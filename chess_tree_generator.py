@@ -21,7 +21,7 @@ class ChessTreeGenerator:
     """Main class for generating chess game trees."""
     
     def __init__(self, stockfish_path: str, max_depth: int = 3, 
-                 analysis_time: float = 1.0, centipawn_threshold: int = 30):
+                 analysis_time: float = 60.0, centipawn_threshold: int = 30):
         """
         Initialize the chess tree generator.
         
@@ -250,8 +250,8 @@ Examples:
     parser.add_argument(
         '--time',
         type=float,
-        default=1.0,
-        help='Analysis time per position in seconds (default: 1.0)'
+        default=60.0,
+        help='Analysis time per position in seconds (default: 60.0)'
     )
     
     parser.add_argument(

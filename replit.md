@@ -7,6 +7,7 @@ This is a Python command-line tool that generates chess game trees using the Sto
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
+Analysis preference: Deep analysis with powerful local hardware rather than cloud limitations.
 
 ## System Architecture
 

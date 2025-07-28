@@ -14,13 +14,13 @@ class StockfishAnalyzer:
     Wrapper class for Stockfish engine analysis with optimized configuration.
     """
     
-    def __init__(self, stockfish_path: str, analysis_time: float = 1.0):
+    def __init__(self, stockfish_path: str, analysis_time: float = 60.0):
         """
         Initialize Stockfish analyzer with optimal system configuration.
         
         Args:
             stockfish_path: Path to Stockfish executable
-            analysis_time: Time limit for analysis in seconds
+            analysis_time: Time limit for analysis in seconds (default: 60.0)
             
         Raises:
             RuntimeError: If Stockfish engine cannot be initialized
