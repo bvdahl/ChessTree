@@ -8,6 +8,8 @@ This is a Python command-line tool that generates chess game trees using the Sto
 
 Preferred communication style: Simple, everyday language.
 Analysis preference: Deep analysis with powerful local hardware rather than cloud limitations.
+Output preference: PGN format for compatibility with ChessBase and other chess software.
+Workflow preference: Analyze from existing PGN files rather than starting from FEN positions.
 
 ## System Architecture
 

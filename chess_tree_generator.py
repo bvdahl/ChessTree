@@ -13,6 +13,8 @@ import os
 from typing import List, Dict, Any
 import chess
 import chess.engine
+import chess.pgn
+import io
 from stockfish_analyzer import StockfishAnalyzer
 from tree_node import TreeNode
 
@@ -37,6 +39,40 @@ class ChessTreeGenerator:
         self.centipawn_threshold = centipawn_threshold
         self.analyzer = StockfishAnalyzer(stockfish_path, analysis_time)
         
+    def generate_tree_from_pgn(self, pgn_file: str) -> tuple[TreeNode, chess.pgn.Game]:
+        """
+        Generate a game tree from the last position in a PGN file.
+        
+        Args:
+            pgn_file: Path to PGN file
+            
+        Returns:
+            Tuple of (TreeNode root, chess.pgn.Game object)
+        """
+        with open(pgn_file, 'r') as f:
+            game = chess.pgn.read_game(f)
+        
+        if game is None:
+            raise ValueError(f"No valid game found in PGN file: {pgn_file}")
+        
+        # Play through the game to get the final position
+        board = game.board()
+        for move in game.mainline_moves():
+            board.push(move)
+        
+        # Create root node from final position
+        root = TreeNode(
+            board=board.copy(),
+            move=None,
+            evaluation=None,
+            depth=0
+        )
+        
+        # Build tree from this position
+        self._build_tree_breadth_first(root)
+        
+        return root, game
+
     def generate_tree(self, fen: str) -> TreeNode:
         """
         Generate a complete game tree from the given FEN position.
@@ -156,40 +192,81 @@ class ChessTreeGenerator:
         
         return filtered_moves
     
-    def tree_to_pgn(self, node: TreeNode, game_info: Dict[str, str] = None) -> str:
+    def tree_to_pgn(self, node: TreeNode, game_info: Dict[str, str] = None, existing_game: chess.pgn.Game = None) -> str:
         """
-        Convert tree to PGN format with variations.
+        Convert tree to PGN format with variations, optionally appending to existing game.
         
         Args:
             node: Root node of the tree
             game_info: Optional game information for PGN headers
+            existing_game: Optional existing game to append analysis to
             
         Returns:
             PGN string with main line and variations
         """
-        if game_info is None:
-            game_info = {
-                "Event": "Chess Tree Analysis",
-                "Site": "Local Analysis",
-                "Date": "????.??.??",
-                "Round": "?",
-                "White": "?",
-                "Black": "?",
-                "Result": "*"
-            }
-        
-        # Create PGN headers
         pgn_lines = []
-        for key, value in game_info.items():
-            pgn_lines.append(f'[{key} "{value}"]')
-        pgn_lines.append("")  # Empty line after headers
         
-        # Convert tree to moves with variations
-        # Calculate starting move number from FEN
-        board_copy = node.board.copy()
-        starting_move_num = board_copy.fullmove_number
-        moves_text = self._node_to_pgn_moves(node, node.board.turn, starting_move_num)
-        pgn_lines.append(moves_text)
+        if existing_game:
+            # Use existing game headers and moves
+            headers = existing_game.headers
+            for key, value in headers.items():
+                pgn_lines.append(f'[{key} "{value}"]')
+            
+            # Add analysis comment
+            pgn_lines.append('[Annotator "Chess Tree Generator"]')
+            pgn_lines.append("")  # Empty line after headers
+            
+            # Get the main line moves from existing game
+            board = existing_game.board()
+            moves_list = []
+            move_number = 1
+            white_move = True
+            
+            for move in existing_game.mainline_moves():
+                move_san = board.san(move)
+                if white_move:
+                    moves_list.append(f"{move_number}. {move_san}")
+                else:
+                    moves_list.append(move_san)
+                    move_number += 1
+                white_move = not white_move
+                board.push(move)
+            
+            # Add original game moves
+            game_moves = " ".join(moves_list)
+            
+            # Add analysis starting point
+            starting_move_num = board.fullmove_number
+            analysis_moves = self._node_to_pgn_moves(node, board.turn, starting_move_num)
+            
+            if analysis_moves:
+                pgn_lines.append(f"{game_moves} {analysis_moves} *")
+            else:
+                pgn_lines.append(f"{game_moves} *")
+                
+        else:
+            # Create new PGN from scratch
+            if game_info is None:
+                game_info = {
+                    "Event": "Chess Tree Analysis",
+                    "Site": "Local Analysis", 
+                    "Date": "????.??.??",
+                    "Round": "?",
+                    "White": "?",
+                    "Black": "?",
+                    "Result": "*",
+                    "FEN": node.board.fen()
+                }
+            
+            # Create PGN headers
+            for key, value in game_info.items():
+                pgn_lines.append(f'[{key} "{value}"]')
+            pgn_lines.append("")  # Empty line after headers
+            
+            # Convert tree to moves with variations
+            starting_move_num = node.board.fullmove_number
+            moves_text = self._node_to_pgn_moves(node, node.board.turn, starting_move_num)
+            pgn_lines.append(f"{moves_text} *" if moves_text else "*")
         
         return "\n".join(pgn_lines)
     
@@ -214,7 +291,15 @@ class ChessTreeGenerator:
         for i, child in enumerate(node.children):
             try:
                 move_san = node.board.san(child.move)
-                eval_comment = f" {{{child.evaluation:+.0f}}}" if child.evaluation is not None else ""
+                # Format evaluation properly (convert from centipawns if needed)
+                if child.evaluation is not None:
+                    if abs(child.evaluation) > 1000:  # Likely in centipawns
+                        eval_display = child.evaluation / 100
+                        eval_comment = f" {{{eval_display:+.2f}}}"
+                    else:  # Already in pawns
+                        eval_comment = f" {{{child.evaluation:+.2f}}}"
+                else:
+                    eval_comment = ""
                 
                 if i == 0:  # Main line
                     # Add move number for White moves or if it's the first move shown
@@ -325,10 +410,15 @@ Examples:
         """
     )
     
-    parser.add_argument(
+    # Input group - either FEN or PGN file (mutually exclusive)
+    input_group = parser.add_mutually_exclusive_group(required=True)
+    input_group.add_argument(
         '--fen',
-        required=True,
         help='FEN string representing the starting position'
+    )
+    input_group.add_argument(
+        '--pgn-file',
+        help='PGN file to analyze from the last position'
     )
     
     parser.add_argument(
@@ -377,6 +467,11 @@ Examples:
         print(f"Error: Stockfish executable not found at: {args.stockfish_path}", file=sys.stderr)
         sys.exit(1)
     
+    # Validate PGN file if provided
+    if args.pgn_file and not os.path.isfile(args.pgn_file):
+        print(f"Error: PGN file not found at: {args.pgn_file}", file=sys.stderr)
+        sys.exit(1)
+    
     try:
         # Initialize generator
         generator = ChessTreeGenerator(
@@ -386,14 +481,22 @@ Examples:
             centipawn_threshold=args.threshold
         )
         
-        print(f"Generating game tree from FEN: {args.fen}")
-        print(f"Max depth: {args.depth} half-moves")
-        print(f"Analysis time: {args.time} seconds per position")
-        print(f"Centipawn threshold: {args.threshold}")
-        print("=" * 50)
-        
-        # Generate tree
-        root = generator.generate_tree(args.fen)
+        # Generate tree from either FEN or PGN
+        existing_game = None
+        if args.pgn_file:
+            print(f"Analyzing PGN file: {args.pgn_file}")
+            print(f"Max depth: {args.depth} half-moves")
+            print(f"Analysis time: {args.time} seconds per position")
+            print(f"Centipawn threshold: {args.threshold}")
+            print("=" * 50)
+            root, existing_game = generator.generate_tree_from_pgn(args.pgn_file)
+        else:
+            print(f"Generating game tree from FEN: {args.fen}")
+            print(f"Max depth: {args.depth} half-moves")
+            print(f"Analysis time: {args.time} seconds per position")
+            print(f"Centipawn threshold: {args.threshold}")
+            print("=" * 50)
+            root = generator.generate_tree(args.fen)
         
         # Output results
         if args.output == 'json':
@@ -407,7 +510,7 @@ Examples:
             else:
                 print(json_output)
         elif args.output == 'pgn':
-            pgn_output = generator.tree_to_pgn(root)
+            pgn_output = generator.tree_to_pgn(root, existing_game=existing_game)
             
             if args.output_file:
                 with open(args.output_file, 'w') as f:
