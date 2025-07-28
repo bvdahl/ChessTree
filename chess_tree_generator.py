@@ -156,6 +156,103 @@ class ChessTreeGenerator:
         
         return filtered_moves
     
+    def tree_to_pgn(self, node: TreeNode, game_info: Dict[str, str] = None) -> str:
+        """
+        Convert tree to PGN format with variations.
+        
+        Args:
+            node: Root node of the tree
+            game_info: Optional game information for PGN headers
+            
+        Returns:
+            PGN string with main line and variations
+        """
+        if game_info is None:
+            game_info = {
+                "Event": "Chess Tree Analysis",
+                "Site": "Local Analysis",
+                "Date": "????.??.??",
+                "Round": "?",
+                "White": "?",
+                "Black": "?",
+                "Result": "*"
+            }
+        
+        # Create PGN headers
+        pgn_lines = []
+        for key, value in game_info.items():
+            pgn_lines.append(f'[{key} "{value}"]')
+        pgn_lines.append("")  # Empty line after headers
+        
+        # Convert tree to moves with variations
+        # Calculate starting move number from FEN
+        board_copy = node.board.copy()
+        starting_move_num = board_copy.fullmove_number
+        moves_text = self._node_to_pgn_moves(node, node.board.turn, starting_move_num)
+        pgn_lines.append(moves_text)
+        
+        return "\n".join(pgn_lines)
+    
+    def _node_to_pgn_moves(self, node: TreeNode, starting_turn: bool, move_number: int = 1) -> str:
+        """
+        Convert tree node to PGN move notation with variations.
+        
+        Args:
+            node: Current tree node
+            starting_turn: True if White to move, False if Black
+            move_number: Current move number
+            
+        Returns:
+            PGN formatted string with moves and variations
+        """
+        if not node.children:
+            return ""
+        
+        result = []
+        
+        # Process main line (first child) and variations
+        for i, child in enumerate(node.children):
+            try:
+                move_san = node.board.san(child.move)
+                eval_comment = f" {{{child.evaluation:+.0f}}}" if child.evaluation is not None else ""
+                
+                if i == 0:  # Main line
+                    # Add move number for White moves or if it's the first move shown
+                    if starting_turn:  # White to move
+                        move_text = f"{move_number}. {move_san}{eval_comment}"
+                    else:  # Black to move
+                        move_text = f"{move_number}... {move_san}{eval_comment}"
+                    
+                    result.append(move_text)
+                    
+                    # Recursively add continuation of main line
+                    next_move_num = move_number + (0 if starting_turn else 1)
+                    child_moves = self._node_to_pgn_moves(child, not starting_turn, next_move_num)
+                    if child_moves:
+                        result.append(child_moves)
+                        
+                else:  # Variation
+                    # Add move number for variations
+                    if starting_turn:  # White to move
+                        var_text = f"({move_number}. {move_san}{eval_comment}"
+                    else:  # Black to move
+                        var_text = f"({move_number}... {move_san}{eval_comment}"
+                    
+                    # Add continuation of variation
+                    next_move_num = move_number + (0 if starting_turn else 1)
+                    child_moves = self._node_to_pgn_moves(child, not starting_turn, next_move_num)
+                    if child_moves:
+                        var_text += f" {child_moves})"
+                    else:
+                        var_text += ")"
+                    
+                    result.append(var_text)
+            except Exception as e:
+                # Skip moves that can't be converted to SAN notation
+                continue
+        
+        return " ".join(result)
+
     def tree_to_dict(self, node: TreeNode) -> Dict[str, Any]:
         """
         Convert tree to dictionary format for JSON output.
@@ -263,9 +360,9 @@ Examples:
     
     parser.add_argument(
         '--output',
-        choices=['tree', 'json'],
+        choices=['tree', 'json', 'pgn'],
         default='tree',
-        help='Output format: tree (human-readable) or json (default: tree)'
+        help='Output format: tree (human-readable), json, or pgn (default: tree)'
     )
     
     parser.add_argument(
@@ -309,6 +406,15 @@ Examples:
                 print(f"Tree saved to: {args.output_file}")
             else:
                 print(json_output)
+        elif args.output == 'pgn':
+            pgn_output = generator.tree_to_pgn(root)
+            
+            if args.output_file:
+                with open(args.output_file, 'w') as f:
+                    f.write(pgn_output)
+                print(f"PGN saved to: {args.output_file}")
+            else:
+                print(pgn_output)
         else:  # tree format
             if args.output_file:
                 with open(args.output_file, 'w') as f:
