@@ -280,140 +280,172 @@ class ChessTreeGenerator:
     
     def _node_to_pgn_moves(self, node: TreeNode, starting_turn: bool, move_number: int = 1) -> str:
         """
-        Convert tree to proper PGN format showing complete analysis with all variations.
+        Convert tree to proper PGN format matching the manual example structure.
+        Shows exactly 3 moves at each level, explored 3 levels deep.
         """
         if not node.children:
             return ""
         
         result = []
         
-        # Start with the best line (3 half-moves)
-        main_line = self._build_main_line(node, starting_turn, move_number, 3)
-        result.extend(main_line)
+        # Build the complete tree structure
+        tree_text = self._build_complete_tree(node, starting_turn, move_number)
         
-        # Add variations at each level
-        variations = self._build_all_variations(node, starting_turn, move_number, 3)
-        result.extend(variations)
-        
-        return " ".join(result)
+        return tree_text
     
-    def _build_main_line(self, node: TreeNode, starting_turn: bool, move_number: int, depth: int) -> List[str]:
-        """Build the main line (best moves) for the specified depth."""
-        line = []
-        current_node = node
-        current_turn = starting_turn
-        current_move_num = move_number
+    def _build_complete_tree(self, node: TreeNode, starting_turn: bool, move_number: int) -> str:
+        """Build the complete tree structure exactly like the manual example."""
+        if not node.children:
+            return ""
         
-        for level in range(depth):
-            if not current_node.children:
-                break
-                
-            best_child = current_node.children[0]
-            try:
-                move_san = current_node.board.san(best_child.move)
-                eval_str = f" {{{best_child.evaluation:+.0f}}}" if best_child.evaluation is not None else ""
-                
-                if current_turn:  # White to move
-                    move_text = f"{current_move_num}. {move_san}{eval_str}"
-                    current_turn = False
-                else:  # Black to move  
-                    move_text = f"{current_move_num}... {move_san}{eval_str}"
-                    current_turn = True
-                    current_move_num += 1
-                
-                line.append(move_text)
-                current_node = best_child
-                
-            except Exception as e:
-                print(f"Error building main line: {e}", file=sys.stderr)
-                break
+        parts = []
         
-        return line
-    
-    def _build_all_variations(self, node: TreeNode, starting_turn: bool, move_number: int, max_depth: int) -> List[str]:
-        """Build all variations at each level."""
-        variations = []
+        # Main move (first move)
+        main_child = node.children[0]
+        main_san = node.board.san(main_child.move)
+        main_eval = f" {{{main_child.evaluation:+.0f}}}" if main_child.evaluation is not None else ""
         
-        # Level 1 variations (alternatives to first move)
-        for alt_child in node.children[1:]:  # All alternatives to main move
-            try:
-                alt_san = node.board.san(alt_child.move)
-                alt_eval = f" {{{alt_child.evaluation:+.0f}}}" if alt_child.evaluation is not None else ""
-                
-                if starting_turn:
-                    var_text = f"({move_number}. {alt_san}{alt_eval}"
-                else:
-                    var_text = f"({move_number}... {alt_san}{alt_eval}"
-                
-                # Add deeper variations for this alternative if available
-                if alt_child.children and max_depth > 1:
-                    next_turn = not starting_turn
-                    next_move_num = move_number + (0 if starting_turn else 1)
-                    
-                    deeper_vars = self._build_variation_continuation(alt_child, next_turn, next_move_num, max_depth - 1)
-                    if deeper_vars:
-                        var_text += " " + " ".join(deeper_vars)
-                
-                var_text += ")"
-                variations.append(var_text)
-                
-            except Exception as e:
-                print(f"Error building variation: {e}", file=sys.stderr)
-                continue
+        if starting_turn:
+            main_move = f"{move_number}. {main_san}{main_eval}"
+            next_turn = False
+            next_move_num = move_number
+        else:
+            main_move = f"{move_number}... {main_san}{main_eval}"
+            next_turn = True
+            next_move_num = move_number + 1
         
-        # Level 2 variations (if main line exists)
-        if node.children and node.children[0].children:
-            main_child = node.children[0]
-            next_turn = not starting_turn
-            next_move_num = move_number + (0 if starting_turn else 1)
+        parts.append(main_move)
+        
+        # Main response and its continuation
+        if main_child.children:
+            main_response_child = main_child.children[0]
+            response_san = main_child.board.san(main_response_child.move)
+            response_eval = f" {{{main_response_child.evaluation:+.0f}}}" if main_response_child.evaluation is not None else ""
             
-            for resp_alt in main_child.children[1:]:  # Alternatives to main response
-                try:
-                    resp_san = main_child.board.san(resp_alt.move)
-                    resp_eval = f" {{{resp_alt.evaluation:+.0f}}}" if resp_alt.evaluation is not None else ""
-                    
-                    if next_turn:
-                        var_text = f"({next_move_num}. {resp_san}{resp_eval})"
-                    else:
-                        var_text = f"({next_move_num}... {resp_san}{resp_eval})"
-                    
-                    variations.append(var_text)
-                    
-                except Exception as e:
-                    continue
+            if next_turn:
+                response_move = f"{next_move_num}. {response_san}{response_eval}"
+                final_turn = False
+                final_move_num = next_move_num
+            else:
+                response_move = f"{next_move_num}... {response_san}{response_eval}"
+                final_turn = True
+                final_move_num = next_move_num + 1
+            
+            parts.append(response_move)
+            
+            # Final move in main line
+            if main_response_child.children:
+                final_child = main_response_child.children[0]
+                final_san = main_response_child.board.san(final_child.move)
+                final_eval = f" {{{final_child.evaluation:+.0f}}}" if final_child.evaluation is not None else ""
+                
+                if final_turn:
+                    final_move = f"{final_move_num}. {final_san}{final_eval}"
+                else:
+                    final_move = f"{final_move_num}... {final_san}{final_eval}"
+                
+                parts.append(final_move)
         
-        return variations
+        # Alternative moves at level 1 (alternatives to main move)
+        for alt_child in node.children[1:3]:  # Limit to 2 alternatives
+            alt_variation = self._build_variation_branch(node, alt_child, starting_turn, move_number, 3)
+            if alt_variation:
+                parts.append(alt_variation)
+        
+        # Alternative responses at level 2 (alternatives to main response)
+        if main_child.children:
+            for alt_response in main_child.children[1:3]:  # Limit to 2 alternatives 
+                alt_var = self._build_variation_branch(main_child, alt_response, next_turn, next_move_num, 2)
+                if alt_var:
+                    parts.append(alt_var)
+        
+        return " ".join(parts)
     
-    def _build_variation_continuation(self, node: TreeNode, starting_turn: bool, move_number: int, depth: int) -> List[str]:
-        """Build continuation moves for a variation."""
-        if depth <= 0 or not node.children:
-            return []
-        
-        continuation = []
-        best_child = node.children[0]
+    def _build_variation_branch(self, parent_node: TreeNode, child_node: TreeNode, 
+                               starting_turn: bool, move_number: int, depth_remaining: int) -> str:
+        """Build a complete variation branch like the manual example."""
+        if depth_remaining <= 0:
+            return ""
         
         try:
-            move_san = node.board.san(best_child.move)
-            eval_str = f" {{{best_child.evaluation:+.0f}}}" if best_child.evaluation is not None else ""
+            # Start the variation
+            move_san = parent_node.board.san(child_node.move)
+            move_eval = f" {{{child_node.evaluation:+.0f}}}" if child_node.evaluation is not None else ""
             
             if starting_turn:
-                move_text = f"{move_number}. {move_san}{eval_str}"
+                var_start = f"({move_number}. {move_san}{move_eval}"
+                next_turn = False
+                next_move_num = move_number
             else:
-                move_text = f"{move_number}... {move_san}{eval_str}"
+                var_start = f"({move_number}... {move_san}{move_eval}"
+                next_turn = True
+                next_move_num = move_number + 1
             
-            continuation.append(move_text)
+            # Continue the variation if there are more moves
+            continuation_parts = []
             
-            # Continue recursively if more depth needed
-            if depth > 1:
-                next_turn = not starting_turn
-                next_move_num = move_number + (0 if starting_turn else 1)
-                deeper = self._build_variation_continuation(best_child, next_turn, next_move_num, depth - 1)
-                continuation.extend(deeper)
+            if child_node.children and depth_remaining > 1:
+                # Add main response
+                main_resp = child_node.children[0]
+                resp_san = child_node.board.san(main_resp.move)
+                resp_eval = f" {{{main_resp.evaluation:+.0f}}}" if main_resp.evaluation is not None else ""
+                
+                if next_turn:
+                    resp_text = f"{next_move_num}. {resp_san}{resp_eval}"
+                    final_turn = False
+                    final_move_num = next_move_num
+                else:
+                    resp_text = f"{next_move_num}... {resp_san}{resp_eval}"
+                    final_turn = True
+                    final_move_num = next_move_num + 1
+                
+                continuation_parts.append(resp_text)
+                
+                # Add final move if available
+                if main_resp.children and depth_remaining > 2:
+                    final_move = main_resp.children[0]
+                    final_san = main_resp.board.san(final_move.move)
+                    final_eval = f" {{{final_move.evaluation:+.0f}}}" if final_move.evaluation is not None else ""
+                    
+                    if final_turn:
+                        final_text = f"{final_move_num}. {final_san}{final_eval}"
+                    else:
+                        final_text = f"{final_move_num}... {final_san}{final_eval}"
+                    
+                    continuation_parts.append(final_text)
+                
+                # Add sub-variations (alternatives at deeper levels)
+                if depth_remaining > 2 and main_resp.children:
+                    for sub_alt in main_resp.children[1:3]:  # Max 2 sub-variations
+                        sub_var = self._build_simple_variation(main_resp, sub_alt, final_turn, final_move_num)
+                        if sub_var:
+                            continuation_parts.append(sub_var)
+            
+            # Combine all parts
+            if continuation_parts:
+                return var_start + " " + " ".join(continuation_parts) + ")"
+            else:
+                return var_start + ")"
                 
         except Exception as e:
-            print(f"Error in variation continuation: {e}", file=sys.stderr)
-        
-        return continuation
+            print(f"Error building variation branch: {e}", file=sys.stderr)
+            return ""
+    
+    def _build_simple_variation(self, parent_node: TreeNode, child_node: TreeNode, 
+                               starting_turn: bool, move_number: int) -> str:
+        """Build a simple variation without deep nesting."""
+        try:
+            move_san = parent_node.board.san(child_node.move)
+            move_eval = f" {{{child_node.evaluation:+.0f}}}" if child_node.evaluation is not None else ""
+            
+            if starting_turn:
+                return f"({move_number}. {move_san}{move_eval})"
+            else:
+                return f"({move_number}... {move_san}{move_eval})"
+                
+        except Exception as e:
+            print(f"Error building simple variation: {e}", file=sys.stderr)
+            return ""
 
     def tree_to_dict(self, node: TreeNode) -> Dict[str, Any]:
         """
