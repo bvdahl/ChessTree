@@ -10,6 +10,7 @@ Preferred communication style: Simple, everyday language.
 Analysis preference: Deep analysis with powerful local hardware rather than cloud limitations.
 Output preference: PGN format for compatibility with ChessBase and other chess software.
 Workflow preference: Analyze from existing PGN files rather than starting from FEN positions.
+Resource management: Requires proper Stockfish engine cleanup after each run to prevent resource consumption.
 
 ## System Architecture
 

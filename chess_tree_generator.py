@@ -316,9 +316,9 @@ class ChessTreeGenerator:
         
         parts.append(main_move)
         
-        # Step 2: Build complete variations for alternative first moves
+        # Step 2: Build complete variations for alternative first moves (like manual example)
         for alt_child in node.children[1:]:  # All alternatives to main move
-            alt_variation = self._build_full_variation(node, alt_child, starting_turn, move_number, 3)
+            alt_variation = self._build_manual_style_variation(node, alt_child, starting_turn, move_number)
             if alt_variation:
                 parts.append(alt_variation)
         
@@ -339,9 +339,9 @@ class ChessTreeGenerator:
             
             parts.append(response_move)
             
-            # Step 4: Build variations for alternative responses
+            # Step 4: Build variations for alternative responses (like manual example)
             for alt_response in main_child.children[1:]:  # All alternatives to main response
-                alt_resp_var = self._build_full_variation(main_child, alt_response, response_turn, response_move_num, 2)
+                alt_resp_var = self._build_manual_style_variation(main_child, alt_response, response_turn, response_move_num)
                 if alt_resp_var:
                     parts.append(alt_resp_var)
             
@@ -366,6 +366,99 @@ class ChessTreeGenerator:
         
         return " ".join(parts)
     
+    def _build_manual_style_variation(self, parent_node: TreeNode, child_node: TreeNode, 
+                                     starting_turn: bool, move_number: int) -> str:
+        """Build variation exactly like the manual example with all responses and continuations."""
+        try:
+            # Start the variation
+            move_san = parent_node.board.san(child_node.move)
+            move_eval = f" {{{child_node.evaluation:+.0f}}}" if child_node.evaluation is not None else ""
+            
+            if starting_turn:
+                var_parts = [f"({move_number}. {move_san}{move_eval}"]
+                next_turn = False
+                next_move_num = move_number
+            else:
+                var_parts = [f"({move_number}... {move_san}{move_eval}"]
+                next_turn = True
+                next_move_num = move_number + 1
+            
+            if child_node.children:
+                # Main response
+                main_resp = child_node.children[0]
+                resp_san = child_node.board.san(main_resp.move)
+                resp_eval = f" {{{main_resp.evaluation:+.0f}}}" if main_resp.evaluation is not None else ""
+                
+                if next_turn:
+                    resp_text = f"{next_move_num}. {resp_san}{resp_eval}"
+                    final_turn = False
+                    final_move_num = next_move_num
+                else:
+                    resp_text = f"{next_move_num}... {resp_san}{resp_eval}"
+                    final_turn = True
+                    final_move_num = next_move_num + 1
+                
+                var_parts.append(resp_text)
+                
+                # ALL alternative responses as sub-variations (this was missing!)
+                for alt_resp in child_node.children[1:]:
+                    alt_resp_san = child_node.board.san(alt_resp.move)
+                    alt_resp_eval = f" {{{alt_resp.evaluation:+.0f}}}" if alt_resp.evaluation is not None else ""
+                    
+                    if next_turn:
+                        sub_var_start = f"({next_move_num}. {alt_resp_san}{alt_resp_eval}"
+                    else:
+                        sub_var_start = f"({next_move_num}... {alt_resp_san}{alt_resp_eval}"
+                    
+                    # Add continuation for this alternative response
+                    if alt_resp.children:
+                        cont_child = alt_resp.children[0]
+                        cont_san = alt_resp.board.san(cont_child.move)
+                        cont_eval = f" {{{cont_child.evaluation:+.0f}}}" if cont_child.evaluation is not None else ""
+                        
+                        if final_turn:
+                            cont_text = f"{final_move_num}. {cont_san}{cont_eval}"
+                        else:
+                            cont_text = f"{final_move_num}... {cont_san}{cont_eval}"
+                        
+                        # Add alternatives to this continuation
+                        cont_parts = [cont_text]
+                        for alt_cont in alt_resp.children[1:]:
+                            alt_cont_var = self._build_simple_variation(alt_resp, alt_cont, final_turn, final_move_num)
+                            if alt_cont_var:
+                                cont_parts.append(alt_cont_var)
+                        
+                        sub_var = sub_var_start + " " + " ".join(cont_parts) + ")"
+                    else:
+                        sub_var = sub_var_start + ")"
+                    
+                    var_parts.append(sub_var)
+                
+                # Main continuation
+                if main_resp.children:
+                    final_main = main_resp.children[0]
+                    final_san = main_resp.board.san(final_main.move)
+                    final_eval = f" {{{final_main.evaluation:+.0f}}}" if final_main.evaluation is not None else ""
+                    
+                    if final_turn:
+                        final_text = f"{final_move_num}. {final_san}{final_eval}"
+                    else:
+                        final_text = f"{final_move_num}... {final_san}{final_eval}"
+                    
+                    var_parts.append(final_text)
+                    
+                    # Add alternative final moves
+                    for alt_final in main_resp.children[1:]:
+                        alt_final_var = self._build_simple_variation(main_resp, alt_final, final_turn, final_move_num)
+                        if alt_final_var:
+                            var_parts.append(alt_final_var)
+            
+            return " ".join(var_parts) + ")"
+            
+        except Exception as e:
+            print(f"Error building manual style variation: {e}", file=sys.stderr)
+            return ""
+    
     def _build_full_variation(self, parent_node: TreeNode, child_node: TreeNode, 
                              starting_turn: bool, move_number: int, depth_remaining: int) -> str:
         """Build a complete variation with all 3 levels like in the manual example."""
@@ -388,7 +481,7 @@ class ChessTreeGenerator:
             
             # Add all responses and their continuations
             if child_node.children and depth_remaining > 1:
-                # Main response
+                # Main response (best move)
                 main_resp = child_node.children[0]
                 resp_san = child_node.board.san(main_resp.move)
                 resp_eval = f" {{{main_resp.evaluation:+.0f}}}" if main_resp.evaluation is not None else ""
@@ -404,7 +497,13 @@ class ChessTreeGenerator:
                 
                 var_parts.append(resp_text)
                 
-                # Add final moves for main response
+                # Add alternative responses FIRST (before main continuation)
+                for alt_resp in child_node.children[1:]:
+                    alt_resp_var = self._build_response_variation(child_node, alt_resp, next_turn, next_move_num, depth_remaining - 1)
+                    if alt_resp_var:
+                        var_parts.append(alt_resp_var)
+                
+                # Add final moves for main response (continuation of main line)
                 if main_resp.children and depth_remaining > 2:
                     final_main = main_resp.children[0]
                     final_san = main_resp.board.san(final_main.move)
@@ -422,12 +521,6 @@ class ChessTreeGenerator:
                         alt_final_var = self._build_simple_variation(main_resp, alt_final, final_turn, final_move_num)
                         if alt_final_var:
                             var_parts.append(alt_final_var)
-                
-                # Add alternative responses 
-                for alt_resp in child_node.children[1:]:
-                    alt_resp_var = self._build_response_variation(child_node, alt_resp, next_turn, next_move_num, depth_remaining - 1)
-                    if alt_resp_var:
-                        var_parts.append(alt_resp_var)
             
             return " ".join(var_parts) + ")"
             
