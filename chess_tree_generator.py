@@ -23,7 +23,7 @@ class ChessTreeGenerator:
     """Main class for generating chess game trees."""
     
     def __init__(self, stockfish_path: str, max_depth: int = 3, 
-                 analysis_time: float = 60.0, centipawn_threshold: int = 30):
+                 analysis_time: float = 60.0, centipawn_threshold: int = 30, num_moves: int = 3):
         """
         Initialize the chess tree generator.
         
@@ -32,11 +32,13 @@ class ChessTreeGenerator:
             max_depth: Maximum depth in half-moves (default: 3)
             analysis_time: Time to analyze each position in seconds (default: 1.0)
             centipawn_threshold: Centipawn threshold for move filtering (default: 30)
+            num_moves: Number of top moves to analyze per position (default: 3)
         """
         self.stockfish_path = stockfish_path
         self.max_depth = max_depth
         self.analysis_time = analysis_time
         self.centipawn_threshold = centipawn_threshold
+        self.num_moves = num_moves
         self.analyzer = StockfishAnalyzer(stockfish_path, analysis_time)
         
     def generate_tree_from_pgn(self, pgn_file: str) -> tuple[TreeNode, chess.pgn.Game]:
@@ -190,8 +192,8 @@ class ChessTreeGenerator:
         filtered_moves = [sorted_moves[0]]
         best_eval = sorted_moves[0]['evaluation']
         
-        # Add second and third moves if within threshold
-        for move_data in sorted_moves[1:3]:
+        # Add additional moves up to num_moves if within threshold
+        for move_data in sorted_moves[1:self.num_moves]:
             eval_diff = best_eval - move_data['evaluation']
             if eval_diff <= self.centipawn_threshold:
                 filtered_moves.append(move_data)
@@ -632,7 +634,7 @@ class ChessTreeGenerator:
                 
                 # Add sub-variations (alternatives at deeper levels)
                 if depth_remaining > 2 and main_resp.children:
-                    for sub_alt in main_resp.children[1:3]:  # Max 2 sub-variations
+                    for sub_alt in main_resp.children[1:]:  # All available sub-variations
                         sub_var = self._build_simple_variation(main_resp, sub_alt, final_turn, final_move_num)
                         if sub_var:
                             continuation_parts.append(sub_var)
@@ -774,6 +776,13 @@ Examples:
     )
     
     parser.add_argument(
+        '--num-moves',
+        type=int,
+        default=3,
+        help='Number of top moves to analyze per position (default: 3)'
+    )
+    
+    parser.add_argument(
         '--output',
         choices=['tree', 'json', 'pgn'],
         default='tree',
@@ -804,7 +813,8 @@ Examples:
             stockfish_path=args.stockfish_path,
             max_depth=args.depth,
             analysis_time=args.time,
-            centipawn_threshold=args.threshold
+            centipawn_threshold=args.threshold,
+            num_moves=args.num_moves
         )
         
         # Generate tree from either FEN or PGN
@@ -814,6 +824,7 @@ Examples:
             print(f"Max depth: {args.depth} half-moves")
             print(f"Analysis time: {args.time} seconds per position")
             print(f"Centipawn threshold: {args.threshold}")
+            print(f"Number of moves per position: {args.num_moves}")
             print("=" * 50)
             root, existing_game = generator.generate_tree_from_pgn(args.pgn_file)
         else:
@@ -821,6 +832,7 @@ Examples:
             print(f"Max depth: {args.depth} half-moves")
             print(f"Analysis time: {args.time} seconds per position")
             print(f"Centipawn threshold: {args.threshold}")
+            print(f"Number of moves per position: {args.num_moves}")
             print("=" * 50)
             root = generator.generate_tree(args.fen)
         
