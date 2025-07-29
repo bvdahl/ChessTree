@@ -74,18 +74,8 @@ class StockfishAnalyzer:
             
             # Configure memory allocation for hash table
             total_memory_mb = psutil.virtual_memory().total // (1024 * 1024)
-            available_memory_mb = psutil.virtual_memory().available // (1024 * 1024)
-            
-            # Conservative memory allocation to prevent engine crashes
-            # Use requested memory but cap at safe limits based on system capacity
-            if self.hash_memory_mb <= 4096:
-                # For requests up to 4GB, use the requested amount
-                hash_size_mb = min(self.hash_memory_mb, available_memory_mb // 4)
-            else:
-                # For larger requests, be more conservative to prevent crashes
-                max_conservative = min(6144, available_memory_mb // 8)  # Max 6GB or 12.5% of available
-                hash_size_mb = min(self.hash_memory_mb, max_conservative)
-            
+            # Use exactly the requested hash memory amount without any limits
+            hash_size_mb = self.hash_memory_mb
             print(f"Detected {total_memory_mb}MB total RAM, allocating {hash_size_mb}MB for hash table")
             
             # Set hash table size
