@@ -127,14 +127,22 @@ class ChessTreeGenerator:
                 continue
             
             try:
+                print(f"Analyzing position at depth {current_depth} (move {current_node.board.fullmove_number})")
+                
                 # Analyze current position
                 analysis_results = self.analyzer.analyze_position(current_node.board)
                 
                 if not analysis_results:
+                    print(f"No analysis results for depth {current_depth}")
                     continue
+                
+                print(f"Got {len(analysis_results)} moves from analysis")
+                for i, move_data in enumerate(analysis_results):
+                    print(f"  Move {i+1}: {move_data['move']} eval: {move_data['evaluation']}")
                 
                 # Filter moves based on centipawn threshold
                 filtered_moves = self._filter_moves(analysis_results)
+                print(f"After filtering: {len(filtered_moves)} moves")
                 
                 # Create child nodes for filtered moves
                 for move_data in filtered_moves:
@@ -272,7 +280,7 @@ class ChessTreeGenerator:
     
     def _node_to_pgn_moves(self, node: TreeNode, starting_turn: bool, move_number: int = 1) -> str:
         """
-        Convert tree node to PGN move notation with variations.
+        Convert tree to proper PGN format - fixed to limit depth to exactly 3 half-moves.
         
         Args:
             node: Current tree node
@@ -280,61 +288,88 @@ class ChessTreeGenerator:
             move_number: Current move number
             
         Returns:
-            PGN formatted string with moves and variations
+            PGN formatted string with exactly 3 half-moves deep
         """
         if not node.children:
             return ""
         
         result = []
         
-        # Process main line (first child) and variations
-        for i, child in enumerate(node.children):
-            try:
-                move_san = node.board.san(child.move)
-                # Format evaluation properly (convert from centipawns if needed)
-                if child.evaluation is not None:
-                    if abs(child.evaluation) > 1000:  # Likely in centipawns
-                        eval_display = child.evaluation / 100
-                        eval_comment = f" {{{eval_display:+.2f}}}"
-                    else:  # Already in pawns
-                        eval_comment = f" {{{child.evaluation:+.2f}}}"
-                else:
-                    eval_comment = ""
+        # Level 1: Process the first move and its alternatives
+        main_child = node.children[0]
+        try:
+            # Main first move
+            move_san = node.board.san(main_child.move)
+            eval_str = f" {{{main_child.evaluation:+.0f}}}" if main_child.evaluation is not None else ""
+            
+            if starting_turn:  # White's move
+                main_move = f"{move_number}. {move_san}{eval_str}"
+                next_is_white = False
+                next_move_num = move_number
+            else:  # Black's move
+                main_move = f"{move_number}... {move_san}{eval_str}"
+                next_is_white = True
+                next_move_num = move_number + 1
+            
+            result.append(main_move)
+            
+            # Level 2: Response to main move
+            if main_child.children:
+                response_child = main_child.children[0]
+                response_san = main_child.board.san(response_child.move)
+                response_eval = f" {{{response_child.evaluation:+.0f}}}" if response_child.evaluation is not None else ""
                 
-                if i == 0:  # Main line
-                    # Add move number for White moves or if it's the first move shown
-                    if starting_turn:  # White to move
-                        move_text = f"{move_number}. {move_san}{eval_comment}"
-                    else:  # Black to move
-                        move_text = f"{move_number}... {move_san}{eval_comment}"
+                if next_is_white:
+                    response_move = f"{next_move_num}. {response_san}{response_eval}"
+                    final_is_white = False
+                    final_move_num = next_move_num
+                else:
+                    response_move = f"{next_move_num}... {response_san}{response_eval}"
+                    final_is_white = True
+                    final_move_num = next_move_num + 1
+                
+                result.append(response_move)
+                
+                # Level 3: Final move
+                if response_child.children:
+                    final_child = response_child.children[0]
+                    final_san = response_child.board.san(final_child.move)
+                    final_eval = f" {{{final_child.evaluation:+.0f}}}" if final_child.evaluation is not None else ""
                     
-                    result.append(move_text)
-                    
-                    # Recursively add continuation of main line
-                    next_move_num = move_number + (0 if starting_turn else 1)
-                    child_moves = self._node_to_pgn_moves(child, not starting_turn, next_move_num)
-                    if child_moves:
-                        result.append(child_moves)
-                        
-                else:  # Variation
-                    # Add move number for variations
-                    if starting_turn:  # White to move
-                        var_text = f"({move_number}. {move_san}{eval_comment}"
-                    else:  # Black to move
-                        var_text = f"({move_number}... {move_san}{eval_comment}"
-                    
-                    # Add continuation of variation
-                    next_move_num = move_number + (0 if starting_turn else 1)
-                    child_moves = self._node_to_pgn_moves(child, not starting_turn, next_move_num)
-                    if child_moves:
-                        var_text += f" {child_moves})"
+                    if final_is_white:
+                        final_move = f"{final_move_num}. {final_san}{final_eval}"
                     else:
-                        var_text += ")"
+                        final_move = f"{final_move_num}... {final_san}{final_eval}"
+                    
+                    result.append(final_move)
+                
+                # Add variations at level 2 (responses to main move)
+                for var_child in main_child.children[1:3]:  # Max 2 variations
+                    var_san = main_child.board.san(var_child.move)
+                    var_eval = f" {{{var_child.evaluation:+.0f}}}" if var_child.evaluation is not None else ""
+                    
+                    if next_is_white:
+                        var_text = f"({next_move_num}. {var_san}{var_eval})"
+                    else:
+                        var_text = f"({next_move_num}... {var_san}{var_eval})"
                     
                     result.append(var_text)
-            except Exception as e:
-                # Skip moves that can't be converted to SAN notation
-                continue
+            
+            # Add variations at level 1 (alternatives to first move)
+            for var_child in node.children[1:3]:  # Max 2 variations
+                var_san = node.board.san(var_child.move)
+                var_eval = f" {{{var_child.evaluation:+.0f}}}" if var_child.evaluation is not None else ""
+                
+                if starting_turn:
+                    var_text = f"({move_number}. {var_san}{var_eval})"
+                else:
+                    var_text = f"({move_number}... {var_san}{var_eval})"
+                
+                result.append(var_text)
+                
+        except Exception as e:
+            print(f"Error in PGN generation: {e}", file=sys.stderr)
+            return ""
         
         return " ".join(result)
 
