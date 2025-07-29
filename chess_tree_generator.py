@@ -22,14 +22,11 @@ from tree_node import TreeNode
 class ChessTreeGenerator:
     """Main class for generating chess game trees."""
     
-    def _format_evaluation(self, evaluation: float, for_pgn: bool = False) -> str:
-        """Format evaluation for display."""
+    def _format_evaluation(self, evaluation: float) -> str:
+        """Format evaluation for display - always divided by 100 with 2 decimal places."""
         if evaluation is None:
             return ""
-        if for_pgn:
-            return f" [{evaluation/100:+.2f}]"
-        else:
-            return f" (eval: {evaluation/100:.2f})"
+        return f" {evaluation/100:+.2f}"
     
     def __init__(self, stockfish_path: str, max_depth: int = 3, 
                  analysis_time: float = 60.0, centipawn_threshold: int = 30, num_moves: int = 3, hash_memory_mb: int = 8192):
@@ -385,7 +382,7 @@ class ChessTreeGenerator:
         try:
             # Start the variation
             move_san = parent_node.board.san(child_node.move)
-            move_eval = f" {{{child_node.evaluation:+.0f}}}" if child_node.evaluation is not None else ""
+            move_eval = f" {self._format_evaluation(child_node.evaluation)}" if child_node.evaluation is not None else ""
             
             if starting_turn:
                 var_parts = [f"({move_number}. {move_san}{move_eval}"]
@@ -400,7 +397,7 @@ class ChessTreeGenerator:
                 # Main response
                 main_resp = child_node.children[0]
                 resp_san = child_node.board.san(main_resp.move)
-                resp_eval = f" {{{main_resp.evaluation:+.0f}}}" if main_resp.evaluation is not None else ""
+                resp_eval = f" {self._format_evaluation(main_resp.evaluation)}" if main_resp.evaluation is not None else ""
                 
                 if next_turn:
                     resp_text = f"{next_move_num}. {resp_san}{resp_eval}"
@@ -416,7 +413,7 @@ class ChessTreeGenerator:
                 # ALL alternative responses as sub-variations (this was missing!)
                 for alt_resp in child_node.children[1:]:
                     alt_resp_san = child_node.board.san(alt_resp.move)
-                    alt_resp_eval = f" {{{alt_resp.evaluation:+.0f}}}" if alt_resp.evaluation is not None else ""
+                    alt_resp_eval = f" {self._format_evaluation(alt_resp.evaluation)}" if alt_resp.evaluation is not None else ""
                     
                     if next_turn:
                         sub_var_start = f"({next_move_num}. {alt_resp_san}{alt_resp_eval}"
@@ -427,7 +424,7 @@ class ChessTreeGenerator:
                     if alt_resp.children:
                         cont_child = alt_resp.children[0]
                         cont_san = alt_resp.board.san(cont_child.move)
-                        cont_eval = f" {{{cont_child.evaluation:+.0f}}}" if cont_child.evaluation is not None else ""
+                        cont_eval = f" {self._format_evaluation(cont_child.evaluation)}" if cont_child.evaluation is not None else ""
                         
                         if final_turn:
                             cont_text = f"{final_move_num}. {cont_san}{cont_eval}"
@@ -451,7 +448,7 @@ class ChessTreeGenerator:
                 if main_resp.children:
                     final_main = main_resp.children[0]
                     final_san = main_resp.board.san(final_main.move)
-                    final_eval = f" {{{final_main.evaluation:+.0f}}}" if final_main.evaluation is not None else ""
+                    final_eval = f" {self._format_evaluation(final_main.evaluation)}" if final_main.evaluation is not None else ""
                     
                     if final_turn:
                         final_text = f"{final_move_num}. {final_san}{final_eval}"
@@ -481,7 +478,7 @@ class ChessTreeGenerator:
         try:
             # Start the variation 
             move_san = parent_node.board.san(child_node.move)
-            move_eval = f" {{{child_node.evaluation:+.0f}}}" if child_node.evaluation is not None else ""
+            move_eval = f" {self._format_evaluation(child_node.evaluation)}" if child_node.evaluation is not None else ""
             
             if starting_turn:
                 var_parts = [f"({move_number}. {move_san}{move_eval}"]
@@ -497,7 +494,7 @@ class ChessTreeGenerator:
                 # Main response (best move)
                 main_resp = child_node.children[0]
                 resp_san = child_node.board.san(main_resp.move)
-                resp_eval = f" {{{main_resp.evaluation:+.0f}}}" if main_resp.evaluation is not None else ""
+                resp_eval = f" {self._format_evaluation(main_resp.evaluation)}" if main_resp.evaluation is not None else ""
                 
                 if next_turn:
                     resp_text = f"{next_move_num}. {resp_san}{resp_eval}"
@@ -520,7 +517,7 @@ class ChessTreeGenerator:
                 if main_resp.children and depth_remaining > 2:
                     final_main = main_resp.children[0]
                     final_san = main_resp.board.san(final_main.move)
-                    final_eval = f" {{{final_main.evaluation:+.0f}}}" if final_main.evaluation is not None else ""
+                    final_eval = f" {self._format_evaluation(final_main.evaluation)}" if final_main.evaluation is not None else ""
                     
                     if final_turn:
                         final_text = f"{final_move_num}. {final_san}{final_eval}"
@@ -549,7 +546,7 @@ class ChessTreeGenerator:
         
         try:
             move_san = parent_node.board.san(child_node.move)
-            move_eval = f" {{{child_node.evaluation:+.0f}}}" if child_node.evaluation is not None else ""
+            move_eval = f" {self._format_evaluation(child_node.evaluation)}" if child_node.evaluation is not None else ""
             
             if starting_turn:
                 var_start = f"({move_number}. {move_san}{move_eval}"
@@ -564,7 +561,7 @@ class ChessTreeGenerator:
             if child_node.children and depth_remaining > 1:
                 main_cont = child_node.children[0]
                 cont_san = child_node.board.san(main_cont.move)
-                cont_eval = f" {{{main_cont.evaluation:+.0f}}}" if main_cont.evaluation is not None else ""
+                cont_eval = f" {self._format_evaluation(main_cont.evaluation)}" if main_cont.evaluation is not None else ""
                 
                 if next_turn:
                     cont_text = f"{next_move_num}. {cont_san}{cont_eval}"
@@ -599,7 +596,7 @@ class ChessTreeGenerator:
         try:
             # Start the variation
             move_san = parent_node.board.san(child_node.move)
-            move_eval = f" {{{child_node.evaluation:+.0f}}}" if child_node.evaluation is not None else ""
+            move_eval = f" {self._format_evaluation(child_node.evaluation)}" if child_node.evaluation is not None else ""
             
             if starting_turn:
                 var_start = f"({move_number}. {move_san}{move_eval}"
@@ -617,7 +614,7 @@ class ChessTreeGenerator:
                 # Add main response
                 main_resp = child_node.children[0]
                 resp_san = child_node.board.san(main_resp.move)
-                resp_eval = f" {{{main_resp.evaluation:+.0f}}}" if main_resp.evaluation is not None else ""
+                resp_eval = f" {self._format_evaluation(main_resp.evaluation)}" if main_resp.evaluation is not None else ""
                 
                 if next_turn:
                     resp_text = f"{next_move_num}. {resp_san}{resp_eval}"
@@ -634,7 +631,7 @@ class ChessTreeGenerator:
                 if main_resp.children and depth_remaining > 2:
                     final_move = main_resp.children[0]
                     final_san = main_resp.board.san(final_move.move)
-                    final_eval = f" {{{final_move.evaluation:+.0f}}}" if final_move.evaluation is not None else ""
+                    final_eval = f" {self._format_evaluation(final_move.evaluation)}" if final_move.evaluation is not None else ""
                     
                     if final_turn:
                         final_text = f"{final_move_num}. {final_san}{final_eval}"
@@ -665,7 +662,7 @@ class ChessTreeGenerator:
         """Build a simple variation without deep nesting."""
         try:
             move_san = parent_node.board.san(child_node.move)
-            move_eval = f" {{{child_node.evaluation:+.0f}}}" if child_node.evaluation is not None else ""
+            move_eval = f" {self._format_evaluation(child_node.evaluation)}" if child_node.evaluation is not None else ""
             
             if starting_turn:
                 return f"({move_number}. {move_san}{move_eval})"
@@ -714,7 +711,7 @@ class ChessTreeGenerator:
         
         if node.move:
             move_str = str(node.move)
-            eval_str = f" (eval: {node.evaluation})" if node.evaluation is not None else ""
+            eval_str = f" (eval: {node.evaluation/100:.2f})" if node.evaluation is not None else ""
             print(f"{prefix}{move_str}{eval_str}")
         else:
             print(f"{prefix}Starting position (FEN: {node.board.fen()})")
