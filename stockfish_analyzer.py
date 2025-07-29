@@ -150,10 +150,7 @@ class StockfishAnalyzer:
         Returns:
             Evaluation in centipawns from the perspective of the side to move
         """
-        # Debug print to see what we're getting
-        print(f"Debug: info keys: {list(info.keys()) if hasattr(info, 'keys') else 'No keys'}")
-        if 'score' in info:
-            print(f"Debug: score type: {type(info['score'])}, score: {info['score']}")
+        # Extract score from analysis info
         
         # Handle mate scores
         if 'score' in info and info['score'].is_mate():
