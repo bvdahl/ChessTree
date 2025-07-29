@@ -39,7 +39,7 @@ class ChessTreeGenerator:
         self.analysis_time = analysis_time
         self.centipawn_threshold = centipawn_threshold
         self.num_moves = num_moves
-        self.analyzer = StockfishAnalyzer(stockfish_path, analysis_time)
+        self.analyzer = StockfishAnalyzer(stockfish_path, analysis_time, num_moves)
         
     def generate_tree_from_pgn(self, pgn_file: str) -> tuple[TreeNode, chess.pgn.Game]:
         """

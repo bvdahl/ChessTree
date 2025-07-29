@@ -14,19 +14,21 @@ class StockfishAnalyzer:
     Wrapper class for Stockfish engine analysis with optimized configuration.
     """
     
-    def __init__(self, stockfish_path: str, analysis_time: float = 60.0):
+    def __init__(self, stockfish_path: str, analysis_time: float = 60.0, num_moves: int = 3):
         """
         Initialize Stockfish analyzer with optimal system configuration.
         
         Args:
             stockfish_path: Path to Stockfish executable
             analysis_time: Time limit for analysis in seconds (default: 60.0)
+            num_moves: Number of top moves to analyze (default: 3)
             
         Raises:
             RuntimeError: If Stockfish engine cannot be initialized
         """
         self.stockfish_path = stockfish_path
         self.analysis_time = analysis_time
+        self.num_moves = num_moves
         self.engine = None
         
         # Initialize engine with optimal configuration
@@ -79,7 +81,7 @@ class StockfishAnalyzer:
             # Additional optimizations
             self.engine.configure({
                 "Ponder": False,  # Disable pondering for consistent timing
-                "MultiPV": 3,     # Analyze top 3 moves
+                "MultiPV": self.num_moves,     # Analyze requested number of top moves
             })
             
         except Exception as e:
@@ -111,7 +113,7 @@ class StockfishAnalyzer:
             analysis = self.engine.analyse(
                 board,
                 chess.engine.Limit(time=self.analysis_time),
-                multipv=3  # Get top 3 moves
+                multipv=self.num_moves  # Get requested number of top moves
             )
             
             results = []
