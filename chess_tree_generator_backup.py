@@ -22,15 +22,6 @@ from tree_node import TreeNode
 class ChessTreeGenerator:
     """Main class for generating chess game trees."""
     
-    def _format_evaluation(self, evaluation: float, for_pgn: bool = False) -> str:
-        """Format evaluation for display."""
-        if evaluation is None:
-            return ""
-        if for_pgn:
-            return f" [{evaluation/100:+.2f}]"
-        else:
-            return f" (eval: {evaluation/100:.2f})"
-    
     def __init__(self, stockfish_path: str, max_depth: int = 3, 
                  analysis_time: float = 60.0, centipawn_threshold: int = 30, num_moves: int = 3, hash_memory_mb: int = 8192):
         """
