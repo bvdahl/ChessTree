@@ -704,6 +704,7 @@ Examples:
         print(f"Error: PGN file not found at: {args.pgn_file}", file=sys.stderr)
         sys.exit(1)
     
+    generator = None
     try:
         # Initialize generator
         generator = ChessTreeGenerator(
@@ -762,9 +763,6 @@ Examples:
             else:
                 generator.print_tree(root)
         
-        # Close generator
-        generator.close()
-        
     except ValueError as e:
         print(f"Input Error: {e}", file=sys.stderr)
         sys.exit(1)
@@ -777,6 +775,11 @@ Examples:
     except Exception as e:
         print(f"Unexpected error: {e}", file=sys.stderr)
         sys.exit(1)
+    finally:
+        # Always close the Stockfish engine to free resources
+        if generator:
+            generator.close()
+            print("Stockfish engine closed.")
 
 
 if __name__ == "__main__":
