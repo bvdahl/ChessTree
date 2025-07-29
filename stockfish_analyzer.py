@@ -14,7 +14,7 @@ class StockfishAnalyzer:
     Wrapper class for Stockfish engine analysis with optimized configuration.
     """
     
-    def __init__(self, stockfish_path: str, analysis_time: float = 60.0, num_moves: int = 3):
+    def __init__(self, stockfish_path: str, analysis_time: float = 60.0, num_moves: int = 3, hash_memory_mb: int = 8192):
         """
         Initialize Stockfish analyzer with optimal system configuration.
         
@@ -22,6 +22,7 @@ class StockfishAnalyzer:
             stockfish_path: Path to Stockfish executable
             analysis_time: Time limit for analysis in seconds (default: 60.0)
             num_moves: Number of top moves to analyze (default: 3)
+            hash_memory_mb: Memory allocation for hash table in MB (default: 8192)
             
         Raises:
             RuntimeError: If Stockfish engine cannot be initialized
@@ -29,6 +30,7 @@ class StockfishAnalyzer:
         self.stockfish_path = stockfish_path
         self.analysis_time = analysis_time
         self.num_moves = num_moves
+        self.hash_memory_mb = hash_memory_mb
         self.engine = None
         
         # Initialize engine with optimal configuration
@@ -70,9 +72,12 @@ class StockfishAnalyzer:
             # Set threads (use all available threads)
             self.engine.configure({"Threads": num_threads})
             
-            # Auto-detect and configure memory (use half of available RAM)
+            # Configure memory allocation for hash table
             total_memory_mb = psutil.virtual_memory().total // (1024 * 1024)
-            hash_size_mb = max(16, min(1024, total_memory_mb // 2))  # Between 16MB and 1GB
+            available_memory_mb = psutil.virtual_memory().available // (1024 * 1024)
+            # Use specified hash memory, but cap at safe limits (max 25% of available memory or 4GB)
+            safe_limit = min(available_memory_mb // 4, 4096)
+            hash_size_mb = min(self.hash_memory_mb, safe_limit)
             print(f"Detected {total_memory_mb}MB total RAM, allocating {hash_size_mb}MB for hash table")
             
             # Set hash table size

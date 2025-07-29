@@ -23,7 +23,7 @@ class ChessTreeGenerator:
     """Main class for generating chess game trees."""
     
     def __init__(self, stockfish_path: str, max_depth: int = 3, 
-                 analysis_time: float = 60.0, centipawn_threshold: int = 30, num_moves: int = 3):
+                 analysis_time: float = 60.0, centipawn_threshold: int = 30, num_moves: int = 3, hash_memory_mb: int = 8192):
         """
         Initialize the chess tree generator.
         
@@ -33,13 +33,15 @@ class ChessTreeGenerator:
             analysis_time: Time to analyze each position in seconds (default: 1.0)
             centipawn_threshold: Centipawn threshold for move filtering (default: 30)
             num_moves: Number of top moves to analyze per position (default: 3)
+            hash_memory_mb: Memory allocation for hash table in MB (default: 8192)
         """
         self.stockfish_path = stockfish_path
         self.max_depth = max_depth
         self.analysis_time = analysis_time
         self.centipawn_threshold = centipawn_threshold
         self.num_moves = num_moves
-        self.analyzer = StockfishAnalyzer(stockfish_path, analysis_time, num_moves)
+        self.hash_memory_mb = hash_memory_mb
+        self.analyzer = StockfishAnalyzer(stockfish_path, analysis_time, num_moves, hash_memory_mb)
         
     def generate_tree_from_pgn(self, pgn_file: str) -> tuple[TreeNode, chess.pgn.Game]:
         """
@@ -783,6 +785,13 @@ Examples:
     )
     
     parser.add_argument(
+        '--hash-memory',
+        type=int,
+        default=8192,
+        help='Memory allocation for Stockfish hash table in MB (default: 8192)'
+    )
+    
+    parser.add_argument(
         '--output',
         choices=['tree', 'json', 'pgn'],
         default='tree',
@@ -814,7 +823,8 @@ Examples:
             max_depth=args.depth,
             analysis_time=args.time,
             centipawn_threshold=args.threshold,
-            num_moves=args.num_moves
+            num_moves=args.num_moves,
+            hash_memory_mb=args.hash_memory
         )
         
         # Generate tree from either FEN or PGN
