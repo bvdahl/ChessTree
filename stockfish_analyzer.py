@@ -150,6 +150,11 @@ class StockfishAnalyzer:
         Returns:
             Evaluation in centipawns from the perspective of the side to move
         """
+        # Debug print to see what we're getting
+        print(f"Debug: info keys: {list(info.keys()) if hasattr(info, 'keys') else 'No keys'}")
+        if 'score' in info:
+            print(f"Debug: score type: {type(info['score'])}, score: {info['score']}")
+        
         # Handle mate scores
         if 'score' in info and info['score'].is_mate():
             mate_in = info['score'].mate()
@@ -161,15 +166,29 @@ class StockfishAnalyzer:
                 else:
                     return -10000 - mate_in  # Getting mated in N moves
         
-        # Handle centipawn scores
-        if 'score' in info and hasattr(info['score'], 'cp') and info['score'].cp is not None:
-            cp_score = info['score'].cp
+        # Handle centipawn scores - try multiple methods
+        if 'score' in info:
+            score_obj = info['score']
             
-            # Return score from perspective of side to move
-            if white_to_move:
-                return float(cp_score)
-            else:
-                return float(-cp_score)
+            # Method 1: Direct cp access
+            if hasattr(score_obj, 'cp') and score_obj.cp is not None:
+                return float(score_obj.cp)
+            
+            # Method 2: Try white() method
+            try:
+                white_score = score_obj.white()
+                if hasattr(white_score, 'cp') and white_score.cp is not None:
+                    return float(white_score.cp)
+            except:
+                pass
+            
+            # Method 3: Try relative() method
+            try:
+                relative_score = score_obj.relative
+                if hasattr(relative_score, 'cp') and relative_score.cp is not None:
+                    return float(relative_score.cp)
+            except:
+                pass
         
         # Default to 0 if no score available
         return 0.0

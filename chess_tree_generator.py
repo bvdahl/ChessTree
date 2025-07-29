@@ -280,98 +280,82 @@ class ChessTreeGenerator:
     
     def _node_to_pgn_moves(self, node: TreeNode, starting_turn: bool, move_number: int = 1) -> str:
         """
-        Convert tree to proper PGN format - fixed to limit depth to exactly 3 half-moves.
+        Convert tree to proper PGN format showing exactly 3 half-moves with correct variations.
         
         Args:
-            node: Current tree node
+            node: Current tree node  
             starting_turn: True if White to move, False if Black
             move_number: Current move number
             
         Returns:
-            PGN formatted string with exactly 3 half-moves deep
+            PGN formatted string with proper structure
         """
         if not node.children:
             return ""
         
         result = []
         
-        # Level 1: Process the first move and its alternatives
-        main_child = node.children[0]
+        # Get the main line (best move at each level)
+        main_line = self._get_main_line(node, 3)  # Get 3 half-moves
+        
+        # Build the main line text
+        current_turn = starting_turn
+        current_move_num = move_number
+        
+        for i, (move, evaluation) in enumerate(main_line):
+            eval_str = f" {{{evaluation:+.0f}}}" if evaluation is not None else ""
+            
+            if current_turn:  # White to move
+                move_text = f"{current_move_num}. {move}{eval_str}"
+                current_turn = False
+            else:  # Black to move
+                move_text = f"{current_move_num}... {move}{eval_str}"
+                current_turn = True
+                current_move_num += 1
+            
+            result.append(move_text)
+        
+        # Add variations for each level
+        self._add_variations_to_result(result, node, starting_turn, move_number, 0, 3)
+        
+        return " ".join(result)
+    
+    def _get_main_line(self, node: TreeNode, depth_remaining: int) -> List[tuple[str, float]]:
+        """Get the main line (best moves) up to the specified depth."""
+        if depth_remaining <= 0 or not node.children:
+            return []
+        
+        best_child = node.children[0]  # Best move is first child
         try:
-            # Main first move
-            move_san = node.board.san(main_child.move)
-            eval_str = f" {{{main_child.evaluation:+.0f}}}" if main_child.evaluation is not None else ""
+            move_san = node.board.san(best_child.move)
+            evaluation = best_child.evaluation
             
-            if starting_turn:  # White's move
-                main_move = f"{move_number}. {move_san}{eval_str}"
-                next_is_white = False
-                next_move_num = move_number
-            else:  # Black's move
-                main_move = f"{move_number}... {move_san}{eval_str}"
-                next_is_white = True
-                next_move_num = move_number + 1
-            
-            result.append(main_move)
-            
-            # Level 2: Response to main move
-            if main_child.children:
-                response_child = main_child.children[0]
-                response_san = main_child.board.san(response_child.move)
-                response_eval = f" {{{response_child.evaluation:+.0f}}}" if response_child.evaluation is not None else ""
-                
-                if next_is_white:
-                    response_move = f"{next_move_num}. {response_san}{response_eval}"
-                    final_is_white = False
-                    final_move_num = next_move_num
-                else:
-                    response_move = f"{next_move_num}... {response_san}{response_eval}"
-                    final_is_white = True
-                    final_move_num = next_move_num + 1
-                
-                result.append(response_move)
-                
-                # Level 3: Final move
-                if response_child.children:
-                    final_child = response_child.children[0]
-                    final_san = response_child.board.san(final_child.move)
-                    final_eval = f" {{{final_child.evaluation:+.0f}}}" if final_child.evaluation is not None else ""
-                    
-                    if final_is_white:
-                        final_move = f"{final_move_num}. {final_san}{final_eval}"
-                    else:
-                        final_move = f"{final_move_num}... {final_san}{final_eval}"
-                    
-                    result.append(final_move)
-                
-                # Add variations at level 2 (responses to main move)
-                for var_child in main_child.children[1:3]:  # Max 2 variations
-                    var_san = main_child.board.san(var_child.move)
-                    var_eval = f" {{{var_child.evaluation:+.0f}}}" if var_child.evaluation is not None else ""
-                    
-                    if next_is_white:
-                        var_text = f"({next_move_num}. {var_san}{var_eval})"
-                    else:
-                        var_text = f"({next_move_num}... {var_san}{var_eval})"
-                    
-                    result.append(var_text)
-            
-            # Add variations at level 1 (alternatives to first move)
-            for var_child in node.children[1:3]:  # Max 2 variations
+            main_line = [(move_san, evaluation)]
+            main_line.extend(self._get_main_line(best_child, depth_remaining - 1))
+            return main_line
+        except:
+            return []
+    
+    def _add_variations_to_result(self, result: List[str], node: TreeNode, starting_turn: bool, 
+                                move_number: int, current_depth: int, max_depth: int):
+        """Add variations to the result list at the current level."""
+        if current_depth >= max_depth or not node.children:
+            return
+        
+        # Add variations for current position (alternatives to the main move)
+        for var_child in node.children[1:3]:  # Max 2 variations
+            try:
                 var_san = node.board.san(var_child.move)
                 var_eval = f" {{{var_child.evaluation:+.0f}}}" if var_child.evaluation is not None else ""
                 
-                if starting_turn:
+                if starting_turn:  # White variation
                     var_text = f"({move_number}. {var_san}{var_eval})"
-                else:
+                else:  # Black variation
                     var_text = f"({move_number}... {var_san}{var_eval})"
                 
                 result.append(var_text)
-                
-        except Exception as e:
-            print(f"Error in PGN generation: {e}", file=sys.stderr)
-            return ""
-        
-        return " ".join(result)
+            except:
+                continue
 
     def tree_to_dict(self, node: TreeNode) -> Dict[str, Any]:
         """

@@ -1,0 +1,78 @@
+==================================================
+Analyzing position at depth 0 (move 8)
+Got 3 moves from analysis
+  Move 1: d3d4 eval: 0.0
+  Move 2: a1b1 eval: 0.0
+  Move 3: f1e2 eval: 0.0
+After filtering: 3 moves
+Analyzing position at depth 1 (move 8)
+Got 3 moves from analysis
+  Move 1: d8d5 eval: 0.0
+  Move 2: c8e6 eval: 0.0
+  Move 3: f8e7 eval: 0.0
+After filtering: 3 moves
+Analyzing position at depth 1 (move 8)
+Got 3 moves from analysis
+  Move 1: b8c6 eval: 0.0
+  Move 2: d8d5 eval: 0.0
+  Move 3: c8e6 eval: 0.0
+After filtering: 3 moves
+Analyzing position at depth 1 (move 8)
+Got 3 moves from analysis
+  Move 1: b8c6 eval: 0.0
+  Move 2: c8e6 eval: 0.0
+  Move 3: d8d5 eval: 0.0
+After filtering: 3 moves
+Analyzing position at depth 2 (move 9)
+Got 3 moves from analysis
+  Move 1: a1b1 eval: 0.0
+  Move 2: f1d3 eval: 0.0
+  Move 3: c1e3 eval: 0.0
+After filtering: 3 moves
+Analyzing position at depth 2 (move 9)
+Got 3 moves from analysis
+  Move 1: a1b1 eval: 0.0
+  Move 2: d1d3 eval: 0.0
+  Move 3: f1b5 eval: 0.0
+After filtering: 3 moves
+Analyzing position at depth 2 (move 9)
+Got 3 moves from analysis
+  Move 1: f1c4 eval: 0.0
+  Move 2: d1d3 eval: 0.0
+  Move 3: f1d3 eval: 0.0
+After filtering: 3 moves
+Analyzing position at depth 2 (move 9)
+Got 3 moves from analysis
+  Move 1: d3d4 eval: 0.0
+  Move 2: c1e3 eval: 0.0
+  Move 3: c1g5 eval: 0.0
+After filtering: 3 moves
+Analyzing position at depth 2 (move 9)
+Got 3 moves from analysis
+  Move 1: d3d4 eval: 0.0
+  Move 2: c1e3 eval: 0.0
+  Move 3: f1e2 eval: 0.0
+After filtering: 3 moves
+Analyzing position at depth 2 (move 9)
+Got 3 moves from analysis
+  Move 1: d3d4 eval: 0.0
+  Move 2: b1b7 eval: 0.0
+  Move 3: c1g5 eval: 0.0
+After filtering: 3 moves
+Analyzing position at depth 2 (move 9)
+Got 3 moves from analysis
+  Move 1: e1g1 eval: 0.0
+  Move 2: c1e3 eval: 0.0
+  Move 3: d3d4 eval: 0.0
+After filtering: 3 moves
+Analyzing position at depth 2 (move 9)
+Got 3 moves from analysis
+  Move 1: e1g1 eval: 0.0
+  Move 2: d3d4 eval: 0.0
+  Move 3: c1e3 eval: 0.0
+After filtering: 3 moves
+Analyzing position at depth 2 (move 9)
+Got 3 moves from analysis
+  Move 1: e1g1 eval: 0.0
+  Move 2: d3d4 eval: 0.0
+  Move 3: c1e3 eval: 0.0
