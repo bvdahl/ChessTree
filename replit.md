@@ -62,7 +62,8 @@ The application follows a modular, object-oriented architecture with clear separ
 6. **Output Generation**: Tree formatted as human-readable text or JSON
 
 ### Move Selection Criteria
-- Includes top 3 moves from engine analysis with intelligent mate handling
+- Configurable number of moves per side with intelligent mate handling
+- **Side-specific parameters**: Support for different thresholds and move counts for White vs Black
 - **Mate detection**: When current player has forced mate (#N for White, -#N for Black), shows only that move and ends variation
 - **Mate filtering**: Automatically filters moves giving opponent mate regardless of threshold
 - **Centipawn filtering**: For non-mate positions, filters moves more than configurable centipawns worse than best
@@ -113,6 +114,7 @@ The architecture prioritizes modularity, resource efficiency, and ease of use wh
 - **✅ VERIFIED: Complete tree structure**: Every analyzed position (all 169 in user's example) now properly represented in PGN with full variation continuations
 - **✅ PERFORMANCE: Stable operation**: System handles depth 4+ analysis without timeouts or crashes, completing 15+ positions in 30 seconds
 - **✅ NEW: Advanced mate evaluation handling**: System now properly detects and handles forced mate positions with intelligent filtering and variation termination
+- **✅ NEW: Side-specific analysis parameters**: Support for different centipawn thresholds and move counts for White vs Black positions (--white-threshold, --black-threshold, --white-moves, --black-moves)
 
 **Previous Updates:**
 - **Fixed centipawn filtering for Black moves**: Algorithm now correctly filters from Black's perspective (lower values are better for Black, higher for White)

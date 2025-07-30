@@ -26,7 +26,10 @@ class ChessTreeGenerator:
     """Main class for generating chess game trees."""
     
     def __init__(self, stockfish_path: str, max_depth: int = 3, 
-                 analysis_time: float = 60.0, centipawn_threshold: int = 30, num_moves: int = 3, hash_memory_mb: int = 8192):
+                 analysis_time: float = 60.0, 
+                 white_threshold: int = 30, black_threshold: int = 30,
+                 white_moves: int = 3, black_moves: int = 3,
+                 hash_memory_mb: int = 8192):
         """
         Initialize the chess tree generator.
         
@@ -34,17 +37,24 @@ class ChessTreeGenerator:
             stockfish_path: Path to Stockfish engine executable
             max_depth: Maximum depth in half-moves (default: 3)
             analysis_time: Time to analyze each position in seconds (default: 1.0)
-            centipawn_threshold: Centipawn threshold for move filtering (default: 30)
-            num_moves: Number of top moves to analyze per position (default: 3)
+            white_threshold: Centipawn threshold for White move filtering (default: 30)
+            black_threshold: Centipawn threshold for Black move filtering (default: 30)
+            white_moves: Number of top moves to analyze for White positions (default: 3)
+            black_moves: Number of top moves to analyze for Black positions (default: 3)
             hash_memory_mb: Memory allocation for hash table in MB (default: 8192)
         """
         self.stockfish_path = stockfish_path
         self.max_depth = max_depth
         self.analysis_time = analysis_time
-        self.centipawn_threshold = centipawn_threshold
-        self.num_moves = num_moves
+        self.white_threshold = white_threshold
+        self.black_threshold = black_threshold
+        self.white_moves = white_moves
+        self.black_moves = black_moves
         self.hash_memory_mb = hash_memory_mb
-        self.analyzer = StockfishAnalyzer(stockfish_path, analysis_time, num_moves, hash_memory_mb)
+        
+        # Use the maximum of white/black moves for analyzer initialization
+        max_moves = max(white_moves, black_moves)
+        self.analyzer = StockfishAnalyzer(stockfish_path, analysis_time, max_moves, hash_memory_mb)
         
         # Statistics tracking
         self.total_positions_analyzed = 0
@@ -198,17 +208,21 @@ class ChessTreeGenerator:
     
     def _filter_moves(self, analysis_results: List[Dict[str, Any]], is_white_to_move: bool) -> List[Dict[str, Any]]:
         """
-        Filter moves based on evaluation with special mate handling.
+        Filter moves based on evaluation with special mate handling and side-specific parameters.
         
         Args:
             analysis_results: List of move analysis results from Stockfish
             is_white_to_move: True if White to move, False if Black to move
             
         Returns:
-            List of filtered moves (maximum num_moves, within centipawn threshold)
+            List of filtered moves (maximum num_moves for current side, within centipawn threshold)
         """
         if not analysis_results:
             return []
+        
+        # Get side-specific parameters
+        current_threshold = self.white_threshold if is_white_to_move else self.black_threshold
+        current_max_moves = self.white_moves if is_white_to_move else self.black_moves
         
         # Sort moves by evaluation with mate-aware comparison
         sorted_moves = sorted(analysis_results, key=lambda x: self._get_sort_value(x['evaluation'], is_white_to_move), reverse=True)
@@ -224,9 +238,9 @@ class ChessTreeGenerator:
         # Take best move
         filtered_moves = [best_move]
         
-        # Add additional moves up to num_moves if within threshold
+        # Add additional moves up to current_max_moves if within threshold
         filtered_out = []
-        for move_data in sorted_moves[1:self.num_moves]:
+        for move_data in sorted_moves[1:current_max_moves]:
             move_eval = move_data['evaluation']
             
             # Filter out moves that lead to opponent mate (regardless of threshold)
@@ -242,7 +256,7 @@ class ChessTreeGenerator:
                 else:
                     eval_diff = move_eval - best_eval  # Positive difference for Black
                     
-                if eval_diff <= self.centipawn_threshold:
+                if eval_diff <= current_threshold:
                     filtered_moves.append(move_data)
                 else:
                     filtered_out.append(move_data)
@@ -251,13 +265,13 @@ class ChessTreeGenerator:
                 filtered_moves.append(move_data)
         
         # Add remaining moves as filtered out
-        for move_data in sorted_moves[self.num_moves:]:
+        for move_data in sorted_moves[current_max_moves:]:
             filtered_out.append(move_data)
         
         # Print filtered out moves
         if filtered_out:
             player = "White" if is_white_to_move else "Black"
-            print(f"  Filtered out {len(filtered_out)} moves for {player} (threshold: {self.centipawn_threshold}cp):")
+            print(f"  Filtered out {len(filtered_out)} moves for {player} (threshold: {current_threshold}cp, max_moves: {current_max_moves}):")
             for move in filtered_out:
                 print(f"    {move['move']} eval: {move['evaluation']}")
         
@@ -1012,14 +1026,38 @@ Examples:
         '--threshold',
         type=int,
         default=30,
-        help='Centipawn threshold for move filtering (default: 30)'
+        help='Centipawn threshold for move filtering (applies to both sides if --white-threshold/--black-threshold not specified)'
+    )
+    
+    parser.add_argument(
+        '--white-threshold',
+        type=int,
+        help='Centipawn threshold for White move filtering (overrides --threshold for White)'
+    )
+    
+    parser.add_argument(
+        '--black-threshold', 
+        type=int,
+        help='Centipawn threshold for Black move filtering (overrides --threshold for Black)'
     )
     
     parser.add_argument(
         '--num-moves',
         type=int,
         default=3,
-        help='Number of top moves to analyze per position (default: 3)'
+        help='Number of top moves to analyze per position (applies to both sides if --white-moves/--black-moves not specified)'
+    )
+    
+    parser.add_argument(
+        '--white-moves',
+        type=int,
+        help='Number of top moves to analyze for White positions (overrides --num-moves for White)'
+    )
+    
+    parser.add_argument(
+        '--black-moves',
+        type=int, 
+        help='Number of top moves to analyze for Black positions (overrides --num-moves for Black)'
     )
     
     parser.add_argument(
@@ -1057,20 +1095,33 @@ Examples:
     diagnostics_buffer = io.StringIO()
     
     try:
+        # Determine White/Black specific parameters
+        white_threshold = args.white_threshold if args.white_threshold is not None else args.threshold
+        black_threshold = args.black_threshold if args.black_threshold is not None else args.threshold
+        white_moves = args.white_moves if args.white_moves is not None else args.num_moves
+        black_moves = args.black_moves if args.black_moves is not None else args.num_moves
+        
         # Initialize generator
         generator = ChessTreeGenerator(
             stockfish_path=args.stockfish_path,
             max_depth=args.depth,
             analysis_time=args.time,
-            centipawn_threshold=args.threshold,
-            num_moves=args.num_moves,
+            white_threshold=white_threshold,
+            black_threshold=black_threshold,
+            white_moves=white_moves,
+            black_moves=black_moves,
             hash_memory_mb=args.hash_memory
         )
         
         # Show initial progress to console
         if args.pgn_file:
             print(f"🔍 Starting analysis of PGN file: {args.pgn_file}")
-            print(f"⚙️  Configuration: depth={args.depth}, time={args.time}s, threshold={args.threshold}cp, moves={args.num_moves}")
+            if white_threshold == black_threshold and white_moves == black_moves:
+                print(f"⚙️  Configuration: depth={args.depth}, time={args.time}s, threshold={white_threshold}cp, moves={white_moves}")
+            else:
+                print(f"⚙️  Configuration: depth={args.depth}, time={args.time}s")
+                print(f"   White: threshold={white_threshold}cp, moves={white_moves}")
+                print(f"   Black: threshold={black_threshold}cp, moves={black_moves}")
         else:
             print(f"🔍 Starting analysis from FEN position")
             print(f"⚙️  Configuration: depth={args.depth}, time={args.time}s, threshold={args.threshold}cp, moves={args.num_moves}")
