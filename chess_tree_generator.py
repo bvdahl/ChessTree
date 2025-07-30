@@ -142,6 +142,11 @@ class ChessTreeGenerator:
                 continue
             
             try:
+                # Show progress to console (bypasses diagnostics capture)
+                original_stdout = sys.__stdout__
+                original_stdout.write(f"\r📊 Analyzing depth {current_depth}, position {self.total_positions_analyzed + 1}...")
+                original_stdout.flush()
+                
                 print(f"Analyzing position at depth {current_depth} (move {current_node.board.fullmove_number})")
                 
                 # Analyze current position
@@ -858,6 +863,14 @@ Examples:
             hash_memory_mb=args.hash_memory
         )
         
+        # Show initial progress to console
+        if args.pgn_file:
+            print(f"🔍 Starting analysis of PGN file: {args.pgn_file}")
+            print(f"⚙️  Configuration: depth={args.depth}, time={args.time}s, threshold={args.threshold}cp, moves={args.num_moves}")
+        else:
+            print(f"🔍 Starting analysis from FEN position")
+            print(f"⚙️  Configuration: depth={args.depth}, time={args.time}s, threshold={args.threshold}cp, moves={args.num_moves}")
+        
         # Start capturing console output for diagnostics
         with redirect_stdout(diagnostics_buffer):
             # Generate tree from either FEN or PGN
@@ -929,12 +942,25 @@ Examples:
             else:
                 generator.print_tree(root)
         
-        # Write diagnostics to file
+        # Clear the progress line and show completion
+        print(f"\r✅ Analysis complete! Processed {generator.total_positions_analyzed} positions")
+        
+        # Write diagnostics to file including summary
         timestamp = datetime.now().strftime("%Y%m%d%H%M")
         diagnostics_filename = f"diagnostics_{timestamp}.txt"
         
+        # Capture the summary in a separate buffer
+        summary_buffer = io.StringIO()
+        with redirect_stdout(summary_buffer):
+            generator.print_summary()
+        
+        # Write both diagnostics and summary to file
         with open(diagnostics_filename, 'w') as f:
             f.write(diagnostics_buffer.getvalue())
+            f.write("\n" + "="*60 + "\n")
+            f.write("FINAL SUMMARY\n")
+            f.write("="*60 + "\n")
+            f.write(summary_buffer.getvalue())
         
         print(f"Diagnostics saved to: {diagnostics_filename}")
         
