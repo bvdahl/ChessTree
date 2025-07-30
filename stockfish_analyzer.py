@@ -144,7 +144,7 @@ class StockfishAnalyzer:
         except Exception as e:
             raise RuntimeError(f"Analysis failed: {e}")
     
-    def _extract_evaluation(self, info: Any, white_to_move: bool) -> float:
+    def _extract_evaluation(self, info: Any, white_to_move: bool):
         """
         Extract evaluation from engine analysis info.
         
@@ -153,20 +153,47 @@ class StockfishAnalyzer:
             white_to_move: True if it's White's turn
             
         Returns:
-            Evaluation in centipawns from the perspective of the side to move
+            Evaluation - either float (centipawns) or string (mate notation like '#5' or '-#3')
         """
         # Extract score from analysis info
         
-        # Handle mate scores
-        if 'score' in info and info['score'].is_mate():
-            mate_in = info['score'].mate()
-            if mate_in is not None:
-                # Convert mate distance to large evaluation
-                # Positive if favorable, negative if unfavorable
-                if mate_in > 0:
-                    return 10000 - mate_in  # Mate in N moves
-                else:
-                    return -10000 - mate_in  # Getting mated in N moves
+        # Handle mate scores - return actual mate notation
+        if 'score' in info:
+            score_obj = info['score']
+            
+            # Try different methods to check for mate
+            try:
+                if hasattr(score_obj, 'is_mate') and score_obj.is_mate():
+                    # Try various ways to get mate value
+                    mate_in = None
+                    
+                    # Method 1: Direct mate() method
+                    if hasattr(score_obj, 'mate'):
+                        mate_in = score_obj.mate()
+                    
+                    # Method 2: Try white().mate() method  
+                    elif hasattr(score_obj, 'white'):
+                        white_score = score_obj.white()
+                        if hasattr(white_score, 'mate'):
+                            mate_in = white_score.mate()
+                    
+                    # Method 3: Try relative.mate() method
+                    elif hasattr(score_obj, 'relative'):
+                        relative_score = score_obj.relative
+                        if hasattr(relative_score, 'mate'):
+                            mate_in = relative_score.mate()
+                    
+                    if mate_in is not None:
+                        # Return mate notation: #5 means mate in 5, -#3 means getting mated in 3
+                        if mate_in > 0:
+                            return f"#{mate_in}"  # Mate in N moves
+                        else:
+                            return f"-#{abs(mate_in)}"  # Getting mated in N moves
+                            
+            except Exception as e:
+                # If mate detection fails, continue to centipawn handling
+                print(f"Warning: Could not extract mate score: {e}")
+                pass
         
         # Handle centipawn scores - try multiple methods
         if 'score' in info:
@@ -194,6 +221,22 @@ class StockfishAnalyzer:
         
         # Default to 0 if no score available
         return 0.0
+        
+    def is_mate_evaluation(self, evaluation) -> bool:
+        """Check if evaluation represents a mate score."""
+        return isinstance(evaluation, str) and ('#' in evaluation)
+        
+    def is_favorable_mate(self, evaluation) -> bool:
+        """Check if mate evaluation is favorable (not getting mated)."""
+        if not self.is_mate_evaluation(evaluation):
+            return False
+        return not evaluation.startswith('-')
+        
+    def is_unfavorable_mate(self, evaluation) -> bool:
+        """Check if mate evaluation is unfavorable (getting mated)."""
+        if not self.is_mate_evaluation(evaluation):
+            return False
+        return evaluation.startswith('-')
     
     def get_best_move(self, board: chess.Board) -> Optional[chess.Move]:
         """

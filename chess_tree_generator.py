@@ -198,7 +198,7 @@ class ChessTreeGenerator:
     
     def _filter_moves(self, analysis_results: List[Dict[str, Any]], is_white_to_move: bool) -> List[Dict[str, Any]]:
         """
-        Filter moves based on evaluation difference threshold, accounting for player perspective.
+        Filter moves based on evaluation with special mate handling.
         
         Args:
             analysis_results: List of move analysis results from Stockfish
@@ -210,30 +210,45 @@ class ChessTreeGenerator:
         if not analysis_results:
             return []
         
-        # Sort moves by evaluation from current player's perspective
-        if is_white_to_move:
-            # White wants higher values (more positive)
-            sorted_moves = sorted(analysis_results, key=lambda x: x['evaluation'], reverse=True)
-        else:
-            # Black wants lower values (more negative)  
-            sorted_moves = sorted(analysis_results, key=lambda x: x['evaluation'])
+        # Sort moves by evaluation with mate-aware comparison
+        sorted_moves = sorted(analysis_results, key=lambda x: self._get_sort_value(x['evaluation'], is_white_to_move), reverse=True)
+        
+        best_move = sorted_moves[0]
+        best_eval = best_move['evaluation']
+        
+        # Special case: If best move is a forced mate, only return that move
+        if self._is_mate_evaluation(best_eval) and self._is_favorable_mate(best_eval):
+            print(f"  Found forced mate: {best_move['move']} {best_eval} - ending variation here")
+            return [best_move]
         
         # Take best move
-        filtered_moves = [sorted_moves[0]]
-        best_eval = sorted_moves[0]['evaluation']
+        filtered_moves = [best_move]
         
         # Add additional moves up to num_moves if within threshold
         filtered_out = []
         for move_data in sorted_moves[1:self.num_moves]:
-            if is_white_to_move:
-                eval_diff = best_eval - move_data['evaluation']  # Positive difference for White
-            else:
-                eval_diff = move_data['evaluation'] - best_eval  # Positive difference for Black
-                
-            if eval_diff <= self.centipawn_threshold:
-                filtered_moves.append(move_data)
-            else:
+            move_eval = move_data['evaluation']
+            
+            # Filter out moves that lead to opponent mate (regardless of threshold)
+            if self._is_mate_evaluation(move_eval) and self._is_unfavorable_mate(move_eval):
+                print(f"  Filtered mate-losing move: {move_data['move']} {move_eval}")
                 filtered_out.append(move_data)
+                continue
+            
+            # For non-mate moves, apply centipawn threshold
+            if not self._is_mate_evaluation(best_eval) and not self._is_mate_evaluation(move_eval):
+                if is_white_to_move:
+                    eval_diff = best_eval - move_eval  # Positive difference for White
+                else:
+                    eval_diff = move_eval - best_eval  # Positive difference for Black
+                    
+                if eval_diff <= self.centipawn_threshold:
+                    filtered_moves.append(move_data)
+                else:
+                    filtered_out.append(move_data)
+            else:
+                # Include other favorable moves when dealing with mates
+                filtered_moves.append(move_data)
         
         # Add remaining moves as filtered out
         for move_data in sorted_moves[self.num_moves:]:
@@ -247,6 +262,44 @@ class ChessTreeGenerator:
                 print(f"    {move['move']} eval: {move['evaluation']}")
         
         return filtered_moves
+    
+    def _is_mate_evaluation(self, evaluation) -> bool:
+        """Check if evaluation represents a mate score."""
+        return isinstance(evaluation, str) and ('#' in evaluation)
+        
+    def _is_favorable_mate(self, evaluation) -> bool:
+        """Check if mate evaluation is favorable (delivering mate)."""
+        if not self._is_mate_evaluation(evaluation):
+            return False
+        return not evaluation.startswith('-')
+        
+    def _is_unfavorable_mate(self, evaluation) -> bool:
+        """Check if mate evaluation is unfavorable (getting mated)."""
+        if not self._is_mate_evaluation(evaluation):
+            return False
+        return evaluation.startswith('-')
+    
+    def _get_sort_value(self, evaluation, is_white_to_move: bool) -> float:
+        """Convert evaluation to sortable numeric value."""
+        if self._is_mate_evaluation(evaluation):
+            # Parse mate notation: #5 or -#3
+            if evaluation.startswith('-#'):
+                mate_moves = int(evaluation[2:])
+                return -20000 + mate_moves  # Getting mated is very bad
+            else:  # #N
+                mate_moves = int(evaluation[1:])
+                return 20000 - mate_moves   # Delivering mate is very good
+        else:
+            # Regular centipawn evaluation
+            eval_cp = float(evaluation)
+            return eval_cp if is_white_to_move else -eval_cp
+    
+    def _format_evaluation(self, evaluation) -> str:
+        """Format evaluation for PGN output."""
+        if self._is_mate_evaluation(evaluation):
+            return str(evaluation)  # Return mate notation as-is: #5 or -#3
+        else:
+            return f"{evaluation:+.0f}"  # Format centipawn with sign: +150, -75
     
     def tree_to_pgn(self, node: TreeNode, game_info: Dict[str, str] = None, existing_game: chess.pgn.Game = None) -> str:
         """
@@ -353,7 +406,7 @@ class ChessTreeGenerator:
             # Main move
             main_child = node.children[0]
             main_san = node.board.san(main_child.move)
-            main_eval = f" {{{main_child.evaluation:+.0f}}}" if main_child.evaluation is not None else ""
+            main_eval = f" {{{self._format_evaluation(main_child.evaluation)}}}" if main_child.evaluation is not None else ""
             
             if turn:
                 main_move = f"{move_num}. {main_san}{main_eval}"
@@ -369,7 +422,7 @@ class ChessTreeGenerator:
             # Add variations WITH their full continuations
             for alt_child in node.children[1:]:
                 alt_san = node.board.san(alt_child.move)
-                alt_eval = f" {{{alt_child.evaluation:+.0f}}}" if alt_child.evaluation is not None else ""
+                alt_eval = f" {{{self._format_evaluation(alt_child.evaluation)}}}" if alt_child.evaluation is not None else ""
                 
                 if turn:
                     var_start = f"({move_num}. {alt_san}{alt_eval}"

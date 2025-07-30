@@ -62,9 +62,11 @@ The application follows a modular, object-oriented architecture with clear separ
 6. **Output Generation**: Tree formatted as human-readable text or JSON
 
 ### Move Selection Criteria
-- Includes top 3 moves from engine analysis
-- Filters out moves more than 30 centipawns worse than best move
-- Ensures diverse tactical options while maintaining quality
+- Includes top 3 moves from engine analysis with intelligent mate handling
+- **Mate detection**: When forced mate found (#N), shows only that move and ends variation
+- **Mate filtering**: Automatically filters moves leading to opponent mate (-#N) regardless of threshold
+- **Centipawn filtering**: For non-mate positions, filters moves more than configurable centipawns worse than best
+- Ensures diverse tactical options while maintaining quality and chess logic
 
 ## External Dependencies
 
@@ -104,12 +106,13 @@ The architecture prioritizes modularity, resource efficiency, and ease of use wh
 
 ## Recent Changes
 
-**January 30, 2025 - FINAL COMPLETE SOLUTION:**
+**January 30, 2025 - COMPLETE SOLUTION WITH MATE HANDLING:**
 - **✅ FULLY RESOLVED: Variation depth truncation**: All variations now continue to their complete analyzed depth instead of ending as single moves
 - **✅ FULLY RESOLVED: Missing diagnostics summaries**: Complete timing and statistical information now properly captured in all diagnostics files  
 - **✅ FULLY RESOLVED: Infinite recursion in PGN generation**: Implemented stack-based tree building with controlled recursion depth limits
 - **✅ VERIFIED: Complete tree structure**: Every analyzed position (all 169 in user's example) now properly represented in PGN with full variation continuations
 - **✅ PERFORMANCE: Stable operation**: System handles depth 4+ analysis without timeouts or crashes, completing 15+ positions in 30 seconds
+- **✅ NEW: Advanced mate evaluation handling**: System now properly detects and handles forced mate positions with intelligent filtering and variation termination
 
 **Previous Updates:**
 - **Fixed centipawn filtering for Black moves**: Algorithm now correctly filters from Black's perspective (lower values are better for Black, higher for White)
