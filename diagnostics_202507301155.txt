@@ -1,0 +1,7 @@
+Analyzing PGN file: test_simple.pgn
+Max depth: 3 half-moves
+Analysis time: 2.0 seconds per position
+Centipawn threshold: 50
+Number of moves per position: 2
+==================================================
+Analyzing position at depth 0 (move 8)

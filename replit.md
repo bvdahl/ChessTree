@@ -104,10 +104,17 @@ The architecture prioritizes modularity, resource efficiency, and ease of use wh
 
 ## Recent Changes
 
-**January 30, 2025 - Major Feature Updates:**
-- **Fixed PGN depth truncation**: Replaced hardcoded 3-level PGN generation with full recursive depth matching analysis depth
-- **Added timestamp functionality**: All output files now automatically include YYYYMMDDHHMM timestamp (e.g., analyzed_game_202507300944.pgn)
-- **Added comprehensive analysis summary**: End-of-run statistics showing start time, end time, duration, positions analyzed, total moves considered, and averages
+**January 30, 2025 - Latest Updates:**
+- **Fixed centipawn filtering for Black moves**: Algorithm now correctly filters from Black's perspective (lower values are better for Black, higher for White)
+- **Added filtered move reporting**: Console output now shows exactly which moves were filtered out with evaluation scores and threshold information
+- **Implemented diagnostics file capture**: All console output during analysis is automatically saved to timestamped diagnostics files (diagnostics_YYYYMMDDHHMM.txt)
+- **Fixed summary statistics**: Now tracks moves AFTER filtering instead of before, providing accurate branching factor data
+- **Verified filtering logic**: System correctly identifies best moves for both White (higher = better) and Black (lower = better) positions
+
+**Previous Major Updates:**
+- **Fixed PGN depth truncation**: Replaced hardcoded 3-level PGN generation with full recursive depth matching analysis depth  
+- **Added timestamp functionality**: All output files now automatically include YYYYMMDDHHMM timestamp
+- **Added comprehensive analysis summary**: End-of-run statistics showing start time, end time, duration, positions analyzed, and moves used after filtering
 - **Removed truncation fallbacks**: System now fails with clear error instead of producing incomplete PGN output when tree is too complex
 - **Verified timing behavior**: Stockfish respects time limits and reaches deep analysis (depth 25+ in 5-10 seconds with large hash tables)
 

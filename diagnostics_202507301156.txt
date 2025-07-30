@@ -1,0 +1,80 @@
+Analyzing PGN file: test_simple.pgn
+Max depth: 3 half-moves
+Analysis time: 1.0 seconds per position
+Centipawn threshold: 50
+Number of moves per position: 3
+==================================================
+Analyzing position at depth 0 (move 8)
+Got 3 moves from analysis
+  Move 1: f1e2 eval: -67.0
+  Move 2: d3d4 eval: -73.0
+  Move 3: c1e3 eval: -77.0
+After filtering: 3 moves
+Analyzing position at depth 1 (move 8)
+Got 3 moves from analysis
+  Move 1: b8c6 eval: -84.0
+  Move 2: d8d5 eval: -78.0
+  Move 3: c8e6 eval: -75.0
+After filtering: 3 moves
+Analyzing position at depth 1 (move 8)
+Got 3 moves from analysis
+  Move 1: d8d5 eval: -68.0
+  Move 2: c8e6 eval: -55.0
+  Move 3: f8e7 eval: 27.0
+  Filtered out 1 moves for Black (threshold: 50cp):
+    f8e7 eval: 27.0
+After filtering: 2 moves
+Analyzing position at depth 1 (move 8)
+Got 3 moves from analysis
+  Move 1: b8c6 eval: -97.0
+  Move 2: c8e6 eval: -93.0
+  Move 3: d8d5 eval: -85.0
+After filtering: 3 moves
+Analyzing position at depth 2 (move 9)
+Got 3 moves from analysis
+  Move 1: e1g1 eval: -86.0
+  Move 2: d3d4 eval: -99.0
+  Move 3: c1e3 eval: -124.0
+After filtering: 3 moves
+Analyzing position at depth 2 (move 9)
+Got 3 moves from analysis
+  Move 1: e1g1 eval: -84.0
+  Move 2: d3d4 eval: -84.0
+  Move 3: c1e3 eval: -111.0
+After filtering: 3 moves
+Analyzing position at depth 2 (move 9)
+Got 3 moves from analysis
+  Move 1: e1g1 eval: -89.0
+  Move 2: d3d4 eval: -95.0
+  Move 3: c1e3 eval: -112.0
+After filtering: 3 moves
+Analyzing position at depth 2 (move 9)
+Got 3 moves from analysis
+  Move 1: f1d3 eval: -80.0
+  Move 2: f1e2 eval: -80.0
+  Move 3: a1b1 eval: -80.0
+After filtering: 3 moves
+Analyzing position at depth 2 (move 9)
+Got 3 moves from analysis
+  Move 1: d1d3 eval: -61.0
+  Move 2: a1b1 eval: -60.0
+  Move 3: f1d3 eval: -62.0
+After filtering: 3 moves
+Analyzing position at depth 2 (move 9)
+Got 3 moves from analysis
+  Move 1: d3d4 eval: -100.0
+  Move 2: f1e2 eval: -122.0
+  Move 3: a2a3 eval: -129.0
+After filtering: 3 moves
+Analyzing position at depth 2 (move 9)
+Got 3 moves from analysis
+  Move 1: g2g3 eval: -103.0
+  Move 2: d3d4 eval: -105.0
+  Move 3: f3g5 eval: -120.0
+After filtering: 3 moves
+Analyzing position at depth 2 (move 9)
+Got 3 moves from analysis
+  Move 1: a1b1 eval: -89.0
+  Move 2: d3d4 eval: -93.0
+  Move 3: g2g3 eval: -99.0
+After filtering: 3 moves

@@ -17,6 +17,7 @@ import chess
 import chess.engine
 import chess.pgn
 import io
+from contextlib import redirect_stdout
 from stockfish_analyzer import StockfishAnalyzer
 from tree_node import TreeNode
 
@@ -155,7 +156,7 @@ class ChessTreeGenerator:
                     print(f"  Move {i+1}: {move_data['move']} eval: {move_data['evaluation']}")
                 
                 # Filter moves based on centipawn threshold
-                filtered_moves = self._filter_moves(analysis_results)
+                filtered_moves = self._filter_moves(analysis_results, current_node.board.turn)
                 print(f"After filtering: {len(filtered_moves)} moves")
                 
                 # Track statistics (after filtering)
@@ -188,33 +189,55 @@ class ChessTreeGenerator:
                 print(f"Error analyzing position at depth {current_depth}: {e}", file=sys.stderr)
                 continue
     
-    def _filter_moves(self, analysis_results: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def _filter_moves(self, analysis_results: List[Dict[str, Any]], is_white_to_move: bool) -> List[Dict[str, Any]]:
         """
-        Filter moves based on evaluation difference threshold.
+        Filter moves based on evaluation difference threshold, accounting for player perspective.
         
         Args:
             analysis_results: List of move analysis results from Stockfish
+            is_white_to_move: True if White to move, False if Black to move
             
         Returns:
-            List of filtered moves (maximum 3, within centipawn threshold)
+            List of filtered moves (maximum num_moves, within centipawn threshold)
         """
         if not analysis_results:
             return []
         
-        # Sort by evaluation (best first)
-        sorted_moves = sorted(analysis_results, key=lambda x: x['evaluation'], reverse=True)
+        # Sort moves by evaluation from current player's perspective
+        if is_white_to_move:
+            # White wants higher values (more positive)
+            sorted_moves = sorted(analysis_results, key=lambda x: x['evaluation'], reverse=True)
+        else:
+            # Black wants lower values (more negative)  
+            sorted_moves = sorted(analysis_results, key=lambda x: x['evaluation'])
         
         # Take best move
         filtered_moves = [sorted_moves[0]]
         best_eval = sorted_moves[0]['evaluation']
         
         # Add additional moves up to num_moves if within threshold
+        filtered_out = []
         for move_data in sorted_moves[1:self.num_moves]:
-            eval_diff = best_eval - move_data['evaluation']
+            if is_white_to_move:
+                eval_diff = best_eval - move_data['evaluation']  # Positive difference for White
+            else:
+                eval_diff = move_data['evaluation'] - best_eval  # Positive difference for Black
+                
             if eval_diff <= self.centipawn_threshold:
                 filtered_moves.append(move_data)
             else:
-                break  # No need to check further moves
+                filtered_out.append(move_data)
+        
+        # Add remaining moves as filtered out
+        for move_data in sorted_moves[self.num_moves:]:
+            filtered_out.append(move_data)
+        
+        # Print filtered out moves
+        if filtered_out:
+            player = "White" if is_white_to_move else "Black"
+            print(f"  Filtered out {len(filtered_out)} moves for {player} (threshold: {self.centipawn_threshold}cp):")
+            for move in filtered_out:
+                print(f"    {move['move']} eval: {move['evaluation']}")
         
         return filtered_moves
     
@@ -822,6 +845,8 @@ Examples:
         sys.exit(1)
     
     generator = None
+    diagnostics_buffer = io.StringIO()
+    
     try:
         # Initialize generator
         generator = ChessTreeGenerator(
@@ -833,24 +858,29 @@ Examples:
             hash_memory_mb=args.hash_memory
         )
         
-        # Generate tree from either FEN or PGN
-        existing_game = None
-        if args.pgn_file:
-            print(f"Analyzing PGN file: {args.pgn_file}")
-            print(f"Max depth: {args.depth} half-moves")
-            print(f"Analysis time: {args.time} seconds per position")
-            print(f"Centipawn threshold: {args.threshold}")
-            print(f"Number of moves per position: {args.num_moves}")
-            print("=" * 50)
-            root, existing_game = generator.generate_tree_from_pgn(args.pgn_file)
-        else:
-            print(f"Generating game tree from FEN: {args.fen}")
-            print(f"Max depth: {args.depth} half-moves")
-            print(f"Analysis time: {args.time} seconds per position")
-            print(f"Centipawn threshold: {args.threshold}")
-            print(f"Number of moves per position: {args.num_moves}")
-            print("=" * 50)
-            root = generator.generate_tree(args.fen)
+        # Start capturing console output for diagnostics
+        with redirect_stdout(diagnostics_buffer):
+            # Generate tree from either FEN or PGN
+            existing_game = None
+            if args.pgn_file:
+                print(f"Analyzing PGN file: {args.pgn_file}")
+                print(f"Max depth: {args.depth} half-moves")
+                print(f"Analysis time: {args.time} seconds per position")
+                print(f"Centipawn threshold: {args.threshold}")
+                print(f"Number of moves per position: {args.num_moves}")
+                print("=" * 50)
+                root, existing_game = generator.generate_tree_from_pgn(args.pgn_file)
+            else:
+                print(f"Generating game tree from FEN: {args.fen}")
+                print(f"Max depth: {args.depth} half-moves")
+                print(f"Analysis time: {args.time} seconds per position")
+                print(f"Centipawn threshold: {args.threshold}")
+                print(f"Number of moves per position: {args.num_moves}")
+                print("=" * 50)
+                root = generator.generate_tree(args.fen)
+            
+            # Print summary statistics to diagnostics
+            generator.print_summary()
         
         # Output results
         if args.output == 'json':
@@ -899,7 +929,16 @@ Examples:
             else:
                 generator.print_tree(root)
         
-        # Print summary statistics
+        # Write diagnostics to file
+        timestamp = datetime.now().strftime("%Y%m%d%H%M")
+        diagnostics_filename = f"diagnostics_{timestamp}.txt"
+        
+        with open(diagnostics_filename, 'w') as f:
+            f.write(diagnostics_buffer.getvalue())
+        
+        print(f"Diagnostics saved to: {diagnostics_filename}")
+        
+        # Also print summary to console for immediate feedback
         generator.print_summary()
         
     except ValueError as e:
