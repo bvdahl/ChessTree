@@ -326,13 +326,13 @@ class ChessTreeGenerator:
     
     def _node_to_pgn_moves(self, node: TreeNode, starting_turn: bool, move_number: int = 1) -> str:
         """
-        Convert tree to proper PGN format matching the manual example structure.
-        Shows exactly 3 moves at each level, explored 3 levels deep.
+        Convert tree to proper PGN format with full recursive depth.
+        Generates variations to match the analysis depth configured by the user.
         """
         if not node.children:
             return ""
         
-        # Build the complete tree structure - fail fast if too complex
+        # Build the complete tree structure to full requested depth
         tree_text = self._build_complete_tree(node, starting_turn, move_number)
         return tree_text
     
@@ -478,7 +478,7 @@ class ChessTreeGenerator:
     
     def _build_full_variation(self, parent_node: TreeNode, child_node: TreeNode, 
                              starting_turn: bool, move_number: int, depth_remaining: int) -> str:
-        """Build a complete variation with all 3 levels like in the manual example."""
+        """Build a complete variation to full depth like the manual example."""
         if depth_remaining <= 0:
             return ""
         
@@ -521,7 +521,7 @@ class ChessTreeGenerator:
                         var_parts.append(alt_resp_var)
                 
                 # Add final moves for main response (continuation of main line)
-                if main_resp.children and depth_remaining > 2:
+                if main_resp.children:
                     final_main = main_resp.children[0]
                     final_san = main_resp.board.san(final_main.move)
                     final_eval = f" {{{final_main.evaluation:+.0f}}}" if final_main.evaluation is not None else ""
@@ -949,18 +949,36 @@ Examples:
         timestamp = datetime.now().strftime("%Y%m%d%H%M")
         diagnostics_filename = f"diagnostics_{timestamp}.txt"
         
-        # Capture the summary in a separate buffer
-        summary_buffer = io.StringIO()
-        with redirect_stdout(summary_buffer):
-            generator.print_summary()
-        
-        # Write both diagnostics and summary to file
+        # Write diagnostics and summary to file
         with open(diagnostics_filename, 'w') as f:
+            # Write captured diagnostics
             f.write(diagnostics_buffer.getvalue())
-            f.write("\n" + "="*60 + "\n")
-            f.write("FINAL SUMMARY\n")
-            f.write("="*60 + "\n")
-            f.write(summary_buffer.getvalue())
+            
+            # Write summary directly to file
+            if generator.start_time and generator.end_time:
+                duration = generator.end_time - generator.start_time
+                start_datetime = datetime.fromtimestamp(generator.start_time)
+                end_datetime = datetime.fromtimestamp(generator.end_time)
+                
+                f.write("\n" + "="*60 + "\n")
+                f.write("FINAL SUMMARY\n")
+                f.write("="*60 + "\n")
+                f.write(f"Start time: {start_datetime.strftime('%Y-%m-%d %H:%M:%S')}\n")
+                f.write(f"End time: {end_datetime.strftime('%Y-%m-%d %H:%M:%S')}\n")
+                f.write(f"Duration: {duration:.1f} seconds ({duration/60:.1f} minutes)\n")
+                f.write(f"Positions analyzed: {generator.total_positions_analyzed}\n")
+                f.write(f"Total moves used: {generator.total_moves_after_filtering} (after filtering)\n")
+                if generator.total_positions_analyzed > 0:
+                    avg_moves = generator.total_moves_after_filtering / generator.total_positions_analyzed
+                    f.write(f"Average moves per position: {avg_moves:.1f}\n")
+                    f.write(f"Average time per position: {duration/generator.total_positions_analyzed:.2f} seconds\n")
+                f.write("="*60 + "\n")
+            else:
+                f.write("\n" + "="*60 + "\n")
+                f.write("FINAL SUMMARY\n")
+                f.write("="*60 + "\n")
+                f.write("Analysis timing information not available\n")
+                f.write("="*60 + "\n")
         
         print(f"Diagnostics saved to: {diagnostics_filename}")
         
