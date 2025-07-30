@@ -142,7 +142,7 @@ class ChessTreeGenerator:
                 
                 print(f"Got {len(analysis_results)} moves from analysis")
                 for i, move_data in enumerate(analysis_results):
-                    print(f"  Move {i+1}: {move_data['move']} eval: {move_data['evaluation']/100:.2f}")
+                    print(f"  Move {i+1}: {move_data['move']} eval: {move_data['evaluation']}")
                 
                 # Filter moves based on centipawn threshold
                 filtered_moves = self._filter_moves(analysis_results)
@@ -307,7 +307,7 @@ class ChessTreeGenerator:
         # Step 1: Main move (best move at current position)
         main_child = node.children[0]
         main_san = node.board.san(main_child.move)
-        main_eval = f" [{main_child.evaluation/100:+.2f}]" if main_child.evaluation is not None else ""
+        main_eval = f" {{{main_child.evaluation:+.0f}}}" if main_child.evaluation is not None else ""
         
         if starting_turn:
             main_move = f"{move_number}. {main_san}{main_eval}"
@@ -330,7 +330,7 @@ class ChessTreeGenerator:
         if main_child.children:
             main_response = main_child.children[0]
             response_san = main_child.board.san(main_response.move)
-            response_eval = f" [{main_response.evaluation/100:+.2f}]" if main_response.evaluation is not None else ""
+            response_eval = f" {{{main_response.evaluation:+.0f}}}" if main_response.evaluation is not None else ""
             
             if response_turn:
                 response_move = f"{response_move_num}. {response_san}{response_eval}"
@@ -353,7 +353,7 @@ class ChessTreeGenerator:
             if main_response.children:
                 final_main = main_response.children[0]
                 final_san = main_response.board.san(final_main.move)
-                final_eval = f" [{final_main.evaluation/100:+.2f}]" if final_main.evaluation is not None else ""
+                final_eval = f" {{{final_main.evaluation:+.0f}}}" if final_main.evaluation is not None else ""
                 
                 if final_turn:
                     final_move = f"{final_move_num}. {final_san}{final_eval}"
