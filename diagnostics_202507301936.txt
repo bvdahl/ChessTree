@@ -1,0 +1,65 @@
+Analyzing PGN file: test_simple.pgn
+Max depth: 3 half-moves
+Analysis time: 1.0 seconds per position
+Centipawn threshold: 50
+Number of moves per position: 2
+==================================================
+Analyzing position at depth 0 (move 8)
+Got 2 moves from analysis
+  Move 1: d3d4 eval: -70.0
+  Move 2: c1e3 eval: -79.0
+After filtering: 2 moves
+Analyzing position at depth 1 (move 8)
+Got 2 moves from analysis
+  Move 1: d8d5 eval: -72.0
+  Move 2: c8e6 eval: -58.0
+After filtering: 2 moves
+Analyzing position at depth 1 (move 8)
+Got 2 moves from analysis
+  Move 1: b8c6 eval: -93.0
+  Move 2: c8e6 eval: -87.0
+After filtering: 2 moves
+Analyzing position at depth 2 (move 9)
+Got 2 moves from analysis
+  Move 1: a1b1 eval: -73.0
+  Move 2: f1d3 eval: -79.0
+After filtering: 2 moves
+Analyzing position at depth 2 (move 9)
+Got 2 moves from analysis
+  Move 1: a1b1 eval: -54.0
+  Move 2: f1b5 eval: -63.0
+After filtering: 2 moves
+Analyzing position at depth 2 (move 9)
+Got 2 moves from analysis
+  Move 1: d3d4 eval: -95.0
+  Move 2: f1e2 eval: -116.0
+After filtering: 2 moves
+Analyzing position at depth 2 (move 9)
+Got 2 moves from analysis
+  Move 1: d3d4 eval: -98.0
+  Move 2: a2a3 eval: -116.0
+After filtering: 2 moves
+
+============================================================
+ANALYSIS SUMMARY
+============================================================
+Start time: 2025-07-30 19:36:34
+End time: 2025-07-30 19:36:41
+Duration: 7.4 seconds (0.1 minutes)
+Positions analyzed: 7
+Total moves used: 14 (after filtering)
+Average moves per position: 2.0
+Average time per position: 1.06 seconds
+============================================================
+
+============================================================
+FINAL SUMMARY
+============================================================
+Start time: 2025-07-30 19:36:34
+End time: 2025-07-30 19:36:41
+Duration: 7.4 seconds (0.1 minutes)
+Positions analyzed: 7
+Total moves used: 14 (after filtering)
+Average moves per position: 2.0
+Average time per position: 1.06 seconds
+============================================================

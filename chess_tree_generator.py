@@ -82,7 +82,9 @@ class ChessTreeGenerator:
         )
         
         # Build tree from this position
+        self.start_time = time.time()
         self._build_tree_breadth_first(root)
+        self.end_time = time.time()
         
         return root, game
 
@@ -337,7 +339,7 @@ class ChessTreeGenerator:
         return tree_text
     
     def _build_complete_tree(self, node: TreeNode, starting_turn: bool, move_number: int) -> str:
-        """Build the complete tree structure exactly like the manual example."""
+        """Build the complete tree structure using the existing tree data."""
         if not node.children:
             return ""
         
@@ -359,9 +361,9 @@ class ChessTreeGenerator:
         
         parts.append(main_move)
         
-        # Step 2: Build complete variations for alternative first moves (like manual example)
-        for alt_child in node.children[1:]:  # All alternatives to main move
-            alt_variation = self._build_manual_style_variation(node, alt_child, starting_turn, move_number)
+        # Step 2: Build variations for alternative first moves  
+        for alt_child in node.children[1:]:
+            alt_variation = self._build_variation_simple(node, alt_child, starting_turn, move_number)
             if alt_variation:
                 parts.append(alt_variation)
         
@@ -382,15 +384,15 @@ class ChessTreeGenerator:
             
             parts.append(response_move)
             
-            # Step 4: Build variations for alternative responses (like manual example)
-            for alt_response in main_child.children[1:]:  # All alternatives to main response
-                alt_resp_var = self._build_manual_style_variation(main_child, alt_response, response_turn, response_move_num)
+            # Step 4: Build variations for alternative responses
+            for alt_response in main_child.children[1:]:
+                alt_resp_var = self._build_variation_simple(main_child, alt_response, response_turn, response_move_num)
                 if alt_resp_var:
                     parts.append(alt_resp_var)
             
-            # Step 5: Continue recursively to full depth
+            # Step 5: Continue with children of main response
             if main_response.children:
-                continuation = self._build_complete_tree(main_response, response_turn, response_move_num)
+                continuation = self._build_complete_tree(main_response, final_turn, final_move_num)
                 if continuation:
                     parts.append(continuation)
         
@@ -454,7 +456,7 @@ class ChessTreeGenerator:
                         # Add alternatives to this continuation
                         cont_parts = [cont_text]
                         for alt_cont in alt_resp.children[1:]:
-                            alt_cont_var = self._build_simple_variation(alt_resp, alt_cont, final_turn, final_move_num)
+                            alt_cont_var = self._build_variation_simple(alt_resp, alt_cont, final_turn, final_move_num)
                             if alt_cont_var:
                                 cont_parts.append(alt_cont_var)
                         
@@ -466,7 +468,7 @@ class ChessTreeGenerator:
                 
                 # Main continuation - recursive call for full depth  
                 if main_resp.children:
-                    continuation = self._build_complete_tree(main_resp, next_turn, next_move_num)
+                    continuation = self._build_complete_tree(main_resp, final_turn, final_move_num)
                     if continuation:
                         var_parts.append(continuation)
             
@@ -497,7 +499,7 @@ class ChessTreeGenerator:
                 next_move_num = move_number + 1
             
             # Add all responses and their continuations
-            if child_node.children and depth_remaining > 1:
+            if child_node.children:
                 # Main response (best move)
                 main_resp = child_node.children[0]
                 resp_san = child_node.board.san(main_resp.move)
@@ -520,24 +522,11 @@ class ChessTreeGenerator:
                     if alt_resp_var:
                         var_parts.append(alt_resp_var)
                 
-                # Add final moves for main response (continuation of main line)
+                # Add recursive continuation for main response
                 if main_resp.children:
-                    final_main = main_resp.children[0]
-                    final_san = main_resp.board.san(final_main.move)
-                    final_eval = f" {{{final_main.evaluation:+.0f}}}" if final_main.evaluation is not None else ""
-                    
-                    if final_turn:
-                        final_text = f"{final_move_num}. {final_san}{final_eval}"
-                    else:
-                        final_text = f"{final_move_num}... {final_san}{final_eval}"
-                    
-                    var_parts.append(final_text)
-                    
-                    # Add alternative final moves
-                    for alt_final in main_resp.children[1:]:
-                        alt_final_var = self._build_simple_variation(main_resp, alt_final, final_turn, final_move_num)
-                        if alt_final_var:
-                            var_parts.append(alt_final_var)
+                    continuation = self._build_complete_tree(main_resp, final_turn, final_move_num)
+                    if continuation:
+                        var_parts.append(continuation)
             
             return " ".join(var_parts) + ")"
             
@@ -582,7 +571,7 @@ class ChessTreeGenerator:
                 # Add alternatives to continuation
                 alt_parts = [cont_text]
                 for alt_cont in main_cont.children[1:]:
-                    alt_var = self._build_simple_variation(main_cont, alt_cont, final_turn, final_move_num)
+                    alt_var = self._build_variation_simple(main_cont, alt_cont, final_turn, final_move_num)
                     if alt_var:
                         alt_parts.append(alt_var)
                 
@@ -634,25 +623,11 @@ class ChessTreeGenerator:
                 
                 continuation_parts.append(resp_text)
                 
-                # Add final move if available
-                if main_resp.children and depth_remaining > 2:
-                    final_move = main_resp.children[0]
-                    final_san = main_resp.board.san(final_move.move)
-                    final_eval = f" {{{final_move.evaluation:+.0f}}}" if final_move.evaluation is not None else ""
-                    
-                    if final_turn:
-                        final_text = f"{final_move_num}. {final_san}{final_eval}"
-                    else:
-                        final_text = f"{final_move_num}... {final_san}{final_eval}"
-                    
-                    continuation_parts.append(final_text)
-                
-                # Add sub-variations (alternatives at deeper levels)
-                if depth_remaining > 2 and main_resp.children:
-                    for sub_alt in main_resp.children[1:]:  # All available sub-variations
-                        sub_var = self._build_simple_variation(main_resp, sub_alt, final_turn, final_move_num)
-                        if sub_var:
-                            continuation_parts.append(sub_var)
+                # Add recursive continuation 
+                if main_resp.children:
+                    continuation = self._build_complete_tree(main_resp, final_turn, final_move_num)
+                    if continuation:
+                        continuation_parts.append(continuation)
             
             # Combine all parts
             if continuation_parts:
@@ -664,9 +639,9 @@ class ChessTreeGenerator:
             print(f"Error building variation branch: {e}", file=sys.stderr)
             return ""
     
-    def _build_simple_variation(self, parent_node: TreeNode, child_node: TreeNode, 
+    def _build_variation_simple(self, parent_node: TreeNode, child_node: TreeNode, 
                                starting_turn: bool, move_number: int) -> str:
-        """Build a simple variation without deep nesting."""
+        """Build a simple variation without deep recursion to avoid infinite loops."""
         try:
             move_san = parent_node.board.san(child_node.move)
             move_eval = f" {{{child_node.evaluation:+.0f}}}" if child_node.evaluation is not None else ""
@@ -677,7 +652,7 @@ class ChessTreeGenerator:
                 return f"({move_number}... {move_san}{move_eval})"
                 
         except Exception as e:
-            print(f"Error building simple variation: {e}", file=sys.stderr)
+            print(f"Error building variation: {e}", file=sys.stderr)
             return ""
 
     def tree_to_dict(self, node: TreeNode) -> Dict[str, Any]:
