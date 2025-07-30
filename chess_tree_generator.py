@@ -47,7 +47,7 @@ class ChessTreeGenerator:
         
         # Statistics tracking
         self.total_positions_analyzed = 0
-        self.total_moves_considered = 0
+        self.total_moves_after_filtering = 0
         self.start_time = None
         self.end_time = None
         
@@ -154,13 +154,13 @@ class ChessTreeGenerator:
                 for i, move_data in enumerate(analysis_results):
                     print(f"  Move {i+1}: {move_data['move']} eval: {move_data['evaluation']}")
                 
-                # Track statistics
-                self.total_positions_analyzed += 1
-                self.total_moves_considered += len(analysis_results)
-                
                 # Filter moves based on centipawn threshold
                 filtered_moves = self._filter_moves(analysis_results)
                 print(f"After filtering: {len(filtered_moves)} moves")
+                
+                # Track statistics (after filtering)
+                self.total_positions_analyzed += 1
+                self.total_moves_after_filtering += len(filtered_moves)
                 
                 # Create child nodes for filtered moves
                 for move_data in filtered_moves:
@@ -721,9 +721,9 @@ class ChessTreeGenerator:
             print(f"End time: {end_datetime.strftime('%Y-%m-%d %H:%M:%S')}")
             print(f"Duration: {duration:.1f} seconds ({duration/60:.1f} minutes)")
             print(f"Positions analyzed: {self.total_positions_analyzed}")
-            print(f"Total moves considered: {self.total_moves_considered} (before filtering)")
+            print(f"Total moves used: {self.total_moves_after_filtering} (after filtering)")
             if self.total_positions_analyzed > 0:
-                avg_moves = self.total_moves_considered / self.total_positions_analyzed
+                avg_moves = self.total_moves_after_filtering / self.total_positions_analyzed
                 print(f"Average moves per position: {avg_moves:.1f}")
                 print(f"Average time per position: {duration/self.total_positions_analyzed:.2f} seconds")
             print("=" * 60)
