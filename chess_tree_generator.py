@@ -290,12 +290,16 @@ class ChessTreeGenerator:
         if not node.children:
             return ""
         
-        result = []
-        
-        # Build the complete tree structure
-        tree_text = self._build_complete_tree(node, starting_turn, move_number)
-        
-        return tree_text
+        try:
+            # Build the complete tree structure with error handling
+            tree_text = self._build_complete_tree(node, starting_turn, move_number)
+            return tree_text
+        except RecursionError:
+            print("Warning: Tree too complex for PGN generation, using simplified output")
+            return self._build_simplified_tree(node, starting_turn, move_number, max_depth=3)
+        except Exception as e:
+            print(f"Error in PGN generation: {e}")
+            return self._build_simplified_tree(node, starting_turn, move_number, max_depth=2)
     
     def _build_complete_tree(self, node: TreeNode, starting_turn: bool, move_number: int) -> str:
         """Build the complete tree structure exactly like the manual example."""
@@ -369,6 +373,57 @@ class ChessTreeGenerator:
                         parts.append(alt_final_var)
         
         return " ".join(parts)
+    
+    def _build_simplified_tree(self, node: TreeNode, starting_turn: bool, move_number: int, max_depth: int = 3) -> str:
+        """
+        Build a simplified tree when the full tree is too complex.
+        Limits the depth and complexity to ensure PGN generation completes.
+        """
+        if not node.children or max_depth <= 0:
+            return ""
+        
+        parts = []
+        
+        try:
+            # Main move
+            main_child = node.children[0]
+            main_san = node.board.san(main_child.move)
+            main_eval = f" {{{main_child.evaluation:+.0f}}}" if main_child.evaluation is not None else ""
+            
+            if starting_turn:
+                main_move = f"{move_number}. {main_san}{main_eval}"
+                next_turn = False
+                next_move_num = move_number
+            else:
+                main_move = f"{move_number}... {main_san}{main_eval}"
+                next_turn = True
+                next_move_num = move_number + 1
+            
+            parts.append(main_move)
+            
+            # Add up to 2 alternative moves as simple variations
+            for alt_child in node.children[1:3]:  # Limit to 2 alternatives
+                alt_san = node.board.san(alt_child.move)
+                alt_eval = f" {{{alt_child.evaluation:+.0f}}}" if alt_child.evaluation is not None else ""
+                
+                if starting_turn:
+                    alt_var = f"({move_number}. {alt_san}{alt_eval})"
+                else:
+                    alt_var = f"({move_number}... {alt_san}{alt_eval})"
+                
+                parts.append(alt_var)
+            
+            # Continue with main line
+            if main_child.children and max_depth > 1:
+                continuation = self._build_simplified_tree(main_child, next_turn, next_move_num, max_depth - 1)
+                if continuation:
+                    parts.append(continuation)
+            
+            return " ".join(parts)
+            
+        except Exception as e:
+            print(f"Error in simplified tree generation: {e}")
+            return ""
     
     def _build_manual_style_variation(self, parent_node: TreeNode, child_node: TreeNode, 
                                      starting_turn: bool, move_number: int) -> str:
