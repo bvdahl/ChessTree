@@ -1,0 +1,181 @@
+Analyzing PGN file: test_simple.pgn
+Max depth: 5 half-moves
+Analysis time: 2.0 seconds per position
+Centipawn threshold: 50
+Number of moves per position: 2
+==================================================
+Analyzing position at depth 0 (move 8)
+Got 2 moves from analysis
+  Move 1: d3d4 eval: -67.0
+  Move 2: f1e2 eval: -70.0
+After filtering: 2 moves
+Analyzing position at depth 1 (move 8)
+Got 2 moves from analysis
+  Move 1: d8d5 eval: -70.0
+  Move 2: c8e6 eval: -62.0
+After filtering: 2 moves
+Analyzing position at depth 1 (move 8)
+Got 2 moves from analysis
+  Move 1: b8c6 eval: -86.0
+  Move 2: d8d5 eval: -75.0
+After filtering: 2 moves
+Analyzing position at depth 2 (move 9)
+Got 2 moves from analysis
+  Move 1: f1e2 eval: -80.0
+  Move 2: f1d3 eval: -73.0
+After filtering: 2 moves
+Analyzing position at depth 2 (move 9)
+Got 2 moves from analysis
+  Move 1: a1b1 eval: -57.0
+  Move 2: d1d3 eval: -68.0
+After filtering: 2 moves
+Analyzing position at depth 2 (move 9)
+Got 2 moves from analysis
+  Move 1: e1g1 eval: -95.0
+  Move 2: d3d4 eval: -108.0
+After filtering: 2 moves
+Analyzing position at depth 2 (move 9)
+Got 2 moves from analysis
+  Move 1: e1g1 eval: -82.0
+  Move 2: d3d4 eval: -83.0
+After filtering: 2 moves
+Analyzing position at depth 3 (move 9)
+Got 2 moves from analysis
+  Move 1: b8c6 eval: -75.0
+  Move 2: c8e6 eval: -3.0
+  Filtered out 1 moves for Black (threshold: 50cp):
+    c8e6 eval: -3.0
+After filtering: 1 moves
+Analyzing position at depth 3 (move 9)
+Got 2 moves from analysis
+  Move 1: b8c6 eval: -67.0
+  Move 2: c8f5 eval: -72.0
+After filtering: 2 moves
+Analyzing position at depth 3 (move 9)
+Got 2 moves from analysis
+  Move 1: b8c6 eval: -66.0
+  Move 2: f8e7 eval: -66.0
+After filtering: 2 moves
+Analyzing position at depth 3 (move 9)
+Got 2 moves from analysis
+  Move 1: c7c5 eval: -69.0
+  Move 2: b8c6 eval: -42.0
+After filtering: 2 moves
+Analyzing position at depth 3 (move 9)
+Got 2 moves from analysis
+  Move 1: h7h6 eval: -97.0
+  Move 2: f8b4 eval: -82.0
+After filtering: 2 moves
+Analyzing position at depth 3 (move 9)
+Got 2 moves from analysis
+  Move 1: c8e6 eval: -95.0
+  Move 2: d8d5 eval: -80.0
+After filtering: 2 moves
+Analyzing position at depth 3 (move 9)
+Got 2 moves from analysis
+  Move 1: b8c6 eval: -94.0
+  Move 2: c8e6 eval: -27.0
+  Filtered out 1 moves for Black (threshold: 50cp):
+    c8e6 eval: -27.0
+After filtering: 1 moves
+Analyzing position at depth 3 (move 9)
+Got 2 moves from analysis
+  Move 1: c8f5 eval: -77.0
+  Move 2: b8c6 eval: -77.0
+After filtering: 2 moves
+Analyzing position at depth 4 (move 10)
+Got 2 moves from analysis
+  Move 1: a1b1 eval: -87.0
+  Move 2: c1e3 eval: -112.0
+After filtering: 2 moves
+Analyzing position at depth 4 (move 10)
+Got 2 moves from analysis
+  Move 1: e2d3 eval: -66.0
+  Move 2: c1e3 eval: -75.0
+After filtering: 2 moves
+Analyzing position at depth 4 (move 10)
+Got 2 moves from analysis
+  Move 1: d1d3 eval: -82.0
+  Move 2: c1e3 eval: -109.0
+After filtering: 2 moves
+Analyzing position at depth 4 (move 10)
+Got 2 moves from analysis
+  Move 1: a2a3 eval: -58.0
+  Move 2: b1b7 eval: -49.0
+After filtering: 2 moves
+Analyzing position at depth 4 (move 10)
+Got 2 moves from analysis
+  Move 1: f1d3 eval: -71.0
+  Move 2: b1b7 eval: -76.0
+After filtering: 2 moves
+Analyzing position at depth 4 (move 10)
+Got 2 moves from analysis
+  Move 1: d3c3 eval: -76.0
+  Move 2: a1b1 eval: -82.0
+After filtering: 2 moves
+Analyzing position at depth 4 (move 10)
+Got 2 moves from analysis
+  Move 1: a2a3 eval: -40.0
+  Move 2: a1b1 eval: -101.0
+  Filtered out 1 moves for White (threshold: 50cp):
+    a1b1 eval: -101.0
+After filtering: 1 moves
+Analyzing position at depth 4 (move 10)
+Got 2 moves from analysis
+  Move 1: a1b1 eval: -85.0
+  Move 2: d3d4 eval: -90.0
+After filtering: 2 moves
+Analyzing position at depth 4 (move 10)
+Got 2 moves from analysis
+  Move 1: g1h1 eval: -86.0
+  Move 2: a2a3 eval: -93.0
+After filtering: 2 moves
+Analyzing position at depth 4 (move 10)
+Got 2 moves from analysis
+  Move 1: d1d3 eval: -109.0
+  Move 2: c1e3 eval: -125.0
+After filtering: 2 moves
+Analyzing position at depth 4 (move 10)
+Got 2 moves from analysis
+  Move 1: d1d3 eval: -88.0
+  Move 2: c1e3 eval: -116.0
+After filtering: 2 moves
+Analyzing position at depth 4 (move 10)
+Got 2 moves from analysis
+  Move 1: d1e1 eval: -75.0
+  Move 2: g1h1 eval: -77.0
+After filtering: 2 moves
+Analyzing position at depth 4 (move 10)
+Got 2 moves from analysis
+  Move 1: e1g1 eval: -62.0
+  Move 2: c1e3 eval: -71.0
+After filtering: 2 moves
+Analyzing position at depth 4 (move 10)
+Got 2 moves from analysis
+  Move 1: d1d3 eval: -94.0
+  Move 2: c1e3 eval: -121.0
+After filtering: 2 moves
+
+============================================================
+ANALYSIS SUMMARY
+============================================================
+Start time: 2025-07-30 20:12:12
+End time: 2025-07-30 20:13:10
+Duration: 58.4 seconds (1.0 minutes)
+Positions analyzed: 29
+Total moves used: 55 (after filtering)
+Average moves per position: 1.9
+Average time per position: 2.02 seconds
+============================================================
+
+============================================================
+FINAL SUMMARY
+============================================================
+Start time: 2025-07-30 20:12:12
+End time: 2025-07-30 20:13:10
+Duration: 58.4 seconds (1.0 minutes)
+Positions analyzed: 29
+Total moves used: 55 (after filtering)
+Average moves per position: 1.9
+Average time per position: 2.02 seconds
+============================================================
