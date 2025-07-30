@@ -101,3 +101,18 @@ The application follows a modular, object-oriented architecture with clear separ
 - **Processing Time**: Deep analysis can take considerable time for complex positions
 
 The architecture prioritizes modularity, resource efficiency, and ease of use while maintaining the flexibility to handle various chess analysis scenarios.
+
+## Recent Changes
+
+**January 30, 2025 - Major Feature Updates:**
+- **Fixed PGN depth truncation**: Replaced hardcoded 3-level PGN generation with full recursive depth matching analysis depth
+- **Added timestamp functionality**: All output files now automatically include YYYYMMDDHHMM timestamp (e.g., analyzed_game_202507300944.pgn)
+- **Added comprehensive analysis summary**: End-of-run statistics showing start time, end time, duration, positions analyzed, total moves considered, and averages
+- **Removed truncation fallbacks**: System now fails with clear error instead of producing incomplete PGN output when tree is too complex
+- **Verified timing behavior**: Stockfish respects time limits and reaches deep analysis (depth 25+ in 5-10 seconds with large hash tables)
+
+**Previous Improvements:**
+- Fixed critical efficiency issue: system now analyzes exactly the requested number of moves instead of analyzing 3 and filtering down
+- Added configurable hash memory parameter (--hash-memory) with user-requested default of 8192MB and removed all artificial memory limits
+- Created comprehensive command-line documentation with usage examples and parameter interactions
+- Successfully tested deep analysis capabilities: completed depth 6 analysis with 190 positions analyzed across all depth levels

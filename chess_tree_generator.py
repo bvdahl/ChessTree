@@ -10,6 +10,8 @@ import argparse
 import json
 import sys
 import os
+import time
+from datetime import datetime
 from typing import List, Dict, Any
 import chess
 import chess.engine
@@ -42,6 +44,12 @@ class ChessTreeGenerator:
         self.num_moves = num_moves
         self.hash_memory_mb = hash_memory_mb
         self.analyzer = StockfishAnalyzer(stockfish_path, analysis_time, num_moves, hash_memory_mb)
+        
+        # Statistics tracking
+        self.total_positions_analyzed = 0
+        self.total_moves_considered = 0
+        self.start_time = None
+        self.end_time = None
         
     def generate_tree_from_pgn(self, pgn_file: str) -> tuple[TreeNode, chess.pgn.Game]:
         """
@@ -105,7 +113,9 @@ class ChessTreeGenerator:
         )
         
         # Build tree using breadth-first approach to ensure complete coverage
+        self.start_time = time.time()
         self._build_tree_breadth_first(root)
+        self.end_time = time.time()
         
         return root
     
@@ -143,6 +153,10 @@ class ChessTreeGenerator:
                 print(f"Got {len(analysis_results)} moves from analysis")
                 for i, move_data in enumerate(analysis_results):
                     print(f"  Move {i+1}: {move_data['move']} eval: {move_data['evaluation']}")
+                
+                # Track statistics
+                self.total_positions_analyzed += 1
+                self.total_moves_considered += len(analysis_results)
                 
                 # Filter moves based on centipawn threshold
                 filtered_moves = self._filter_moves(analysis_results)
@@ -346,24 +360,11 @@ class ChessTreeGenerator:
                 if alt_resp_var:
                     parts.append(alt_resp_var)
             
-            # Step 5: Final moves (best continuation plus alternatives)
+            # Step 5: Continue recursively to full depth
             if main_response.children:
-                final_main = main_response.children[0]
-                final_san = main_response.board.san(final_main.move)
-                final_eval = f" {{{final_main.evaluation:+.0f}}}" if final_main.evaluation is not None else ""
-                
-                if final_turn:
-                    final_move = f"{final_move_num}. {final_san}{final_eval}"
-                else:
-                    final_move = f"{final_move_num}... {final_san}{final_eval}"
-                
-                parts.append(final_move)
-                
-                # Add alternative final moves
-                for alt_final in main_response.children[1:]:
-                    alt_final_var = self._build_simple_variation(main_response, alt_final, final_turn, final_move_num)
-                    if alt_final_var:
-                        parts.append(alt_final_var)
+                continuation = self._build_complete_tree(main_response, response_turn, response_move_num)
+                if continuation:
+                    parts.append(continuation)
         
         return " ".join(parts)
     
@@ -435,24 +436,11 @@ class ChessTreeGenerator:
                     
                     var_parts.append(sub_var)
                 
-                # Main continuation
+                # Main continuation - recursive call for full depth  
                 if main_resp.children:
-                    final_main = main_resp.children[0]
-                    final_san = main_resp.board.san(final_main.move)
-                    final_eval = f" {{{final_main.evaluation:+.0f}}}" if final_main.evaluation is not None else ""
-                    
-                    if final_turn:
-                        final_text = f"{final_move_num}. {final_san}{final_eval}"
-                    else:
-                        final_text = f"{final_move_num}... {final_san}{final_eval}"
-                    
-                    var_parts.append(final_text)
-                    
-                    # Add alternative final moves
-                    for alt_final in main_resp.children[1:]:
-                        alt_final_var = self._build_simple_variation(main_resp, alt_final, final_turn, final_move_num)
-                        if alt_final_var:
-                            var_parts.append(alt_final_var)
+                    continuation = self._build_complete_tree(main_resp, next_turn, next_move_num)
+                    if continuation:
+                        var_parts.append(continuation)
             
             return " ".join(var_parts) + ")"
             
@@ -719,6 +707,27 @@ class ChessTreeGenerator:
         for child in node.children:
             self.print_tree(child, indent + 1)
     
+    def print_summary(self):
+        """Print analysis summary statistics."""
+        if self.start_time and self.end_time:
+            duration = self.end_time - self.start_time
+            start_datetime = datetime.fromtimestamp(self.start_time)
+            end_datetime = datetime.fromtimestamp(self.end_time)
+            
+            print("\n" + "=" * 60)
+            print("ANALYSIS SUMMARY")
+            print("=" * 60)
+            print(f"Start time: {start_datetime.strftime('%Y-%m-%d %H:%M:%S')}")
+            print(f"End time: {end_datetime.strftime('%Y-%m-%d %H:%M:%S')}")
+            print(f"Duration: {duration:.1f} seconds ({duration/60:.1f} minutes)")
+            print(f"Positions analyzed: {self.total_positions_analyzed}")
+            print(f"Total moves considered: {self.total_moves_considered} (before filtering)")
+            if self.total_positions_analyzed > 0:
+                avg_moves = self.total_moves_considered / self.total_positions_analyzed
+                print(f"Average moves per position: {avg_moves:.1f}")
+                print(f"Average time per position: {duration/self.total_positions_analyzed:.2f} seconds")
+            print("=" * 60)
+    
     def close(self):
         """Close the Stockfish analyzer."""
         self.analyzer.close()
@@ -849,31 +858,49 @@ Examples:
             json_output = json.dumps(tree_dict, indent=2)
             
             if args.output_file:
-                with open(args.output_file, 'w') as f:
+                # Add timestamp to filename
+                timestamp = datetime.now().strftime("%Y%m%d%H%M")
+                base_name, ext = os.path.splitext(args.output_file)
+                timestamped_filename = f"{base_name}_{timestamp}{ext}"
+                
+                with open(timestamped_filename, 'w') as f:
                     f.write(json_output)
-                print(f"Tree saved to: {args.output_file}")
+                print(f"Tree saved to: {timestamped_filename}")
             else:
                 print(json_output)
         elif args.output == 'pgn':
             pgn_output = generator.tree_to_pgn(root, existing_game=existing_game)
             
             if args.output_file:
-                with open(args.output_file, 'w') as f:
+                # Add timestamp to filename
+                timestamp = datetime.now().strftime("%Y%m%d%H%M")
+                base_name, ext = os.path.splitext(args.output_file)
+                timestamped_filename = f"{base_name}_{timestamp}{ext}"
+                
+                with open(timestamped_filename, 'w') as f:
                     f.write(pgn_output)
-                print(f"PGN saved to: {args.output_file}")
+                print(f"PGN saved to: {timestamped_filename}")
             else:
                 print(pgn_output)
         else:  # tree format
             if args.output_file:
-                with open(args.output_file, 'w') as f:
+                # Add timestamp to filename
+                timestamp = datetime.now().strftime("%Y%m%d%H%M")
+                base_name, ext = os.path.splitext(args.output_file)
+                timestamped_filename = f"{base_name}_{timestamp}{ext}"
+                
+                with open(timestamped_filename, 'w') as f:
                     # Redirect stdout to file
                     original_stdout = sys.stdout
                     sys.stdout = f
                     generator.print_tree(root)
                     sys.stdout = original_stdout
-                print(f"Tree saved to: {args.output_file}")
+                print(f"Tree saved to: {timestamped_filename}")
             else:
                 generator.print_tree(root)
+        
+        # Print summary statistics
+        generator.print_summary()
         
     except ValueError as e:
         print(f"Input Error: {e}", file=sys.stderr)
