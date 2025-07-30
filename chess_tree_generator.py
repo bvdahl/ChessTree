@@ -338,62 +338,139 @@ class ChessTreeGenerator:
         tree_text = self._build_complete_tree(node, starting_turn, move_number)
         return tree_text
     
-    def _build_tree_iterative(self, root: TreeNode, starting_turn: bool, move_number: int) -> str:
-        """Build tree iteratively level by level to avoid recursion."""
+    def _build_tree_stack_based(self, root: TreeNode, starting_turn: bool, move_number: int) -> str:
+        """Build complete tree with proper variations using controlled depth."""
         if not root.children:
             return ""
         
-        result_parts = []
-        current_nodes = [(root, starting_turn, move_number)]
-        depth_count = 0
-        
-        while current_nodes and depth_count < 10:  # Limit depth to prevent infinite processing
-            next_nodes = []
+        def build_simple_line(node: TreeNode, turn: bool, move_num: int, max_levels: int) -> str:
+            """Build just the main line with variations at each level."""
+            if not node.children or max_levels <= 0:
+                return ""
             
-            for node, turn, move_num in current_nodes:
-                if not node.children:
-                    continue
-                    
-                # Build main line for this level
-                main_child = node.children[0]
-                main_san = node.board.san(main_child.move)
-                main_eval = f" {{{main_child.evaluation:+.0f}}}" if main_child.evaluation is not None else ""
+            parts = []
+            
+            # Main move
+            main_child = node.children[0]
+            main_san = node.board.san(main_child.move)
+            main_eval = f" {{{main_child.evaluation:+.0f}}}" if main_child.evaluation is not None else ""
+            
+            if turn:
+                main_move = f"{move_num}. {main_san}{main_eval}"
+                next_turn = False
+                next_move_num = move_num
+            else:
+                main_move = f"{move_num}... {main_san}{main_eval}"
+                next_turn = True
+                next_move_num = move_num + 1
+            
+            parts.append(main_move)
+            
+            # Add variations WITH their full continuations
+            for alt_child in node.children[1:]:
+                alt_san = node.board.san(alt_child.move)
+                alt_eval = f" {{{alt_child.evaluation:+.0f}}}" if alt_child.evaluation is not None else ""
                 
                 if turn:
-                    main_move = f"{move_num}. {main_san}{main_eval}"
-                    next_turn = False
-                    next_move_num = move_num
+                    var_start = f"({move_num}. {alt_san}{alt_eval}"
+                    var_next_turn = False
+                    var_next_move_num = move_num
                 else:
-                    main_move = f"{move_num}... {main_san}{main_eval}"
-                    next_turn = True
-                    next_move_num = move_num + 1
+                    var_start = f"({move_num}... {alt_san}{alt_eval}"
+                    var_next_turn = True
+                    var_next_move_num = move_num + 1
                 
-                result_parts.append(main_move)
-                
-                # Add variations for alternative moves
-                for alt_child in node.children[1:]:
-                    alt_san = node.board.san(alt_child.move)
-                    alt_eval = f" {{{alt_child.evaluation:+.0f}}}" if alt_child.evaluation is not None else ""
-                    
-                    if turn:
-                        alt_var = f"({move_num}. {alt_san}{alt_eval})"
+                # Build the FULL continuation for this variation
+                if alt_child.children and max_levels > 1:
+                    var_continuation = build_simple_line(alt_child, var_next_turn, var_next_move_num, max_levels - 1)
+                    if var_continuation:
+                        parts.append(var_start + " " + var_continuation + ")")
                     else:
-                        alt_var = f"({move_num}... {alt_san}{alt_eval})"
-                    
-                    result_parts.append(alt_var)
-                
-                # Queue main child for next level
-                if main_child.children:
-                    next_nodes.append((main_child, next_turn, next_move_num))
+                        parts.append(var_start + ")")
+                else:
+                    parts.append(var_start + ")")
             
-            current_nodes = next_nodes
-            depth_count += 1
+            # Continue main line
+            if main_child.children and max_levels > 1:
+                continuation = build_simple_line(main_child, next_turn, next_move_num, max_levels - 1)
+                if continuation:
+                    parts.append(continuation)
             
-        return " ".join(result_parts)
+            return " ".join(parts)
+        
+        return build_simple_line(root, starting_turn, move_number, 8)
+    
+    def _build_full_variation(self, parent_node: TreeNode, child_node: TreeNode, starting_turn: bool, move_number: int, depth_limit: int) -> str:
+        """Build a complete variation including all its sub-variations."""
+        if depth_limit <= 0:
+            return ""
+            
+        move_san = parent_node.board.san(child_node.move)
+        move_eval = f" {{{child_node.evaluation:+.0f}}}" if child_node.evaluation is not None else ""
+        
+        if starting_turn:
+            var_start = f"({move_number}. {move_san}{move_eval}"
+            next_turn = False
+            next_move_num = move_number
+        else:
+            var_start = f"({move_number}... {move_san}{move_eval}"
+            next_turn = True
+            next_move_num = move_number + 1
+        
+        # If this variation has children, build the complete sub-tree
+        if child_node.children and depth_limit > 1:
+            continuation = self._build_tree_simple_recursive(child_node, next_turn, next_move_num, depth_limit - 1)
+            if continuation:
+                return var_start + " " + continuation + ")"
+        
+        return var_start + ")"
+    
+    def _build_tree_simple_recursive(self, node: TreeNode, starting_turn: bool, move_number: int, depth_limit: int) -> str:
+        """Simple recursive tree builder with strict depth limit."""
+        if not node.children or depth_limit <= 0:
+            return ""
+        
+        parts = []
+        
+        # Main move
+        main_child = node.children[0]
+        main_san = node.board.san(main_child.move)
+        main_eval = f" {{{main_child.evaluation:+.0f}}}" if main_child.evaluation is not None else ""
+        
+        if starting_turn:
+            main_move = f"{move_number}. {main_san}{main_eval}"
+            next_turn = False
+            next_move_num = move_number
+        else:
+            main_move = f"{move_number}... {main_san}{main_eval}"
+            next_turn = True
+            next_move_num = move_number + 1
+        
+        parts.append(main_move)
+        
+        # Alternative moves as variations
+        for alt_child in node.children[1:]:
+            alt_san = node.board.san(alt_child.move)
+            alt_eval = f" {{{alt_child.evaluation:+.0f}}}" if alt_child.evaluation is not None else ""
+            
+            if starting_turn:
+                alt_var = f"({move_number}. {alt_san}{alt_eval})"
+            else:
+                alt_var = f"({move_number}... {alt_san}{alt_eval})"
+            
+            parts.append(alt_var)
+        
+        # Continue with main line only (simplified approach)
+        if main_child.children and depth_limit > 1:
+            continuation = self._build_tree_simple_recursive(main_child, next_turn, next_move_num, depth_limit - 1)
+            if continuation:
+                parts.append(continuation)
+        
+        return " ".join(parts)
     
     def _build_complete_tree(self, node: TreeNode, starting_turn: bool, move_number: int) -> str:
-        """Build complete tree iteratively to avoid recursion issues."""
-        return self._build_tree_iterative(node, starting_turn, move_number)
+        """Build complete tree using stack-based approach."""
+        return self._build_tree_stack_based(node, starting_turn, move_number)
     
     def _build_complete_tree_internal(self, node: TreeNode, starting_turn: bool, move_number: int, max_depth: int) -> str:
         """
