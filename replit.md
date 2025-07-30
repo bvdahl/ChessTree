@@ -63,8 +63,8 @@ The application follows a modular, object-oriented architecture with clear separ
 
 ### Move Selection Criteria
 - Includes top 3 moves from engine analysis with intelligent mate handling
-- **Mate detection**: When forced mate found (#N), shows only that move and ends variation
-- **Mate filtering**: Automatically filters moves leading to opponent mate (-#N) regardless of threshold
+- **Mate detection**: When current player has forced mate (#N for White, -#N for Black), shows only that move and ends variation
+- **Mate filtering**: Automatically filters moves giving opponent mate regardless of threshold
 - **Centipawn filtering**: For non-mate positions, filters moves more than configurable centipawns worse than best
 - Ensures diverse tactical options while maintaining quality and chess logic
 

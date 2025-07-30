@@ -216,8 +216,8 @@ class ChessTreeGenerator:
         best_move = sorted_moves[0]
         best_eval = best_move['evaluation']
         
-        # Special case: If best move is a forced mate, only return that move
-        if self._is_mate_evaluation(best_eval) and self._is_favorable_mate(best_eval):
+        # Special case: If best move is a forced mate for current player, only return that move
+        if self._is_mate_evaluation(best_eval) and self._is_mate_for_current_player(best_eval, is_white_to_move):
             print(f"  Found forced mate: {best_move['move']} {best_eval} - ending variation here")
             return [best_move]
         
@@ -230,7 +230,7 @@ class ChessTreeGenerator:
             move_eval = move_data['evaluation']
             
             # Filter out moves that lead to opponent mate (regardless of threshold)
-            if self._is_mate_evaluation(move_eval) and self._is_unfavorable_mate(move_eval):
+            if self._is_mate_evaluation(move_eval) and self._is_mate_for_opponent(move_eval, is_white_to_move):
                 print(f"  Filtered mate-losing move: {move_data['move']} {move_eval}")
                 filtered_out.append(move_data)
                 continue
@@ -267,28 +267,42 @@ class ChessTreeGenerator:
         """Check if evaluation represents a mate score."""
         return isinstance(evaluation, str) and ('#' in evaluation)
         
-    def _is_favorable_mate(self, evaluation) -> bool:
-        """Check if mate evaluation is favorable (delivering mate)."""
+    def _is_mate_for_current_player(self, evaluation, is_white_to_move: bool) -> bool:
+        """Check if mate evaluation represents current player delivering mate."""
         if not self._is_mate_evaluation(evaluation):
             return False
-        return not evaluation.startswith('-')
         
-    def _is_unfavorable_mate(self, evaluation) -> bool:
-        """Check if mate evaluation is unfavorable (getting mated)."""
+        # #N means White delivers mate, -#N means Black delivers mate
+        white_has_mate = not evaluation.startswith('-')
+        return white_has_mate == is_white_to_move
+        
+    def _is_mate_for_opponent(self, evaluation, is_white_to_move: bool) -> bool:
+        """Check if mate evaluation represents opponent delivering mate."""
         if not self._is_mate_evaluation(evaluation):
             return False
-        return evaluation.startswith('-')
+        
+        # #N means White delivers mate, -#N means Black delivers mate
+        white_has_mate = not evaluation.startswith('-')
+        return white_has_mate != is_white_to_move
     
     def _get_sort_value(self, evaluation, is_white_to_move: bool) -> float:
         """Convert evaluation to sortable numeric value."""
         if self._is_mate_evaluation(evaluation):
-            # Parse mate notation: #5 or -#3
+            # Parse mate notation: #5 means White mates in 5, -#3 means Black mates in 3
             if evaluation.startswith('-#'):
                 mate_moves = int(evaluation[2:])
-                return -20000 + mate_moves  # Getting mated is very bad
+                # Black has mate
+                if is_white_to_move:
+                    return -20000 + mate_moves  # Bad for White
+                else:
+                    return 20000 - mate_moves   # Good for Black
             else:  # #N
                 mate_moves = int(evaluation[1:])
-                return 20000 - mate_moves   # Delivering mate is very good
+                # White has mate
+                if is_white_to_move:
+                    return 20000 - mate_moves   # Good for White
+                else:
+                    return -20000 + mate_moves  # Bad for Black
         else:
             # Regular centipawn evaluation
             eval_cp = float(evaluation)
