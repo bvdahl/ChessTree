@@ -138,6 +138,7 @@ class ChessTreeGenerator:
     def _get_move_sequence_notation(self, node: TreeNode, game: chess.pgn.Game = None) -> str:
         """
         Generate chess notation for the move sequence leading to this position.
+        Only shows analysis moves, not the original game moves (except for initial position).
         
         Args:
             node: TreeNode representing current position
@@ -156,19 +157,34 @@ class ChessTreeGenerator:
             current = current.parent if hasattr(current, 'parent') else None
         path.reverse()
         
-        # Start with the game's initial position if available
+        # If analyzing from a game position, start from the final game position
         if game:
-            # Get all moves from the original game
+            # Play through the original game to get to starting position
             board = game.board()
             for move in game.mainline_moves():
-                move_number = board.fullmove_number
-                if board.turn:  # White's turn
-                    moves.append(f"{move_number}.{board.san(move)}")
-                else:  # Black's turn
-                    moves.append(f"{board.san(move)}")
                 board.push(move)
             
-            # Add moves from tree analysis (continuing from game position)
+            # Show initial position only if this is the root (no path)
+            if not path:
+                # This is the initial analysis position - show the last few game moves for context
+                game_moves = list(game.mainline_moves())
+                if len(game_moves) >= 2:
+                    # Show last 2 moves for context
+                    context_board = game.board()
+                    for move in game_moves[:-2]:
+                        context_board.push(move)
+                    
+                    for move in game_moves[-2:]:
+                        move_number = context_board.fullmove_number
+                        san_move = context_board.san(move)
+                        if context_board.turn:  # White's turn
+                            moves.append(f"{move_number}.{san_move}")
+                        else:  # Black's turn
+                            moves.append(f"{san_move}")
+                        context_board.push(move)
+                return " ".join(moves)
+            
+            # For analysis moves, only show the analysis path
             for tree_node in path:
                 move_number = board.fullmove_number
                 san_move = board.san(tree_node.move)
@@ -178,7 +194,7 @@ class ChessTreeGenerator:
                     moves.append(f"{san_move}")
                 board.push(tree_node.move)
         else:
-            # Start from starting position
+            # Start from starting position (FEN input)
             board = chess.Board()
             for tree_node in path:
                 move_number = board.fullmove_number

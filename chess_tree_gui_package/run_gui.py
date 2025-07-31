@@ -7,28 +7,23 @@ import os
 import sys
 
 def main():
-    print("=" * 60)
-    print("Chess Tree Generator GUI")
-    print("=" * 60)
-    print()
-    print("Starting the GUI application...")
-    print("The GUI window should appear shortly.")
-    print()
-    print("Features:")
-    print("- File pickers for PGN files and Stockfish engine")
-    print("- All analysis parameters with intuitive controls")
-    print("- Save/load configuration presets")
-    print("- Real-time analysis progress")
-    print("- Persistent settings between sessions")
-    print()
+    # Hide console window on Windows
+    if sys.platform == "win32":
+        import ctypes
+        ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 0)
     
-    # Import and run the GUI
+    # Import and run the GUI silently
     try:
         from chess_gui import main as gui_main
         gui_main()
     except Exception as e:
-        print(f"Error starting GUI: {e}")
-        print("Make sure all dependencies are installed.")
+        # Only show error if GUI fails to start
+        import tkinter as tk
+        from tkinter import messagebox
+        root = tk.Tk()
+        root.withdraw()
+        messagebox.showerror("Chess Tree Generator", f"Error starting GUI: {e}\nMake sure all dependencies are installed.")
+        root.destroy()
 
 if __name__ == "__main__":
     main()

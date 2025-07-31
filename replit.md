@@ -108,6 +108,12 @@ The architecture prioritizes modularity, resource efficiency, and ease of use wh
 
 ## Recent Changes
 
+**January 31, 2025 - CONSOLE & OUTPUT IMPROVEMENTS:**
+- **✅ NEW: Console window elimination**: Three launcher options for silent GUI startup (run_gui.py, run_gui_windowless.py, run_gui_silent.pyw)
+- **✅ NEW: Filtered output display**: Analysis shows only analysis moves, not original PGN game moves (except initial position context)
+- **✅ IMPROVED: Clean analysis feedback**: Progress shows relevant moves (e.g., "8.d4 Qd5 9.Rb1") without full game history repetition
+- **✅ ENHANCED: Diagnostics organization**: Automatic Diagnostics/ folder creation with timestamped detailed analysis files
+
 **January 31, 2025 - CRITICAL FIXES APPLIED:**
 - **✅ RESOLVED: Unicode encoding error**: Removed emoji characters (🔍, 📊, ⚙️) that caused Windows 'charmap' codec errors
 - **✅ IMPROVED: File selection UX**: Changed from single file picker to folder + base name approach with automatic timestamping
