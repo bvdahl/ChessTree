@@ -156,7 +156,7 @@ class ChessTreeGenerator:
             try:
                 # Show progress to console (bypasses diagnostics capture)
                 original_stdout = sys.__stdout__
-                original_stdout.write(f"\r📊 Analyzing depth {current_depth}, position {self.total_positions_analyzed + 1}...")
+                original_stdout.write(f"\rAnalyzing depth {current_depth}, position {self.total_positions_analyzed + 1}...")
                 original_stdout.flush()
                 
                 print(f"Analyzing position at depth {current_depth} (move {current_node.board.fullmove_number})")
@@ -1118,16 +1118,16 @@ Examples:
         
         # Show initial progress to console
         if args.pgn_file:
-            print(f"🔍 Starting analysis of PGN file: {args.pgn_file}")
+            print(f"Starting analysis of PGN file: {args.pgn_file}")
             if white_threshold == black_threshold and white_moves == black_moves:
-                print(f"⚙️  Configuration: depth={args.depth}, time={args.time}s, threshold={white_threshold}cp, moves={white_moves}")
+                print(f"Configuration: depth={args.depth}, time={args.time}s, threshold={white_threshold}cp, moves={white_moves}")
             else:
-                print(f"⚙️  Configuration: depth={args.depth}, time={args.time}s")
+                print(f"Configuration: depth={args.depth}, time={args.time}s")
                 print(f"   White: threshold={white_threshold}cp, moves={white_moves}")
                 print(f"   Black: threshold={black_threshold}cp, moves={black_moves}")
         else:
-            print(f"🔍 Starting analysis from FEN position")
-            print(f"⚙️  Configuration: depth={args.depth}, time={args.time}s, threshold={args.threshold}cp, moves={args.num_moves}")
+            print(f"Starting analysis from FEN position")
+            print(f"Configuration: depth={args.depth}, time={args.time}s, threshold={args.threshold}cp, moves={args.num_moves}")
         
         # Start capturing console output for diagnostics
         with redirect_stdout(diagnostics_buffer):

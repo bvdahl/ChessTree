@@ -168,14 +168,21 @@ class ChessTreeGUI:
                                    values=["tree", "json", "pgn"], state="readonly")
         format_combo.grid(row=0, column=1, padx=5)
         
-        # Output file
-        ttk.Label(output_frame, text="Output File:").grid(row=1, column=0, sticky=tk.W, padx=5, pady=5)
-        self.output_file_var = tk.StringVar()
-        self.output_entry = ttk.Entry(output_frame, textvariable=self.output_file_var, width=50)
-        self.output_entry.grid(row=1, column=1, columnspan=2, sticky=tk.EW, padx=5)
-        ttk.Button(output_frame, text="Browse", command=self.browse_output_file).grid(row=1, column=3, padx=5)
+        # Output directory and base name
+        ttk.Label(output_frame, text="Output Folder:").grid(row=1, column=0, sticky=tk.W, padx=5, pady=2)
+        self.output_dir_var = tk.StringVar()
+        self.output_dir_entry = ttk.Entry(output_frame, textvariable=self.output_dir_var, width=35)
+        self.output_dir_entry.grid(row=1, column=1, sticky=tk.EW, padx=5)
+        ttk.Button(output_frame, text="Browse", command=self.browse_output_directory).grid(row=1, column=2, padx=5)
         
-        output_frame.columnconfigure(2, weight=1)
+        ttk.Label(output_frame, text="Base Name:").grid(row=2, column=0, sticky=tk.W, padx=5, pady=2)
+        self.output_basename_var = tk.StringVar(value="analysis")
+        self.output_basename_entry = ttk.Entry(output_frame, textvariable=self.output_basename_var, width=25)
+        self.output_basename_entry.grid(row=2, column=1, sticky=tk.W, padx=5)
+        
+        ttk.Label(output_frame, text="(timestamp added automatically)", font=("TkDefaultFont", 8)).grid(row=2, column=2, sticky=tk.W, padx=5)
+        
+        output_frame.columnconfigure(1, weight=1)
         
         # Control buttons
         control_frame = ttk.Frame(parent)
@@ -269,32 +276,17 @@ class ChessTreeGUI:
             self.settings["last_engine_directory"] = os.path.dirname(filename)
             self.save_settings()
     
-    def browse_output_file(self):
-        """Browse for output file location."""
+    def browse_output_directory(self):
+        """Browse for output directory."""
         initial_dir = self.settings.get("last_output_directory", os.path.expanduser("~"))
         
-        # Determine file extension based on format
-        format_ext = {
-            "pgn": ".pgn",
-            "json": ".json", 
-            "tree": ".txt"
-        }
-        ext = format_ext.get(self.output_format_var.get(), ".txt")
-        
-        filename = filedialog.asksaveasfilename(
-            title="Save Output As",
-            initialdir=initial_dir,
-            defaultextension=ext,
-            filetypes=[
-                ("PGN files", "*.pgn"),
-                ("JSON files", "*.json"),
-                ("Text files", "*.txt"),
-                ("All files", "*.*")
-            ]
+        directory = filedialog.askdirectory(
+            title="Select Output Directory",
+            initialdir=initial_dir
         )
-        if filename:
-            self.output_file_var.set(filename)
-            self.settings["last_output_directory"] = os.path.dirname(filename)
+        if directory:
+            self.output_dir_var.set(directory)
+            self.settings["last_output_directory"] = directory
             self.save_settings()
     
     def load_settings(self) -> Dict[str, Any]:
@@ -342,7 +334,8 @@ class ChessTreeGUI:
             "black_moves": self.black_moves_var.get(),
             "black_threshold": self.black_threshold_var.get(),
             "output_format": self.output_format_var.get(),
-            "output_file": self.output_file_var.get()
+            "output_directory": self.output_dir_var.get(),
+            "output_basename": self.output_basename_var.get()
         }
     
     def set_configuration(self, config: Dict[str, Any]):
@@ -359,7 +352,8 @@ class ChessTreeGUI:
         self.black_moves_var.set(config.get("black_moves", 3))
         self.black_threshold_var.set(config.get("black_threshold", 50))
         self.output_format_var.set(config.get("output_format", "pgn"))
-        self.output_file_var.set(config.get("output_file", ""))
+        self.output_dir_var.set(config.get("output_directory", ""))
+        self.output_basename_var.set(config.get("output_basename", "analysis"))
         self.on_input_type_change()
     
     def save_current_settings(self):
@@ -436,9 +430,13 @@ class ChessTreeGUI:
                 messagebox.showerror("Error", "Please enter a FEN position.")
                 return False
         
-        # Check output file
-        if not self.output_file_var.get():
-            messagebox.showerror("Error", "Please specify an output file.")
+        # Check output directory and basename
+        if not self.output_dir_var.get() or not os.path.exists(self.output_dir_var.get()):
+            messagebox.showerror("Error", "Please select a valid output directory.")
+            return False
+        
+        if not self.output_basename_var.get().strip():
+            messagebox.showerror("Error", "Please enter a base name for the output file.")
             return False
         
         return True
@@ -466,6 +464,17 @@ class ChessTreeGUI:
     def run_analysis(self):
         """Run the actual analysis process."""
         try:
+            # Generate timestamped output filename
+            timestamp = datetime.now().strftime("%Y%m%d%H%M")
+            format_ext = {
+                "pgn": ".pgn",
+                "json": ".json", 
+                "tree": ".txt"
+            }
+            ext = format_ext.get(self.output_format_var.get(), ".txt")
+            output_filename = f"{self.output_basename_var.get()}_{timestamp}{ext}"
+            output_path = os.path.join(self.output_dir_var.get(), output_filename)
+            
             # Build command
             cmd = [
                 sys.executable, "chess_tree_generator.py",
@@ -478,7 +487,7 @@ class ChessTreeGUI:
                 "--black-moves", str(self.black_moves_var.get()),
                 "--black-threshold", str(self.black_threshold_var.get()),
                 "--output", self.output_format_var.get(),
-                "--output-file", self.output_file_var.get()
+                "--output-file", output_path
             ]
             
             # Add input
@@ -506,9 +515,9 @@ class ChessTreeGUI:
             self.analysis_process.wait()
             
             if self.analysis_process.returncode == 0:
-                self.root.after(0, self.analysis_complete, True)
+                self.root.after(0, self.analysis_complete, True, output_path)
             else:
-                self.root.after(0, self.analysis_complete, False)
+                self.root.after(0, self.analysis_complete, False, output_path)
                 
         except Exception as e:
             self.root.after(0, self.analysis_error, str(e))
@@ -524,7 +533,7 @@ class ChessTreeGUI:
         elif "Analysis complete" in line:
             self.progress_var.set("Analysis completed successfully!")
     
-    def analysis_complete(self, success: bool):
+    def analysis_complete(self, success: bool, output_path: str = ""):
         """Handle analysis completion."""
         self.is_analyzing = False
         self.analyze_button.config(state=tk.NORMAL)
@@ -533,7 +542,10 @@ class ChessTreeGUI:
         
         if success:
             self.progress_var.set("Analysis completed successfully!")
-            messagebox.showinfo("Success", "Analysis completed successfully!")
+            success_msg = "Analysis completed successfully!"
+            if output_path:
+                success_msg += f"\n\nOutput saved to:\n{output_path}"
+            messagebox.showinfo("Success", success_msg)
         else:
             self.progress_var.set("Analysis failed!")
             messagebox.showerror("Error", "Analysis failed. Check the output for details.")

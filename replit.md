@@ -108,6 +108,13 @@ The architecture prioritizes modularity, resource efficiency, and ease of use wh
 
 ## Recent Changes
 
+**January 31, 2025 - CRITICAL FIXES APPLIED:**
+- **✅ RESOLVED: Unicode encoding error**: Removed emoji characters (🔍, 📊, ⚙️) that caused Windows 'charmap' codec errors
+- **✅ IMPROVED: File selection UX**: Changed from single file picker to folder + base name approach with automatic timestamping
+- **✅ NEW: Output workflow**: Users select output directory once, enter base names (e.g., "Vienna"), program automatically adds timestamp (e.g., "Vienna_202507311045.pgn")
+- **✅ NEW: Success feedback**: Analysis completion shows exact output file path created
+- **✅ VERIFIED: Windows compatibility**: No more encoding issues, improved user workflow matching command-line behavior
+
 **January 31, 2025 - GUI APPLICATION COMPLETE:**
 - **✅ NEW: Windows GUI Application**: Complete tkinter-based GUI with intuitive interface replacing command-line usage
 - **✅ NEW: Persistent Settings**: Automatic saving of Stockfish path, file directories, and custom configuration presets
