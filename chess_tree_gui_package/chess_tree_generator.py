@@ -91,6 +91,9 @@ class ChessTreeGenerator:
             depth=0
         )
         
+        # Store game context for move notation
+        self._current_game = game
+        
         # Build tree from this position
         self.start_time = time.time()
         self._build_tree_breadth_first(root)
@@ -132,6 +135,78 @@ class ChessTreeGenerator:
         
         return root
     
+    def _get_move_sequence_notation(self, node: TreeNode, game: chess.pgn.Game = None) -> str:
+        """
+        Generate chess notation for the move sequence leading to this position.
+        
+        Args:
+            node: TreeNode representing current position
+            game: Original PGN game (if available) for initial moves
+            
+        Returns:
+            String representation of moves in proper chess notation
+        """
+        moves = []
+        
+        # Build move path from root to current node
+        path = []
+        current = node
+        while current and current.move:
+            path.append(current)
+            current = current.parent if hasattr(current, 'parent') else None
+        path.reverse()
+        
+        # Start with the game's initial position if available
+        if game:
+            # Get all moves from the original game
+            board = game.board()
+            for move in game.mainline_moves():
+                move_number = board.fullmove_number
+                if board.turn:  # White's turn
+                    moves.append(f"{move_number}.{board.san(move)}")
+                else:  # Black's turn
+                    moves.append(f"{board.san(move)}")
+                board.push(move)
+            
+            # Add moves from tree analysis (continuing from game position)
+            for tree_node in path:
+                move_number = board.fullmove_number
+                san_move = board.san(tree_node.move)
+                if board.turn:  # White's turn
+                    moves.append(f"{move_number}.{san_move}")
+                else:  # Black's turn
+                    moves.append(f"{san_move}")
+                board.push(tree_node.move)
+        else:
+            # Start from starting position
+            board = chess.Board()
+            for tree_node in path:
+                move_number = board.fullmove_number
+                san_move = board.san(tree_node.move)
+                if board.turn:  # White's turn
+                    moves.append(f"{move_number}.{san_move}")
+                else:  # Black's turn
+                    moves.append(f"{san_move}")
+                board.push(tree_node.move)
+        
+        return " ".join(moves)
+    
+    def _format_evaluation(self, evaluation) -> str:
+        """Format evaluation for display."""
+        if evaluation is None:
+            return "eval unknown"
+        
+        if isinstance(evaluation, chess.engine.Mate):
+            mate_moves = evaluation.moves
+            if mate_moves > 0:
+                return f"mate in {mate_moves}"
+            else:
+                return f"mate in {abs(mate_moves)}"
+        elif isinstance(evaluation, chess.engine.Cp):
+            return f"eval {evaluation.cp:+d}"
+        else:
+            return f"eval {evaluation}"
+
     def _build_tree_breadth_first(self, root: TreeNode):
         """
         Build the game tree using breadth-first traversal to ensure completeness.
@@ -139,11 +214,11 @@ class ChessTreeGenerator:
         Args:
             root: Root node of the tree
         """
-        # Queue for breadth-first traversal: (node, current_depth)
-        queue: List[tuple[TreeNode, int]] = [(root, 0)]
+        # Queue for breadth-first traversal: (node, current_depth, game_context)
+        queue: List[tuple[TreeNode, int, chess.pgn.Game]] = [(root, 0, getattr(self, '_current_game', None))]
         
         while queue:
-            current_node, current_depth = queue.pop(0)
+            current_node, current_depth, game_context = queue.pop(0)
             
             # Stop if we've reached maximum depth
             if current_depth >= self.max_depth:
@@ -154,12 +229,16 @@ class ChessTreeGenerator:
                 continue
             
             try:
-                # Show progress to console (bypasses diagnostics capture)
+                # Generate move sequence notation
+                move_sequence = self._get_move_sequence_notation(current_node, game_context)
+                
+                # Show progress to console with move sequence
                 original_stdout = sys.__stdout__
-                original_stdout.write(f"\rAnalyzing depth {current_depth}, position {self.total_positions_analyzed + 1}...")
+                progress_msg = f"Analyzing depth {current_depth}, position {self.total_positions_analyzed + 1}... {move_sequence}"
+                original_stdout.write(f"\r{progress_msg}")
                 original_stdout.flush()
                 
-                print(f"Analyzing position at depth {current_depth} (move {current_node.board.fullmove_number})")
+                print(f"Analyzing position at depth {current_depth} (move {current_node.board.fullmove_number}) - {move_sequence}")
                 
                 # Determine how many moves to analyze based on whose turn it is
                 moves_to_analyze = self.white_moves if current_node.board.turn else self.black_moves
@@ -178,6 +257,19 @@ class ChessTreeGenerator:
                 # Filter moves based on centipawn threshold
                 filtered_moves = self._filter_moves(analysis_results, current_node.board.turn)
                 print(f"After filtering: {len(filtered_moves)} moves")
+                
+                # Show top move with evaluation
+                if filtered_moves:
+                    top_move = filtered_moves[0]
+                    san_move = current_node.board.san(top_move['move'])
+                    move_number = current_node.board.fullmove_number
+                    side = "..." if current_node.board.turn == chess.BLACK else ""
+                    eval_str = self._format_evaluation(top_move['evaluation'])
+                    
+                    top_move_msg = f" Top move - {move_number}.{side} {san_move} {eval_str}"
+                    original_stdout.write(top_move_msg)
+                    original_stdout.flush()
+                    print(f"Top move: {move_number}.{side} {san_move} {eval_str}")
                 
                 # Track statistics (after filtering)
                 self.total_positions_analyzed += 1
@@ -200,10 +292,12 @@ class ChessTreeGenerator:
                         depth=current_depth + 1
                     )
                     
+                    # Set parent relationship
+                    child_node.parent = current_node
                     current_node.children.append(child_node)
                     
-                    # Add child to queue for further expansion
-                    queue.append((child_node, current_depth + 1))
+                    # Add child to queue for further expansion  
+                    queue.append((child_node, current_depth + 1, game_context))
                     
             except Exception as e:
                 print(f"Error analyzing position at depth {current_depth}: {e}", file=sys.stderr)
@@ -1203,9 +1297,14 @@ Examples:
         # Clear the progress line and show completion
         print(f"\rAnalysis complete! Processed {generator.total_positions_analyzed} positions")
         
+        # Create Diagnostics directory if it doesn't exist
+        diagnostics_dir = "Diagnostics"
+        if not os.path.exists(diagnostics_dir):
+            os.makedirs(diagnostics_dir)
+        
         # Write diagnostics to file including summary
         timestamp = datetime.now().strftime("%Y%m%d%H%M")
-        diagnostics_filename = f"diagnostics_{timestamp}.txt"
+        diagnostics_filename = os.path.join(diagnostics_dir, f"diagnostics_{timestamp}.txt")
         
         # Write diagnostics and summary to file
         with open(diagnostics_filename, 'w') as f:

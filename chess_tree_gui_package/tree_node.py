@@ -34,6 +34,7 @@ class TreeNode:
         self.evaluation = evaluation
         self.depth = depth
         self.children: List['TreeNode'] = []
+        self.parent: Optional['TreeNode'] = None
     
     def add_child(self, child: 'TreeNode'):
         """
