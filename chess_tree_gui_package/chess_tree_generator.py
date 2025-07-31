@@ -1201,7 +1201,7 @@ Examples:
                 generator.print_tree(root)
         
         # Clear the progress line and show completion
-        print(f"\r✅ Analysis complete! Processed {generator.total_positions_analyzed} positions")
+        print(f"\rAnalysis complete! Processed {generator.total_positions_analyzed} positions")
         
         # Write diagnostics to file including summary
         timestamp = datetime.now().strftime("%Y%m%d%H%M")
