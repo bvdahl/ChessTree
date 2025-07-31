@@ -1,0 +1,87 @@
+Analyzing PGN file: test_simple.pgn
+Max depth: 3 half-moves
+Analysis time: 2.0 seconds per position
+Centipawn threshold: 30
+Number of moves per position: 3
+==================================================
+Analyzing position at depth 0 (move 8)
+Got 3 moves from analysis
+  Move 1: d3d4 eval: -70.0
+  Move 2: c1e3 eval: -71.0
+  Move 3: f1e2 eval: -72.0
+After filtering: 3 moves
+Analyzing position at depth 1 (move 8)
+Got 2 moves from analysis
+  Move 1: d8d5 eval: -77.0
+  Move 2: c8e6 eval: -48.0
+After filtering: 2 moves
+Analyzing position at depth 1 (move 8)
+Got 2 moves from analysis
+  Move 1: c8e6 eval: -104.0
+  Move 2: b8c6 eval: -97.0
+After filtering: 2 moves
+Analyzing position at depth 1 (move 8)
+Got 2 moves from analysis
+  Move 1: b8c6 eval: -88.0
+  Move 2: d8d5 eval: -81.0
+After filtering: 2 moves
+Analyzing position at depth 2 (move 9)
+Got 3 moves from analysis
+  Move 1: d1d3 eval: -76.0
+  Move 2: f1d3 eval: -72.0
+  Move 3: f1e2 eval: -77.0
+After filtering: 3 moves
+Analyzing position at depth 2 (move 9)
+Got 3 moves from analysis
+  Move 1: a1b1 eval: -45.0
+  Move 2: f1d3 eval: -58.0
+  Move 3: d1d3 eval: -61.0
+After filtering: 3 moves
+Analyzing position at depth 2 (move 9)
+Got 3 moves from analysis
+  Move 1: d3d4 eval: -103.0
+  Move 2: g2g3 eval: -105.0
+  Move 3: f1e2 eval: -109.0
+After filtering: 3 moves
+Analyzing position at depth 2 (move 9)
+Got 3 moves from analysis
+  Move 1: d3d4 eval: -111.0
+  Move 2: f1e2 eval: -121.0
+  Move 3: a1b1 eval: -133.0
+After filtering: 3 moves
+Analyzing position at depth 2 (move 9)
+Got 3 moves from analysis
+  Move 1: e1g1 eval: -90.0
+  Move 2: d3d4 eval: -115.0
+  Move 3: c1e3 eval: -127.0
+After filtering: 3 moves
+Analyzing position at depth 2 (move 9)
+Got 3 moves from analysis
+  Move 1: d3d4 eval: -74.0
+  Move 2: e1g1 eval: -100.0
+  Move 3: a1b1 eval: -104.0
+After filtering: 3 moves
+
+============================================================
+ANALYSIS SUMMARY
+============================================================
+Start time: 2025-07-31 07:12:18
+End time: 2025-07-31 07:12:38
+Duration: 20.2 seconds (0.3 minutes)
+Positions analyzed: 10
+Total moves used: 27 (after filtering)
+Average moves per position: 2.7
+Average time per position: 2.02 seconds
+============================================================
+
+============================================================
+FINAL SUMMARY
+============================================================
+Start time: 2025-07-31 07:12:18
+End time: 2025-07-31 07:12:38
+Duration: 20.2 seconds (0.3 minutes)
+Positions analyzed: 10
+Total moves used: 27 (after filtering)
+Average moves per position: 2.7
+Average time per position: 2.02 seconds
+============================================================

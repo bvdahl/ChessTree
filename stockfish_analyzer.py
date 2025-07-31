@@ -91,12 +91,13 @@ class StockfishAnalyzer:
             print(f"Warning: Could not configure all engine options: {e}")
             # Continue with default settings if configuration fails
     
-    def analyze_position(self, board: chess.Board) -> List[Dict[str, Any]]:
+    def analyze_position(self, board: chess.Board, num_moves: Optional[int] = None) -> List[Dict[str, Any]]:
         """
         Analyze a chess position and return the top moves with evaluations.
         
         Args:
             board: Chess board position to analyze
+            num_moves: Number of moves to analyze (overrides default if provided)
             
         Returns:
             List of dictionaries containing move analysis results.
@@ -111,18 +112,23 @@ class StockfishAnalyzer:
         if board.is_game_over():
             return []
         
+        # Use provided num_moves or fall back to default
+        moves_to_analyze = num_moves if num_moves is not None else self.num_moves
+        
         try:
-            # Analyze position with time limit
+            # Analyze position with time limit - use the configured MultiPV from initialization
             analysis = self.engine.analyse(
                 board,
                 chess.engine.Limit(time=self.analysis_time),
-                multipv=self.num_moves  # Get requested number of top moves
+                multipv=self.num_moves  # Use the maximum configured MultiPV
             )
             
             results = []
             
-            # Process analysis results
-            for info in analysis:
+            # Process analysis results - limit to requested number of moves
+            for i, info in enumerate(analysis):
+                if i >= moves_to_analyze:  # Stop when we have enough moves
+                    break
                 if 'pv' in info and info['pv']:
                     move = info['pv'][0]
                     

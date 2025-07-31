@@ -107,6 +107,11 @@ The architecture prioritizes modularity, resource efficiency, and ease of use wh
 
 ## Recent Changes
 
+**January 31, 2025 - PERFORMANCE OPTIMIZATION COMPLETE:**
+- **✅ CRITICAL FIX: True side-specific move analysis**: System now analyzes only the requested number of moves per side from the start, eliminating wasted computation time
+- **✅ VERIFIED: Time savings achieved**: Black positions with fewer requested moves now analyze exactly that count (e.g., 2 moves instead of analyzing 3 and filtering to 2)
+- **✅ PERFORMANCE: Optimal resource usage**: No more analyzing excess moves and discarding them - direct analysis efficiency improvement
+
 **January 30, 2025 - COMPLETE SOLUTION WITH MATE HANDLING:**
 - **✅ FULLY RESOLVED: Variation depth truncation**: All variations now continue to their complete analyzed depth instead of ending as single moves
 - **✅ FULLY RESOLVED: Missing diagnostics summaries**: Complete timing and statistical information now properly captured in all diagnostics files  

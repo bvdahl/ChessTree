@@ -161,8 +161,11 @@ class ChessTreeGenerator:
                 
                 print(f"Analyzing position at depth {current_depth} (move {current_node.board.fullmove_number})")
                 
-                # Analyze current position
-                analysis_results = self.analyzer.analyze_position(current_node.board)
+                # Determine how many moves to analyze based on whose turn it is
+                moves_to_analyze = self.white_moves if current_node.board.turn else self.black_moves
+                
+                # Analyze current position with side-specific move count
+                analysis_results = self.analyzer.analyze_position(current_node.board, moves_to_analyze)
                 
                 if not analysis_results:
                     print(f"No analysis results for depth {current_depth}")
