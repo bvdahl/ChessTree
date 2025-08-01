@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using Chess;
 using Newtonsoft.Json;
 
 namespace ChessTreeAnalyzer.Models
@@ -9,15 +8,15 @@ namespace ChessTreeAnalyzer.Models
     public class ChessGameModel
     {
         public string GameInfo { get; set; } = "";
-        public ChessBoard InitialPosition { get; set; }
-        public List<Move> GameMoves { get; set; } = new List<Move>();
+        public SimpleChessBoard InitialPosition { get; set; }
+        public List<SimpleMove> GameMoves { get; set; } = new List<SimpleMove>();
         public AnalysisTreeNode AnalysisTree { get; set; }
         public string SourceFile { get; set; } = "";
         public DateTime CreatedDate { get; set; } = DateTime.Now;
 
         public ChessGameModel()
         {
-            InitialPosition = new ChessBoard();
+            InitialPosition = new SimpleChessBoard();
         }
 
         public static ChessGameModel LoadFromPGN(string filePath)
@@ -35,8 +34,8 @@ namespace ChessTreeAnalyzer.Models
             
             // Parse moves - simplified implementation
             // In a real implementation, you'd use a proper PGN parser
-            var board = new ChessBoard();
-            game.InitialPosition = new ChessBoard(board.ToFen());
+            var board = new SimpleChessBoard();
+            game.InitialPosition = new SimpleChessBoard(board.FEN);
             
             // TODO: Parse actual PGN moves
             // For now, we'll work from the position after all moves
@@ -48,7 +47,7 @@ namespace ChessTreeAnalyzer.Models
         {
             var game = new ChessGameModel
             {
-                InitialPosition = new ChessBoard(fenString),
+                InitialPosition = new SimpleChessBoard(fenString),
                 GameInfo = $"FEN Position: {fenString.Substring(0, Math.Min(30, fenString.Length))}..."
             };
             
@@ -85,14 +84,14 @@ namespace ChessTreeAnalyzer.Models
             return "";
         }
 
-        public ChessBoard GetCurrentPosition()
+        public SimpleChessBoard GetCurrentPosition()
         {
-            var board = new ChessBoard(InitialPosition.ToFen());
+            var board = new SimpleChessBoard(InitialPosition.FEN);
             
             // Apply all game moves
             foreach (var move in GameMoves)
             {
-                board.Move(move);
+                board = board.MakeMove(move.SAN);
             }
             
             return board;
@@ -123,7 +122,7 @@ namespace ChessTreeAnalyzer.Models
             pgn += $"[White \"Analysis\"]\n";
             pgn += $"[Black \"Analysis\"]\n";
             pgn += $"[Result \"*\"]\n";
-            pgn += $"[FEN \"{InitialPosition.ToFen()}\"]\n\n";
+            pgn += $"[FEN \"{InitialPosition.FEN}\"]\n\n";
 
             if (AnalysisTree != null)
             {

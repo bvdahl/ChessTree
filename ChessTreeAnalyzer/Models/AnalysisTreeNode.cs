@@ -1,12 +1,11 @@
 using System.Collections.Generic;
-using Chess;
 
 namespace ChessTreeAnalyzer.Models
 {
     public class AnalysisTreeNode
     {
-        public ChessBoard Position { get; set; }
-        public Move? Move { get; set; }
+        public SimpleChessBoard Position { get; set; }
+        public SimpleMove Move { get; set; }
         public int Evaluation { get; set; } // In centipawns
         public bool IsMateScore { get; set; }
         public int MateInMoves { get; set; }
@@ -22,7 +21,7 @@ namespace ChessTreeAnalyzer.Models
                 if (Move == null)
                     return "Starting Position";
 
-                var moveText = Position.ToSan(Move.Value);
+                var moveText = Move.SAN;
                 var evalText = IsMateScore ? $"Mate in {MateInMoves}" : $"{Evaluation:+0;-#}";
                 
                 return $"{moveText} ({evalText})";
@@ -33,10 +32,7 @@ namespace ChessTreeAnalyzer.Models
         {
             get
             {
-                if (Move == null || Position == null)
-                    return "";
-
-                return Position.ToSan(Move.Value);
+                return Move?.SAN ?? "";
             }
         }
 
@@ -78,9 +74,9 @@ namespace ChessTreeAnalyzer.Models
             return count;
         }
 
-        public AnalysisTreeNode FindNodeByMove(Move move, int depth)
+        public AnalysisTreeNode FindNodeByMove(SimpleMove move, int depth)
         {
-            if (Depth == depth && Move?.ToString() == move.ToString())
+            if (Depth == depth && Move?.UCI == move?.UCI)
                 return this;
 
             foreach (var child in Children)
