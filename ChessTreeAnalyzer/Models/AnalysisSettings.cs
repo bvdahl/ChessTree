@@ -1,0 +1,61 @@
+using System;
+
+namespace ChessTreeAnalyzer.Models
+{
+    public class AnalysisSettings
+    {
+        public int MaxDepth { get; set; } = 3;
+        public TimeSpan TimePerPosition { get; set; } = TimeSpan.FromSeconds(60);
+        public int WhiteMovesToAnalyze { get; set; } = 3;
+        public int BlackMovesToAnalyze { get; set; } = 3;
+        public int WhiteThreshold { get; set; } = 30; // Centipawns
+        public int BlackThreshold { get; set; } = 30; // Centipawns
+        public int HashSizeMB { get; set; } = 8192;
+        public int ThreadCount { get; set; } = Environment.ProcessorCount;
+        public string StockfishPath { get; set; } = "stockfish.exe";
+        public bool EnableMateFiltering { get; set; } = true;
+        public bool ShowFilteredMoves { get; set; } = true;
+
+        public AnalysisSettings Clone()
+        {
+            return new AnalysisSettings
+            {
+                MaxDepth = MaxDepth,
+                TimePerPosition = TimePerPosition,
+                WhiteMovesToAnalyze = WhiteMovesToAnalyze,
+                BlackMovesToAnalyze = BlackMovesToAnalyze,
+                WhiteThreshold = WhiteThreshold,
+                BlackThreshold = BlackThreshold,
+                HashSizeMB = HashSizeMB,
+                ThreadCount = ThreadCount,
+                StockfishPath = StockfishPath,
+                EnableMateFiltering = EnableMateFiltering,
+                ShowFilteredMoves = ShowFilteredMoves
+            };
+        }
+
+        public void Validate()
+        {
+            if (MaxDepth < 1)
+                throw new ArgumentException("Max depth must be at least 1");
+            
+            if (TimePerPosition.TotalSeconds <= 0)
+                throw new ArgumentException("Time per position must be greater than 0");
+            
+            if (WhiteMovesToAnalyze < 1)
+                throw new ArgumentException("White moves to analyze must be at least 1");
+            
+            if (BlackMovesToAnalyze < 1)
+                throw new ArgumentException("Black moves to analyze must be at least 1");
+            
+            if (HashSizeMB < 1)
+                throw new ArgumentException("Hash size must be at least 1 MB");
+            
+            if (ThreadCount < 1)
+                throw new ArgumentException("Thread count must be at least 1");
+            
+            if (string.IsNullOrWhiteSpace(StockfishPath))
+                throw new ArgumentException("Stockfish path cannot be empty");
+        }
+    }
+}

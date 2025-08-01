@@ -1,0 +1,263 @@
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
+using Chess;
+using ChessTreeAnalyzer.Models;
+
+namespace ChessTreeAnalyzer.Services
+{
+    public class StockfishService : IDisposable
+    {
+        private Process _stockfishProcess;
+        private StreamWriter _stockfishInput;
+        private StreamReader _stockfishOutput;
+        private bool _isInitialized = false;
+        private readonly object _lock = new object();
+
+        public bool IsInitialized => _isInitialized;
+
+        public async Task<bool> InitializeAsync(string stockfishPath, AnalysisSettings settings)
+        {
+            try
+            {
+                if (_isInitialized)
+                    Dispose();
+
+                if (!File.Exists(stockfishPath))
+                    throw new FileNotFoundException($"Stockfish executable not found: {stockfishPath}");
+
+                _stockfishProcess = new Process
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = stockfishPath,
+                        UseShellExecute = false,
+                        RedirectStandardInput = true,
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        CreateNoWindow = true
+                    }
+                };
+
+                _stockfishProcess.Start();
+                _stockfishInput = _stockfishProcess.StandardInput;
+                _stockfishOutput = _stockfishProcess.StandardOutput;
+
+                // Wait for UCI ready
+                await SendCommandAsync("uci");
+                await WaitForResponseAsync("uciok");
+
+                // Configure engine settings
+                await SendCommandAsync($"setoption name Hash value {settings.HashSizeMB}");
+                await SendCommandAsync($"setoption name Threads value {settings.ThreadCount}");
+                await SendCommandAsync("isready");
+                await WaitForResponseAsync("readyok");
+
+                _isInitialized = true;
+                return true;
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"Failed to initialize Stockfish: {ex.Message}", ex);
+            }
+        }
+
+        public async Task<List<AnalyzedMove>> AnalyzePositionAsync(ChessBoard position, 
+            int movesToAnalyze, TimeSpan analysisTime, CancellationToken cancellationToken = default)
+        {
+            if (!_isInitialized)
+                throw new InvalidOperationException("Stockfish not initialized");
+
+            lock (_lock)
+            {
+                try
+                {
+                    var results = new List<AnalyzedMove>();
+
+                    // Set position
+                    var fen = position.ToFen();
+                    SendCommand($"position fen {fen}");
+                    
+                    // Start analysis
+                    var timeMs = (int)analysisTime.TotalMilliseconds;
+                    SendCommand($"go movetime {timeMs}");
+
+                    // Read analysis output until bestmove
+                    string line;
+                    var multiPvResults = new Dictionary<int, AnalyzedMove>();
+
+                    while ((line = _stockfishOutput.ReadLine()) != null)
+                    {
+                        cancellationToken.ThrowIfCancellationRequested();
+
+                        if (line.StartsWith("bestmove"))
+                            break;
+
+                        if (line.StartsWith("info") && line.Contains("multipv"))
+                        {
+                            var analyzedMove = ParseInfoLine(line, position);
+                            if (analyzedMove != null)
+                            {
+                                multiPvResults[analyzedMove.MultiPvIndex] = analyzedMove;
+                            }
+                        }
+                    }
+
+                    // Convert to sorted list
+                    for (int i = 1; i <= Math.Min(movesToAnalyze, multiPvResults.Count); i++)
+                    {
+                        if (multiPvResults.ContainsKey(i))
+                        {
+                            results.Add(multiPvResults[i]);
+                        }
+                    }
+
+                    return results;
+                }
+                catch (Exception ex)
+                {
+                    throw new InvalidOperationException($"Analysis failed: {ex.Message}", ex);
+                }
+            }
+        }
+
+        private AnalyzedMove ParseInfoLine(string infoLine, ChessBoard position)
+        {
+            try
+            {
+                var parts = infoLine.Split(' ');
+                var analyzedMove = new AnalyzedMove();
+
+                for (int i = 0; i < parts.Length; i++)
+                {
+                    switch (parts[i])
+                    {
+                        case "multipv":
+                            if (i + 1 < parts.Length && int.TryParse(parts[i + 1], out int pvIndex))
+                                analyzedMove.MultiPvIndex = pvIndex;
+                            break;
+
+                        case "cp":
+                            if (i + 1 < parts.Length && int.TryParse(parts[i + 1], out int cp))
+                            {
+                                analyzedMove.Evaluation = cp;
+                                analyzedMove.IsMate = false;
+                            }
+                            break;
+
+                        case "mate":
+                            if (i + 1 < parts.Length && int.TryParse(parts[i + 1], out int mateIn))
+                            {
+                                analyzedMove.MateInMoves = mateIn;
+                                analyzedMove.IsMate = true;
+                            }
+                            break;
+
+                        case "pv":
+                            if (i + 1 < parts.Length)
+                            {
+                                var moveStr = parts[i + 1];
+                                if (Chess.Move.TryParse(moveStr, out var move))
+                                {
+                                    analyzedMove.Move = move;
+                                    analyzedMove.MoveNotation = position.ToSan(move);
+                                }
+                            }
+                            break;
+
+                        case "depth":
+                            if (i + 1 < parts.Length && int.TryParse(parts[i + 1], out int depth))
+                                analyzedMove.Depth = depth;
+                            break;
+                    }
+                }
+
+                return analyzedMove.Move.HasValue ? analyzedMove : null;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private async Task SendCommandAsync(string command)
+        {
+            await _stockfishInput.WriteLineAsync(command);
+            await _stockfishInput.FlushAsync();
+        }
+
+        private void SendCommand(string command)
+        {
+            _stockfishInput.WriteLine(command);
+            _stockfishInput.Flush();
+        }
+
+        private async Task<bool> WaitForResponseAsync(string expectedResponse, int timeoutMs = 5000)
+        {
+            var timeout = DateTime.Now.AddMilliseconds(timeoutMs);
+            
+            while (DateTime.Now < timeout)
+            {
+                var line = await _stockfishOutput.ReadLineAsync();
+                if (line != null && line.Trim() == expectedResponse)
+                    return true;
+            }
+            
+            return false;
+        }
+
+        public void Dispose()
+        {
+            try
+            {
+                if (_stockfishInput != null)
+                {
+                    _stockfishInput.WriteLine("quit");
+                    _stockfishInput.Flush();
+                    _stockfishInput.Close();
+                }
+
+                _stockfishOutput?.Close();
+                
+                if (_stockfishProcess != null && !_stockfishProcess.HasExited)
+                {
+                    _stockfishProcess.WaitForExit(1000);
+                    if (!_stockfishProcess.HasExited)
+                        _stockfishProcess.Kill();
+                }
+
+                _stockfishProcess?.Dispose();
+                _isInitialized = false;
+            }
+            catch (Exception)
+            {
+                // Ignore disposal errors
+            }
+        }
+    }
+
+    public class AnalyzedMove
+    {
+        public Move? Move { get; set; }
+        public string MoveNotation { get; set; } = "";
+        public int Evaluation { get; set; }
+        public bool IsMate { get; set; }
+        public int MateInMoves { get; set; }
+        public int Depth { get; set; }
+        public int MultiPvIndex { get; set; }
+
+        public string EvaluationText
+        {
+            get
+            {
+                if (IsMate)
+                    return $"Mate in {Math.Abs(MateInMoves)}";
+                else
+                    return $"{Evaluation:+0;-#}";
+            }
+        }
+    }
+}
