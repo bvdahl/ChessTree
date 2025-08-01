@@ -1,0 +1,2 @@
+Keep PGN if analysis is interrupted
+pre-analysis estimated run time. Try to include the thresolds, and if possible base it on prior experience
