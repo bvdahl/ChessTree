@@ -5,7 +5,6 @@
         Title="Chess Tree Analyzer" 
         Height="800" Width="1200"
         MinHeight="600" MinWidth="800"
-        Icon="chess_icon.ico"
         WindowStartupLocation="CenterScreen">
     
     <Grid>
