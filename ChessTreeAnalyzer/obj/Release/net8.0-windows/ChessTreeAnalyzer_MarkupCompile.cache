@@ -10,11 +10,11 @@ none
 false
 TRACE;RELEASE;NET;NET8_0;NETCOREAPP
 /home/runner/workspace/ChessTreeAnalyzer/App.xaml
-4-1872741364
+5-717067767
 
-101925676599
+1124484627
 199-478851764
-Dialogs/FENInputDialog.xaml;MainWindow.xaml;Styles/ChessTheme.xaml;Views/ChessBoardView.xaml;
+Dialogs/AnalysisSettingsDialog.xaml;Dialogs/FENInputDialog.xaml;MainWindow.xaml;Styles/ChessTheme.xaml;Views/ChessBoardView.xaml;
 
 False
 

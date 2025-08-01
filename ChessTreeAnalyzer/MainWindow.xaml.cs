@@ -1,29 +1,50 @@
 using System;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using Microsoft.Win32;
 using ChessTreeAnalyzer.Models;
 using ChessTreeAnalyzer.Services;
+using ChessTreeAnalyzer.Dialogs;
 
 namespace ChessTreeAnalyzer
 {
     public partial class MainWindow : Window
     {
+        private ChessAnalysisService _analysisService;
+        private StockfishService _stockfishService;
+        private ChessGameModel _currentGame;
+        private AnalysisSettings _currentSettings;
+
         public MainWindow()
         {
             InitializeComponent();
+            InitializeServices();
             StatusText.Text = "Chess Tree Analyzer Ready";
             
             // Initialize with a starting position
             var startingBoard = new SimpleChessBoard();
             ChessBoard.SetPosition(startingBoard);
+            _currentGame = ChessGameModel.LoadFromFEN(startingBoard.FEN);
             
             OutputTextBlock.Text = "Welcome to Chess Tree Analyzer!\n\nFeatures:\n" +
                                   "• Load PGN files for analysis\n" +
                                   "• Set up positions from FEN notation\n" +
                                   "• Generate analysis trees with Stockfish\n" +
                                   "• Professional Windows interface\n\n" +
-                                  "Click 'Load FEN' or 'Open PGN' to get started.";
+                                  "Ready for analysis! Configure settings and start analysis.";
+        }
+
+        private void InitializeServices()
+        {
+            _stockfishService = new StockfishService();
+            _analysisService = new ChessAnalysisService(_stockfishService);
+            _currentSettings = new AnalysisSettings();
+            
+            // Subscribe to analysis events
+            _analysisService.AnalysisProgressChanged += OnAnalysisProgressChanged;
+            _analysisService.AnalysisCompleted += OnAnalysisCompleted;
+            _analysisService.AnalysisOutputReceived += OnAnalysisOutputReceived;
         }
 
         private void OpenPGN_Click(object sender, RoutedEventArgs e)
@@ -38,10 +59,10 @@ namespace ChessTreeAnalyzer
             {
                 try
                 {
-                    var game = ChessGameModel.LoadFromPGN(dialog.FileName);
-                    ChessBoard.SetPosition(game.InitialPosition);
+                    _currentGame = ChessGameModel.LoadFromPGN(dialog.FileName);
+                    ChessBoard.SetPosition(_currentGame.InitialPosition);
                     StatusText.Text = $"Loaded PGN: {System.IO.Path.GetFileName(dialog.FileName)}";
-                    OutputTextBlock.Text = $"PGN file loaded successfully:\n{game.GameInfo}\n\nReady for analysis.";
+                    OutputTextBlock.Text = $"PGN file loaded successfully:\n{_currentGame.GameInfo}\n\nReady for analysis.";
                 }
                 catch (Exception ex)
                 {
@@ -61,8 +82,8 @@ namespace ChessTreeAnalyzer
             {
                 try
                 {
-                    var game = ChessGameModel.LoadFromFEN(fen);
-                    ChessBoard.SetPosition(game.InitialPosition);
+                    _currentGame = ChessGameModel.LoadFromFEN(fen);
+                    ChessBoard.SetPosition(_currentGame.InitialPosition);
                     StatusText.Text = "FEN position loaded";
                     OutputTextBlock.Text = $"FEN position loaded:\n{fen}\n\nPosition ready for analysis.";
                 }
@@ -75,12 +96,45 @@ namespace ChessTreeAnalyzer
 
         private void SaveAnalysis_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("Save analysis functionality will be implemented here.", "Save Analysis", MessageBoxButton.OK, MessageBoxImage.Information);
+            if (_currentGame?.AnalysisTree == null)
+            {
+                MessageBox.Show("No analysis to save. Please run an analysis first.", "No Analysis", 
+                              MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            var dialog = new SaveFileDialog
+            {
+                Title = "Save Analysis",
+                Filter = "PGN Files (*.pgn)|*.pgn|JSON Files (*.json)|*.json|All Files (*.*)|*.*",
+                DefaultExt = "pgn"
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                try
+                {
+                    var extension = System.IO.Path.GetExtension(dialog.FileName).ToLower();
+                    if (extension == ".json")
+                        _currentGame.SaveAnalysisAsJSON(dialog.FileName);
+                    else
+                        _currentGame.SaveAnalysisAsPGN(dialog.FileName);
+
+                    StatusText.Text = $"Analysis saved: {System.IO.Path.GetFileName(dialog.FileName)}";
+                    MessageBox.Show("Analysis saved successfully!", "Save Complete", 
+                                  MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error saving analysis: {ex.Message}", "Save Error", 
+                                  MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
         }
 
         private void SaveAsAnalysis_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("Save as analysis functionality will be implemented here.", "Save As", MessageBoxButton.OK, MessageBoxImage.Information);
+            SaveAnalysis_Click(sender, e); // Same as Save Analysis
         }
 
         private void Exit_Click(object sender, RoutedEventArgs e)
@@ -88,33 +142,76 @@ namespace ChessTreeAnalyzer
             Application.Current.Shutdown();
         }
 
-        private void StartAnalysis_Click(object sender, RoutedEventArgs e)
+        private async void StartAnalysis_Click(object sender, RoutedEventArgs e)
         {
-            StatusText.Text = "Analysis functionality will be integrated with Stockfish engine";
-            OutputTextBlock.Text = "Analysis engine integration:\n\n" +
-                                  "This professional Windows interface is ready for Stockfish integration.\n" +
-                                  "The analysis service framework is implemented and can be connected\n" +
-                                  "to your proven Python chess analysis engine.\n\n" +
-                                  "Features ready for integration:\n" +
-                                  "• Real-time analysis progress updates\n" +
-                                  "• Interactive analysis tree display\n" +
-                                  "• Professional result formatting\n" +
-                                  "• Export capabilities";
+            if (_analysisService.IsAnalyzing)
+            {
+                MessageBox.Show("Analysis is already in progress.", "Analysis Running", 
+                              MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            if (_currentGame == null)
+            {
+                MessageBox.Show("Please load a position or PGN file first.", "No Position", 
+                              MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            try
+            {
+                // Update UI for analysis start
+                StartAnalysisButton.IsEnabled = false;
+                StopAnalysisButton.IsEnabled = true;
+                AnalysisProgressBar.Visibility = Visibility.Visible;
+                AnalysisProgressBar.Value = 0;
+                
+                // Get analysis parameters from UI
+                if (int.TryParse(DepthTextBox.Text, out int depth))
+                    _currentSettings.MaxDepth = depth;
+                if (double.TryParse(TimeTextBox.Text, out double timeSeconds))
+                    _currentSettings.TimePerPosition = TimeSpan.FromSeconds(timeSeconds);
+
+                StatusText.Text = "Starting analysis...";
+                OutputTextBlock.Text = "Starting chess analysis...\n";
+
+                // Start analysis
+                await _analysisService.StartAnalysisAsync(_currentGame, _currentSettings);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error starting analysis: {ex.Message}", "Analysis Error", 
+                              MessageBoxButton.OK, MessageBoxImage.Error);
+                ResetAnalysisUI();
+            }
         }
 
         private void StopAnalysis_Click(object sender, RoutedEventArgs e)
         {
-            StatusText.Text = "Analysis stopped";
+            if (_analysisService.IsAnalyzing)
+            {
+                _analysisService.StopAnalysis();
+                StatusText.Text = "Stopping analysis...";
+            }
         }
 
         private void AnalysisSettings_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("Analysis settings dialog will be implemented here.", "Settings", MessageBoxButton.OK, MessageBoxImage.Information);
+            var settingsDialog = new AnalysisSettingsDialog(_currentSettings);
+            if (settingsDialog.ShowDialog() == true)
+            {
+                _currentSettings = settingsDialog.Settings;
+                StatusText.Text = "Analysis settings updated";
+                
+                // Update UI controls to reflect new settings
+                DepthTextBox.Text = _currentSettings.MaxDepth.ToString();
+                TimeTextBox.Text = _currentSettings.TimePerPosition.TotalSeconds.ToString("F1");
+            }
         }
 
         private void EngineSettings_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("Engine settings dialog will be implemented here.", "Engine Settings", MessageBoxButton.OK, MessageBoxImage.Information);
+            AnalysisSettings_Click(sender, e); // Same as Analysis Settings
         }
 
         private void ToggleBoard_Click(object sender, RoutedEventArgs e)
@@ -145,9 +242,119 @@ namespace ChessTreeAnalyzer
 
         private void UserGuide_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("User guide functionality will be implemented here.", "User Guide", MessageBoxButton.OK, MessageBoxImage.Information);
+            var userGuide = "Chess Tree Analyzer - User Guide\n\n" +
+                           "1. Load Position:\n" +
+                           "   • File → Open PGN to load a chess game\n" +
+                           "   • File → Load FEN to set up a specific position\n\n" +
+                           "2. Configure Analysis:\n" +
+                           "   • Analysis → Settings to configure engine parameters\n" +
+                           "   • Set analysis depth and time per position\n" +
+                           "   • Configure move filtering thresholds\n\n" +
+                           "3. Run Analysis:\n" +
+                           "   • Click 'Start Analysis' or press F5\n" +
+                           "   • Monitor progress in the output panel\n" +
+                           "   • View results in the analysis tree\n\n" +
+                           "4. Save Results:\n" +
+                           "   • File → Save Analysis to export as PGN or JSON\n" +
+                           "   • Analysis includes all variations and evaluations\n\n" +
+                           "Requirements:\n" +
+                           "• Stockfish chess engine executable\n" +
+                           "• Configure engine path in settings";
+
+            MessageBox.Show(userGuide, "User Guide", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        // Analysis event handlers
+        private void OnAnalysisProgressChanged(object sender, AnalysisProgressEventArgs e)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                AnalysisProgressBar.Value = e.ProgressPercentage;
+                ProgressText.Text = $"{e.PositionsAnalyzed}/{e.TotalPositions} positions";
+                StatusText.Text = $"Analyzing... {e.ProgressPercentage}%";
+            });
+        }
+
+        private void OnAnalysisCompleted(object sender, AnalysisCompletedEventArgs e)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                ResetAnalysisUI();
+                
+                if (e.Success)
+                {
+                    StatusText.Text = $"Analysis completed! {e.PositionsAnalyzed} positions analyzed";
+                    PopulateAnalysisTree(e.AnalysisResult);
+                }
+                else
+                {
+                    StatusText.Text = "Analysis failed";
+                    MessageBox.Show($"Analysis failed: {e.ErrorMessage}", "Analysis Error", 
+                                  MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            });
+        }
+
+        private void OnAnalysisOutputReceived(object sender, string output)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                OutputTextBlock.Text += output + "\n";
+                
+                // Auto-scroll to bottom
+                if (OutputTextBlock.Parent is ScrollViewer scrollViewer)
+                {
+                    scrollViewer.ScrollToEnd();
+                }
+            });
+        }
+
+        private void ResetAnalysisUI()
+        {
+            StartAnalysisButton.IsEnabled = true;
+            StopAnalysisButton.IsEnabled = false;
+            AnalysisProgressBar.Visibility = Visibility.Collapsed;
+            AnalysisProgressBar.Value = 0;
+            ProgressText.Text = "";
+        }
+
+        private void PopulateAnalysisTree(AnalysisTreeNode rootNode)
+        {
+            AnalysisTreeView.Items.Clear();
+            
+            if (rootNode != null)
+            {
+                var rootItem = CreateTreeViewItem(rootNode, "Analysis Root");
+                AnalysisTreeView.Items.Add(rootItem);
+                rootItem.IsExpanded = true;
+            }
+        }
+
+        private TreeViewItem CreateTreeViewItem(AnalysisTreeNode node, string displayText)
+        {
+            var item = new TreeViewItem
+            {
+                Header = displayText,
+                Tag = node
+            };
+
+            foreach (var child in node.Children)
+            {
+                var moveText = child.Move?.SAN ?? "Unknown";
+                var evalText = child.IsMateScore ? $"Mate {child.MateInMoves}" : $"{child.Evaluation:+0;-#}";
+                var childDisplayText = $"{moveText} ({evalText})";
+                
+                var childItem = CreateTreeViewItem(child, childDisplayText);
+                item.Items.Add(childItem);
+            }
+
+            return item;
+        }
+
+        protected override void OnClosed(EventArgs e)
+        {
+            _stockfishService?.Dispose();
+            base.OnClosed(e);
         }
     }
-
-
 }

@@ -1,4 +1,6 @@
 using System;
+using System.IO;
+using Newtonsoft.Json;
 
 namespace ChessTreeAnalyzer.Models
 {
@@ -56,6 +58,18 @@ namespace ChessTreeAnalyzer.Models
             
             if (string.IsNullOrWhiteSpace(StockfishPath))
                 throw new ArgumentException("Stockfish path cannot be empty");
+        }
+
+        public void SaveToFile(string filePath)
+        {
+            var json = JsonConvert.SerializeObject(this, Formatting.Indented);
+            File.WriteAllText(filePath, json);
+        }
+
+        public static AnalysisSettings LoadFromFile(string filePath)
+        {
+            var json = File.ReadAllText(filePath);
+            return JsonConvert.DeserializeObject<AnalysisSettings>(json);
         }
     }
 }

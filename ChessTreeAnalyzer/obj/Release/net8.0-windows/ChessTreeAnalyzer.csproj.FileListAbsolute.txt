@@ -27,3 +27,5 @@
 /home/runner/workspace/ChessTreeAnalyzer/obj/Release/net8.0-windows/ChessTreeAnalyzer.pdb
 /home/runner/workspace/ChessTreeAnalyzer/obj/Release/net8.0-windows/ChessTreeAnalyzer.genruntimeconfig.cache
 /home/runner/workspace/ChessTreeAnalyzer/obj/Release/net8.0-windows/ref/ChessTreeAnalyzer.dll
+/home/runner/workspace/ChessTreeAnalyzer/obj/Release/net8.0-windows/Dialogs/AnalysisSettingsDialog.baml
+/home/runner/workspace/ChessTreeAnalyzer/obj/Release/net8.0-windows/Dialogs/AnalysisSettingsDialog.g.cs
