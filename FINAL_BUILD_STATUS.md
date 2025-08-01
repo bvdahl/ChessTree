@@ -26,7 +26,7 @@ All C# compilation errors have been fixed! The WPF application now builds and ru
 
 ## Download Files:
 
-**ChessTreeAnalyzer-WPF-Final.tar.gz** - C# WPF application (builds successfully)
+**ChessTreeAnalyzer-WPF-Complete.tar.gz** - C# WPF application (builds and runs successfully)
 **ChessTreeAnalyzer-Python.tar.gz** - Complete Python implementation
 
 ## Build Instructions:

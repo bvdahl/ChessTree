@@ -183,7 +183,7 @@ namespace ChessTreeAnalyzer.Services
                     {
                         if (analyzedMove.Move == null) continue;
 
-                        var childPosition = currentNode.Position.MakeMove(analyzedMove.Move.SAN);
+                        var childPosition = currentNode.Position.MakeMove(analyzedMove.Move);
 
                         var childNode = new AnalysisTreeNode
                         {
@@ -259,7 +259,7 @@ namespace ChessTreeAnalyzer.Services
                         moves.Add($"{moveNumber}.{san}");
                     else
                         moves.Add(san);
-                    board = board.MakeMove(pathNode.Move.SAN);
+                    board = board.MakeMove(pathNode.Move);
                 }
             }
 

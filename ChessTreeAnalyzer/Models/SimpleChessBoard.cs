@@ -83,6 +83,12 @@ namespace ChessTreeAnalyzer.Models
             var piece = GetPieceAt(square);
             return _pieceSymbols.ContainsKey(piece) ? _pieceSymbols[piece] : "";
         }
+        
+        // Method needed by ChessAnalysisService
+        public SimpleChessBoard MakeMove(SimpleMove move)
+        {
+            return MakeMove(move.SAN);
+        }
 
         public List<string> GetLegalMoves()
         {
