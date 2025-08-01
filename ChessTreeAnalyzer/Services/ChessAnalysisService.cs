@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Chess;
 using ChessTreeAnalyzer.Models;
 
 namespace ChessTreeAnalyzer.Services
@@ -182,15 +181,14 @@ namespace ChessTreeAnalyzer.Services
                     // Create child nodes
                     foreach (var analyzedMove in filteredMoves)
                     {
-                        if (!analyzedMove.Move.HasValue) continue;
+                        if (analyzedMove.Move == null) continue;
 
-                        var childPosition = new ChessBoard(currentNode.Position.ToFen());
-                        childPosition.Move(analyzedMove.Move.Value);
+                        var childPosition = currentNode.Position.MakeMove(analyzedMove.Move.SAN);
 
                         var childNode = new AnalysisTreeNode
                         {
                             Position = childPosition,
-                            Move = analyzedMove.Move.Value,
+                            Move = analyzedMove.Move,
                             Evaluation = analyzedMove.Evaluation,
                             IsMateScore = analyzedMove.IsMate,
                             MateInMoves = analyzedMove.MateInMoves,
@@ -253,15 +251,15 @@ namespace ChessTreeAnalyzer.Services
             var board = game.GetCurrentPosition();
             foreach (var pathNode in path.Skip(1))
             {
-                if (pathNode.Move.HasValue)
+                if (pathNode.Move != null)
                 {
                     var moveNumber = board.MoveNumber;
-                    var san = board.ToSan(pathNode.Move.Value);
+                    var san = pathNode.Move.SAN;
                     if (board.WhiteToMove)
                         moves.Add($"{moveNumber}.{san}");
                     else
                         moves.Add(san);
-                    board.Move(pathNode.Move.Value);
+                    board = board.MakeMove(pathNode.Move.SAN);
                 }
             }
 

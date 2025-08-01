@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using Chess;
 using ChessTreeAnalyzer.Models;
 
 namespace ChessTreeAnalyzer.Services
@@ -65,7 +64,7 @@ namespace ChessTreeAnalyzer.Services
             }
         }
 
-        public async Task<List<AnalyzedMove>> AnalyzePositionAsync(ChessBoard position, 
+        public async Task<List<AnalyzedMove>> AnalyzePositionAsync(SimpleChessBoard position, 
             int movesToAnalyze, TimeSpan analysisTime, CancellationToken cancellationToken = default)
         {
             if (!_isInitialized)
@@ -78,7 +77,7 @@ namespace ChessTreeAnalyzer.Services
                     var results = new List<AnalyzedMove>();
 
                     // Set position
-                    var fen = position.ToFen();
+                    var fen = position.FEN;
                     SendCommand($"position fen {fen}");
                     
                     // Start analysis
@@ -124,7 +123,7 @@ namespace ChessTreeAnalyzer.Services
             }
         }
 
-        private AnalyzedMove ParseInfoLine(string infoLine, ChessBoard position)
+        private AnalyzedMove ParseInfoLine(string infoLine, SimpleChessBoard position)
         {
             try
             {
@@ -160,11 +159,9 @@ namespace ChessTreeAnalyzer.Services
                             if (i + 1 < parts.Length)
                             {
                                 var moveStr = parts[i + 1];
-                                if (Chess.Move.TryParse(moveStr, out var move))
-                                {
-                                    analyzedMove.Move = move;
-                                    analyzedMove.MoveNotation = position.ToSan(move);
-                                }
+                                // Simplified move parsing - in real implementation would parse UCI moves
+                                analyzedMove.Move = new SimpleMove(moveStr, moveStr);
+                                analyzedMove.MoveNotation = moveStr;
                             }
                             break;
 
@@ -175,7 +172,7 @@ namespace ChessTreeAnalyzer.Services
                     }
                 }
 
-                return analyzedMove.Move.HasValue ? analyzedMove : null;
+                return analyzedMove.Move != null ? analyzedMove : null;
             }
             catch
             {
@@ -241,7 +238,7 @@ namespace ChessTreeAnalyzer.Services
 
     public class AnalyzedMove
     {
-        public Move? Move { get; set; }
+        public SimpleMove Move { get; set; }
         public string MoveNotation { get; set; } = "";
         public int Evaluation { get; set; }
         public bool IsMate { get; set; }

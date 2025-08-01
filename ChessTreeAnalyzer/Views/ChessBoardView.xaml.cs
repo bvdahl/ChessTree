@@ -4,7 +4,6 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Shapes;
-using Chess;
 using ChessTreeAnalyzer.Models;
 
 namespace ChessTreeAnalyzer.Views
@@ -18,7 +17,7 @@ namespace ChessTreeAnalyzer.Views
         };
 
         private ChessGameModel _currentGame;
-        private ChessBoard _currentPosition;
+        private SimpleChessBoard _currentPosition;
         private bool _flipped = false;
         private readonly Border[,] _squares = new Border[8, 8];
         private readonly TextBlock[,] _pieces = new TextBlock[8, 8];
@@ -65,7 +64,7 @@ namespace ChessTreeAnalyzer.Views
             }
 
             // Set starting position
-            SetPosition(new ChessBoard());
+            SetPosition(new SimpleChessBoard());
         }
 
         private Brush GetSquareColor(int rank, int file)
@@ -81,7 +80,7 @@ namespace ChessTreeAnalyzer.Views
             SetPosition(game.GetCurrentPosition());
         }
 
-        public void SetPosition(ChessBoard position)
+        public void SetPosition(SimpleChessBoard position)
         {
             _currentPosition = position;
             UpdatePieces();
@@ -103,16 +102,11 @@ namespace ChessTreeAnalyzer.Views
             // Place pieces on board
             for (int squareIndex = 0; squareIndex < 64; squareIndex++)
             {
-                var piece = _currentPosition.GetPiece(squareIndex);
-                if (piece != null)
+                var pieceSymbol = _currentPosition.GetPieceSymbol(squareIndex);
+                if (!string.IsNullOrEmpty(pieceSymbol))
                 {
                     var (rank, file) = IndexToCoordinates(squareIndex);
-                    var pieceKey = GetPieceKey(piece);
-                    
-                    if (_pieceSymbols.ContainsKey(pieceKey))
-                    {
-                        _pieces[rank, file].Text = _pieceSymbols[pieceKey];
-                    }
+                    _pieces[rank, file].Text = pieceSymbol;
                 }
             }
         }
@@ -131,21 +125,7 @@ namespace ChessTreeAnalyzer.Views
             return (rank, file);
         }
 
-        private string GetPieceKey(Piece piece)
-        {
-            string color = piece.Color == PieceColor.White ? "w" : "b";
-            string type = piece.Type switch
-            {
-                PieceType.King => "K",
-                PieceType.Queen => "Q",
-                PieceType.Rook => "R",
-                PieceType.Bishop => "B",
-                PieceType.Knight => "N",
-                PieceType.Pawn => "P",
-                _ => ""
-            };
-            return color + type;
-        }
+
 
         public void FlipBoard()
         {
