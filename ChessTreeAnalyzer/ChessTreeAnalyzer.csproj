@@ -5,7 +5,7 @@
     <TargetFramework>net8.0-windows</TargetFramework>
     <UseWPF>true</UseWPF>
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
-    <ApplicationIcon>chess_icon.ico</ApplicationIcon>
+
     <AssemblyTitle>Chess Tree Analyzer</AssemblyTitle>
     <AssemblyDescription>Professional chess game tree analysis application</AssemblyDescription>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>

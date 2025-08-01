@@ -226,24 +226,24 @@ namespace ChessTreeAnalyzer.Services
             {
                 // Show last few moves for context
                 var contextMoves = game.GameMoves.TakeLast(2).ToList();
-                var tempBoard = new ChessBoard(game.InitialPosition.ToFen());
+                var tempBoard = new SimpleChessBoard(game.InitialPosition.FEN);
                 
                 // Apply moves before context
                 for (int i = 0; i < game.GameMoves.Count - contextMoves.Count; i++)
                 {
-                    tempBoard.Move(game.GameMoves[i]);
+                    tempBoard = tempBoard.MakeMove(game.GameMoves[i].SAN);
                 }
 
                 // Add context moves
                 foreach (var move in contextMoves)
                 {
                     var moveNumber = tempBoard.MoveNumber;
-                    var san = tempBoard.ToSan(move);
+                    var san = move.SAN; // Get SAN notation from SimpleMove
                     if (tempBoard.WhiteToMove)
                         moves.Add($"{moveNumber}.{san}");
                     else
                         moves.Add(san);
-                    tempBoard.Move(move);
+                    tempBoard = tempBoard.MakeMove(san);
                 }
             }
 
@@ -259,7 +259,7 @@ namespace ChessTreeAnalyzer.Services
                         moves.Add($"{moveNumber}.{san}");
                     else
                         moves.Add(san);
-                    board = board.MakeMove(pathNode.Move);
+                    board = board.MakeMove(pathNode.Move.SAN);
                 }
             }
 
