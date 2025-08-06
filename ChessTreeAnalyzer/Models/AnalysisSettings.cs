@@ -17,6 +17,13 @@ namespace ChessTreeAnalyzer.Models
         public string StockfishPath { get; set; } = "stockfish.exe";
         public bool EnableMateFiltering { get; set; } = true;
         public bool ShowFilteredMoves { get; set; } = true;
+        
+        // Output settings
+        public string OutputDirectory { get; set; } = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+        public string BaseFilename { get; set; } = "chess_analysis";
+        public bool SavePGN { get; set; } = true;
+        public bool SaveJSON { get; set; } = false;
+        public bool AutoSaveDiagnostics { get; set; } = true;
 
         public AnalysisSettings Clone()
         {
@@ -32,7 +39,12 @@ namespace ChessTreeAnalyzer.Models
                 ThreadCount = ThreadCount,
                 StockfishPath = StockfishPath,
                 EnableMateFiltering = EnableMateFiltering,
-                ShowFilteredMoves = ShowFilteredMoves
+                ShowFilteredMoves = ShowFilteredMoves,
+                OutputDirectory = OutputDirectory,
+                BaseFilename = BaseFilename,
+                SavePGN = SavePGN,
+                SaveJSON = SaveJSON,
+                AutoSaveDiagnostics = AutoSaveDiagnostics
             };
         }
 

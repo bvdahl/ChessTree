@@ -115,12 +115,38 @@
                 </GroupBox>
 
                 <!-- Output Settings -->
-                <GroupBox Header="Output Options" Margin="0,0,0,15" Padding="10">
-                    <StackPanel>
-                        <CheckBox x:Name="SavePGNCheckBox" Content="Save analysis as PGN" IsChecked="True" Margin="0,5"/>
-                        <CheckBox x:Name="SaveJSONCheckBox" Content="Save analysis as JSON" IsChecked="False" Margin="0,5"/>
-                        <CheckBox x:Name="VerboseOutputCheckBox" Content="Verbose console output" IsChecked="True" Margin="0,5"/>
-                    </StackPanel>
+                <GroupBox Header="Output Settings" Margin="0,0,0,15" Padding="10">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="150"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Output Directory -->
+                        <Label Grid.Row="0" Grid.Column="0" Content="Output Directory:" VerticalAlignment="Center"/>
+                        <TextBox x:Name="OutputDirectoryTextBox" Grid.Row="0" Grid.Column="1" Margin="5" Height="25"/>
+                        <Button x:Name="BrowseOutputButton" Grid.Row="0" Grid.Column="2" 
+                                Content="Browse..." Width="80" Height="25" Margin="5,0,0,0" Click="BrowseOutput_Click"/>
+
+                        <!-- Base Filename -->
+                        <Label Grid.Row="1" Grid.Column="0" Content="Base Filename:" VerticalAlignment="Center"/>
+                        <TextBox x:Name="BaseFilenameTextBox" Grid.Row="1" Grid.Column="1" Text="chess_analysis" Margin="5" Height="25"/>
+                        
+                        <!-- Output Options -->
+                        <CheckBox Grid.Row="2" Grid.Column="1" x:Name="SavePGNCheckBox" Content="Save analysis as PGN" IsChecked="True" Margin="5"/>
+                        <CheckBox Grid.Row="3" Grid.Column="1" x:Name="SaveJSONCheckBox" Content="Save analysis as JSON" IsChecked="False" Margin="5"/>
+                        <CheckBox Grid.Row="4" Grid.Column="1" x:Name="AutoSaveDiagnosticsCheckBox" Content="Auto-save diagnostics to file" IsChecked="True" Margin="5"/>
+                        <CheckBox Grid.Row="5" Grid.Column="1" x:Name="VerboseOutputCheckBox" Content="Show filtered moves in output" IsChecked="True" Margin="5"/>
+                    </Grid>
                 </GroupBox>
 
             </StackPanel>

@@ -154,12 +154,19 @@
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
                         
-                        <TextBlock Grid.Row="0" Text="Analysis Output" FontWeight="Bold" FontSize="16" 
-                                  Margin="10" HorizontalAlignment="Center"/>
+                        <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Center" Margin="10">
+                            <TextBlock Text="Analysis Output" FontWeight="Bold" FontSize="16"/>
+                            <Button x:Name="CopyOutputButton" Content="Copy to Clipboard" 
+                                    Margin="15,0,0,0" Height="25" Click="CopyOutput_Click"/>
+                            <Button x:Name="SaveOutputButton" Content="Save to File" 
+                                    Margin="5,0,0,0" Height="25" Click="SaveOutput_Click"/>
+                        </StackPanel>
                         
                         <ScrollViewer Grid.Row="1" Margin="10" VerticalScrollBarVisibility="Auto">
-                            <TextBlock x:Name="OutputTextBlock" FontFamily="Consolas" FontSize="12" 
-                                      TextWrapping="Wrap" Background="#F8F8F8" Padding="5"/>
+                            <TextBox x:Name="OutputTextBox" FontFamily="Consolas" FontSize="12" 
+                                    TextWrapping="Wrap" Background="#F8F8F8" Padding="5" 
+                                    IsReadOnly="True" AcceptsReturn="True"
+                                    VerticalScrollBarVisibility="Auto"/>
                         </ScrollViewer>
                     </Grid>
                 </Border>

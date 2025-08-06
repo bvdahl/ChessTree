@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -27,7 +28,7 @@ namespace ChessTreeAnalyzer
             ChessBoard.SetPosition(startingBoard);
             _currentGame = ChessGameModel.LoadFromFEN(startingBoard.FEN);
             
-            OutputTextBlock.Text = "Welcome to Chess Tree Analyzer!\n\nFeatures:\n" +
+            OutputTextBox.Text = "Welcome to Chess Tree Analyzer!\n\nFeatures:\n" +
                                   "• Load PGN files for analysis\n" +
                                   "• Set up positions from FEN notation\n" +
                                   "• Generate analysis trees with Stockfish\n" +
@@ -39,7 +40,7 @@ namespace ChessTreeAnalyzer
         {
             _stockfishService = new StockfishService();
             _analysisService = new ChessAnalysisService(_stockfishService);
-            _currentSettings = new AnalysisSettings();
+            _currentSettings = SettingsService.LoadSettings(); // Load persistent settings
             
             // Subscribe to analysis events
             _analysisService.AnalysisProgressChanged += OnAnalysisProgressChanged;
@@ -60,9 +61,9 @@ namespace ChessTreeAnalyzer
                 try
                 {
                     _currentGame = ChessGameModel.LoadFromPGN(dialog.FileName);
-                    ChessBoard.SetPosition(_currentGame.InitialPosition);
+                    ChessBoard.SetPosition(_currentGame.GetCurrentPosition()); // Use current position after moves
                     StatusText.Text = $"Loaded PGN: {System.IO.Path.GetFileName(dialog.FileName)}";
-                    OutputTextBlock.Text = $"PGN file loaded successfully:\n{_currentGame.GameInfo}\n\nReady for analysis.";
+                    OutputTextBox.Text = $"PGN file loaded successfully:\n{_currentGame.GameInfo}\n\nCurrent position loaded. Ready for analysis.";
                 }
                 catch (Exception ex)
                 {
@@ -85,7 +86,7 @@ namespace ChessTreeAnalyzer
                     _currentGame = ChessGameModel.LoadFromFEN(fen);
                     ChessBoard.SetPosition(_currentGame.InitialPosition);
                     StatusText.Text = "FEN position loaded";
-                    OutputTextBlock.Text = $"FEN position loaded:\n{fen}\n\nPosition ready for analysis.";
+                    OutputTextBox.Text = $"FEN position loaded:\n{fen}\n\nPosition ready for analysis.";
                 }
                 catch (Exception ex)
                 {
@@ -173,7 +174,7 @@ namespace ChessTreeAnalyzer
                     _currentSettings.TimePerPosition = TimeSpan.FromSeconds(timeSeconds);
 
                 StatusText.Text = "Starting analysis...";
-                OutputTextBlock.Text = "Starting chess analysis...\n";
+                OutputTextBox.Text = "Starting chess analysis...\n";
 
                 // Start analysis
                 await _analysisService.StartAnalysisAsync(_currentGame, _currentSettings);
@@ -201,7 +202,8 @@ namespace ChessTreeAnalyzer
             if (settingsDialog.ShowDialog() == true)
             {
                 _currentSettings = settingsDialog.Settings;
-                StatusText.Text = "Analysis settings updated";
+                SettingsService.SaveSettings(_currentSettings); // Persist settings
+                StatusText.Text = "Analysis settings updated and saved";
                 
                 // Update UI controls to reflect new settings
                 DepthTextBox.Text = _currentSettings.MaxDepth.ToString();
@@ -299,13 +301,10 @@ namespace ChessTreeAnalyzer
         {
             Dispatcher.Invoke(() =>
             {
-                OutputTextBlock.Text += output + "\n";
+                OutputTextBox.Text += output + "\n";
                 
                 // Auto-scroll to bottom
-                if (OutputTextBlock.Parent is ScrollViewer scrollViewer)
-                {
-                    scrollViewer.ScrollToEnd();
-                }
+                OutputTextBox.ScrollToEnd();
             });
         }
 
@@ -351,8 +350,52 @@ namespace ChessTreeAnalyzer
             return item;
         }
 
+        // New methods to address the 6 issues
+        private void CopyOutput_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                Clipboard.SetText(OutputTextBox.Text);
+                StatusText.Text = "Output copied to clipboard";
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error copying to clipboard: {ex.Message}", "Copy Error", 
+                              MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void SaveOutput_Click(object sender, RoutedEventArgs e)
+        {
+            var dialog = new SaveFileDialog
+            {
+                Title = "Save Analysis Output",
+                Filter = "Text Files (*.txt)|*.txt|All Files (*.*)|*.*",
+                DefaultExt = "txt",
+                FileName = $"chess_analysis_output_{DateTime.Now:yyyyMMdd_HHmmss}.txt"
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                try
+                {
+                    File.WriteAllText(dialog.FileName, OutputTextBox.Text);
+                    StatusText.Text = $"Output saved: {Path.GetFileName(dialog.FileName)}";
+                    MessageBox.Show("Analysis output saved successfully!", "Save Complete", 
+                                  MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error saving output: {ex.Message}", "Save Error", 
+                                  MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+        }
+
         protected override void OnClosed(EventArgs e)
         {
+            // Save settings on exit  
+            SettingsService.SaveSettings(_currentSettings);
             _stockfishService?.Dispose();
             base.OnClosed(e);
         }

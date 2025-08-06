@@ -80,6 +80,9 @@ namespace ChessTreeAnalyzer.Services
                     var fen = position.FEN;
                     SendCommand($"position fen {fen}");
                     
+                    // Configure multipv for analyzing multiple moves
+                    SendCommand($"setoption name MultiPV value {movesToAnalyze}");
+                    
                     // Start analysis
                     var timeMs = (int)analysisTime.TotalMilliseconds;
                     SendCommand($"go movetime {timeMs}");

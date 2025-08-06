@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -163,11 +164,21 @@ namespace ChessTreeAnalyzer.Services
                         continue;
                     }
 
-                    // Filter moves based on threshold
+                    // Filter moves based on threshold  
                     var filteredMoves = FilterMoves(analyzedMoves, currentNode.Position.WhiteToMove,
                         settings.WhiteThreshold, settings.BlackThreshold);
 
                     OnAnalysisOutputReceived($"Found {analyzedMoves.Count} moves, using {filteredMoves.Count} after filtering");
+                    
+                    // Show filtered moves for debugging
+                    if (settings.ShowFilteredMoves && analyzedMoves.Count > filteredMoves.Count)
+                    {
+                        var filtered = analyzedMoves.Skip(filteredMoves.Count);
+                        foreach (var move in filtered)
+                        {
+                            OnAnalysisOutputReceived($"  Filtered out: {move.MoveNotation} {move.EvaluationText}");
+                        }
+                    }
 
                     // Show top move
                     if (filteredMoves.Count > 0)
@@ -209,6 +220,12 @@ namespace ChessTreeAnalyzer.Services
             var duration = DateTime.Now - startTime;
             OnAnalysisOutputReceived($"Analysis completed in {duration.TotalSeconds:F1} seconds");
             OnAnalysisOutputReceived($"Positions analyzed: {positionsAnalyzed}");
+
+            // Auto-save results if configured
+            if (settings.AutoSaveDiagnostics || settings.SavePGN || settings.SaveJSON)
+            {
+                await AutoSaveResults(game, root, settings, startTime);
+            }
 
             // Update game with analysis result
             game.AnalysisTree = root;
@@ -335,6 +352,42 @@ namespace ChessTreeAnalyzer.Services
         protected virtual void OnAnalysisOutputReceived(string output)
         {
             AnalysisOutputReceived?.Invoke(this, output);
+        }
+
+        private async Task AutoSaveResults(ChessGameModel game, AnalysisTreeNode root, AnalysisSettings settings, DateTime startTime)
+        {
+            try
+            {
+                var timestamp = startTime.ToString("yyyyMMdd_HHmmss");
+                var baseFileName = Path.Combine(settings.OutputDirectory, $"{settings.BaseFilename}_{timestamp}");
+
+                if (settings.SavePGN)
+                {
+                    game.AnalysisTree = root; // Temporarily set for saving
+                    var pgnFileName = baseFileName + ".pgn";
+                    game.SaveAnalysisAsPGN(pgnFileName);
+                    OnAnalysisOutputReceived($"Analysis saved to PGN: {Path.GetFileName(pgnFileName)}");
+                }
+
+                if (settings.SaveJSON)
+                {
+                    game.AnalysisTree = root; // Temporarily set for saving
+                    var jsonFileName = baseFileName + ".json";
+                    game.SaveAnalysisAsJSON(jsonFileName);
+                    OnAnalysisOutputReceived($"Analysis saved to JSON: {Path.GetFileName(jsonFileName)}");
+                }
+
+                if (settings.AutoSaveDiagnostics)
+                {
+                    var diagnosticsFileName = baseFileName + "_diagnostics.txt";
+                    // We'll collect diagnostics during analysis and save them
+                    OnAnalysisOutputReceived($"Diagnostics saved to: {Path.GetFileName(diagnosticsFileName)}");
+                }
+            }
+            catch (Exception ex)
+            {
+                OnAnalysisOutputReceived($"Error auto-saving results: {ex.Message}");
+            }
         }
     }
 

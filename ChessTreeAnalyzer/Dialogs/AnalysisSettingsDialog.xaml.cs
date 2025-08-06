@@ -40,6 +40,14 @@ namespace ChessTreeAnalyzer.Dialogs
             BlackMovesTextBox.Text = settings.BlackMovesToAnalyze.ToString();
             WhiteThresholdTextBox.Text = settings.WhiteThreshold.ToString();
             BlackThresholdTextBox.Text = settings.BlackThreshold.ToString();
+            
+            // Output settings
+            OutputDirectoryTextBox.Text = settings.OutputDirectory;
+            BaseFilenameTextBox.Text = settings.BaseFilename;
+            SavePGNCheckBox.IsChecked = settings.SavePGN;
+            SaveJSONCheckBox.IsChecked = settings.SaveJSON;
+            AutoSaveDiagnosticsCheckBox.IsChecked = settings.AutoSaveDiagnostics;
+            VerboseOutputCheckBox.IsChecked = settings.ShowFilteredMoves;
         }
 
         private void BrowseStockfish_Click(object sender, RoutedEventArgs e)
@@ -151,8 +159,38 @@ namespace ChessTreeAnalyzer.Dialogs
                 WhiteMovesToAnalyze = int.Parse(WhiteMovesTextBox.Text),
                 BlackMovesToAnalyze = int.Parse(BlackMovesTextBox.Text),
                 WhiteThreshold = int.Parse(WhiteThresholdTextBox.Text),
-                BlackThreshold = int.Parse(BlackThresholdTextBox.Text)
+                BlackThreshold = int.Parse(BlackThresholdTextBox.Text),
+                
+                // Output settings
+                OutputDirectory = OutputDirectoryTextBox.Text.Trim(),
+                BaseFilename = BaseFilenameTextBox.Text.Trim(),
+                SavePGN = SavePGNCheckBox.IsChecked ?? false,
+                SaveJSON = SaveJSONCheckBox.IsChecked ?? false,
+                AutoSaveDiagnostics = AutoSaveDiagnosticsCheckBox.IsChecked ?? false,
+                ShowFilteredMoves = VerboseOutputCheckBox.IsChecked ?? false
             };
+        }
+
+        private void BrowseOutput_Click(object sender, RoutedEventArgs e)
+        {
+            var dialog = new Microsoft.Win32.SaveFileDialog
+            {
+                Title = "Select Output Directory (choose any file in the folder)",
+                Filter = "All Files (*.*)|*.*",
+                CheckFileExists = false,
+                CheckPathExists = true,
+                FileName = "select_this_folder"
+            };
+
+            if (!string.IsNullOrEmpty(OutputDirectoryTextBox.Text))
+            {
+                dialog.InitialDirectory = OutputDirectoryTextBox.Text;
+            }
+
+            if (dialog.ShowDialog() == true)
+            {
+                OutputDirectoryTextBox.Text = System.IO.Path.GetDirectoryName(dialog.FileName);
+            }
         }
     }
 }

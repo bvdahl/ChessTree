@@ -19,6 +19,8 @@ namespace ChessTreeAnalyzer.Models
             InitialPosition = new SimpleChessBoard();
         }
 
+
+
         public static ChessGameModel LoadFromPGN(string filePath)
         {
             var game = new ChessGameModel
@@ -32,13 +34,19 @@ namespace ChessTreeAnalyzer.Models
             // Parse PGN headers for game info
             game.GameInfo = ExtractGameInfo(pgnContent);
             
-            // Parse moves - simplified implementation
-            // In a real implementation, you'd use a proper PGN parser
+            // Parse moves and determine current position
             var board = new SimpleChessBoard();
             game.InitialPosition = new SimpleChessBoard(board.FEN);
             
-            // TODO: Parse actual PGN moves
-            // For now, we'll work from the position after all moves
+            // Parse PGN moves (simplified - in real app would use proper PGN parser)
+            game.GameMoves = ParsePGNMoves(pgnContent);
+            
+            // If there's a FEN tag, use that as initial position
+            var fenMatch = System.Text.RegularExpressions.Regex.Match(pgnContent, @"\[FEN ""([^""]+)""\]");
+            if (fenMatch.Success)
+            {
+                game.InitialPosition = new SimpleChessBoard(fenMatch.Groups[1].Value);
+            }
             
             return game;
         }
@@ -137,6 +145,46 @@ namespace ChessTreeAnalyzer.Models
             // TODO: Implement PGN generation from analysis tree
             // This is a simplified version
             return "Analysis tree conversion to PGN format";
+        }
+
+        private static List<SimpleMove> ParsePGNMoves(string pgnContent)
+        {
+            var moves = new List<SimpleMove>();
+            
+            // Extract move text (everything after headers)
+            var lines = pgnContent.Split('\n');
+            bool inMoveText = false;
+            var moveText = "";
+            
+            foreach (var line in lines)
+            {
+                if (string.IsNullOrWhiteSpace(line) && !inMoveText)
+                {
+                    inMoveText = true;
+                    continue;
+                }
+                
+                if (inMoveText && !line.StartsWith("["))
+                {
+                    moveText += line + " ";
+                }
+            }
+            
+            // Simple move parsing - extract SAN notation
+            // This is simplified - real implementation would use proper PGN parser
+            var moveMatches = System.Text.RegularExpressions.Regex.Matches(moveText, 
+                @"\d+\.(?:\.\.)?\s*([NBRQK]?[a-h]?[1-8]?x?[a-h][1-8](?:=[NBRQ])?[+#]?)");
+            
+            foreach (System.Text.RegularExpressions.Match match in moveMatches)
+            {
+                if (match.Groups[1].Success)
+                {
+                    var san = match.Groups[1].Value.Trim();
+                    moves.Add(new SimpleMove(san, san));
+                }
+            }
+            
+            return moves;
         }
     }
 }
