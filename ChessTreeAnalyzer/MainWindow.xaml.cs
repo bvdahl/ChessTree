@@ -12,7 +12,7 @@ namespace ChessTreeAnalyzer
 {
     public partial class MainWindow : Window
     {
-        private ChessAnalysisService _analysisService;
+        private ChessAnalysisService_Fixed _analysisService;  // Use fixed service
         private StockfishService _stockfishService;
         private ChessGameModel _currentGame;
         private AnalysisSettings _currentSettings;
@@ -39,7 +39,7 @@ namespace ChessTreeAnalyzer
         private void InitializeServices()
         {
             _stockfishService = new StockfishService();
-            _analysisService = new ChessAnalysisService(_stockfishService);
+            _analysisService = new ChessAnalysisService_Fixed(_stockfishService);  // Use fixed service
             _currentSettings = SettingsService.LoadSettings(); // Load persistent settings
             
             // Subscribe to analysis events

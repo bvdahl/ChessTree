@@ -1,0 +1,49 @@
+Starting chess analysis...
+Initializing Stockfish engine...
+Stockfish initialized successfully.
+Starting analysis with depth 3, time 5s per position
+White: 3 moves, threshold 80cp
+Black: 3 moves, threshold 80cp
+Analyzing depth 0, position 1... bxc3 4.Nf3
+Found 3 moves, using 3 after filtering
+Top move: 4.... d7d5 +27
+Analyzing depth 1, position 2... d7d5
+Found 3 moves, using 3 after filtering
+Top move: 5. e2e4 +38
+Analyzing depth 1, position 3... g8f6
+Found 3 moves, using 3 after filtering
+Top move: 5. e2e4 +26
+Analyzing depth 1, position 4... e7e5
+Found 3 moves, using 3 after filtering
+Top move: 5. e2e4 +27
+Analyzing depth 2, position 5... d7d5 5.e2e4
+Found 3 moves, using 3 after filtering
+Top move: 5.... d7d5 +31
+Analyzing depth 2, position 6... d7d5 5.d2d4
+Found 3 moves, using 3 after filtering
+Top move: 5.... d7d5 +26
+Analyzing depth 2, position 7... d7d5 5.g1f3
+Found 3 moves, using 3 after filtering
+Top move: 5.... d7d5 +28
+Analyzing depth 2, position 8... g8f6 5.e2e4
+Found 3 moves, using 3 after filtering
+Top move: 5.... e7e5 +27
+Analyzing depth 2, position 9... g8f6 5.d2d4
+Found 3 moves, using 3 after filtering
+Top move: 5.... e7e5 +29
+Analyzing depth 2, position 10... g8f6 5.g1f3
+Found 3 moves, using 3 after filtering
+Top move: 5.... e7e5 +28
+Analyzing depth 2, position 11... e7e5 5.e2e4
+Found 3 moves, using 3 after filtering
+Top move: 5.... e7e5 +24
+Analyzing depth 2, position 12... e7e5 5.d2d4
+Found 3 moves, using 3 after filtering
+Top move: 5.... e7e5 +25
+Analyzing depth 2, position 13... e7e5 5.g1f3
+Found 3 moves, using 3 after filtering
+Top move: 5.... e7e5 +24
+Analysis completed in 65.2 seconds
+Positions analyzed: 13
+Analysis saved to PGN: chess_analysis_20250806_235448.pgn
+Diagnostics saved to: chess_analysis_20250806_235448_diagnostics.txt

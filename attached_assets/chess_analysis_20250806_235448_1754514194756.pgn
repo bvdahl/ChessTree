@@ -1,0 +1,8 @@
+[Event "Chess Tree Analysis"]
+[Date "2025.08.06"]
+[White "Analysis"]
+[Black "Analysis"]
+[Result "*"]
+[FEN "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"]
+
+Analysis tree conversion to PGN format
