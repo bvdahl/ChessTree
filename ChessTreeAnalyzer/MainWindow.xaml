@@ -19,7 +19,7 @@
         <Menu Grid.Row="0" Background="#F5F5F5" Padding="5">
             <MenuItem Header="_File">
                 <MenuItem Header="_Open PGN..." Click="OpenPGN_Click" InputGestureText="Ctrl+O"/>
-                <MenuItem Header="Load _FEN..." Click="LoadFEN_Click" InputGestureText="Ctrl+F"/>
+                <!-- FEN loading removed per user request -->
                 <Separator/>
                 <MenuItem Header="_Save Analysis..." Click="SaveAnalysis_Click" InputGestureText="Ctrl+S"/>
                 <MenuItem Header="Save _As..." Click="SaveAsAnalysis_Click" InputGestureText="Ctrl+Shift+S"/>
@@ -54,12 +54,7 @@
                     <TextBlock Text="Open PGN"/>
                 </StackPanel>
             </Button>
-            <Button Name="LoadFENButton" Click="LoadFEN_Click" ToolTip="Load FEN Position (Ctrl+F)">
-                <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="♔" FontSize="16" Margin="0,0,5,0"/>
-                    <TextBlock Text="Load FEN"/>
-                </StackPanel>
-            </Button>
+            <!-- FEN loading button removed per user request -->
             <Separator/>
             <Button Name="StartAnalysisButton" Click="StartAnalysis_Click" ToolTip="Start Analysis (F5)" Background="#4CAF50" Foreground="White">
                 <StackPanel Orientation="Horizontal">

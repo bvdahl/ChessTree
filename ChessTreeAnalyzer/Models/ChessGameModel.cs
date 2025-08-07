@@ -28,24 +28,43 @@ namespace ChessTreeAnalyzer.Models
                 SourceFile = filePath
             };
 
-            // Read PGN file
-            var pgnContent = File.ReadAllText(filePath);
-            
-            // Parse PGN headers for game info
-            game.GameInfo = ExtractGameInfo(pgnContent);
-            
-            // Parse moves and determine current position
-            var board = new SimpleChessBoard();
-            game.InitialPosition = new SimpleChessBoard(board.FEN);
-            
-            // Parse PGN moves (simplified - in real app would use proper PGN parser)
-            game.GameMoves = ParsePGNMoves(pgnContent);
-            
-            // If there's a FEN tag, use that as initial position
-            var fenMatch = System.Text.RegularExpressions.Regex.Match(pgnContent, @"\[FEN ""([^""]+)""\]");
-            if (fenMatch.Success)
+            try
             {
-                game.InitialPosition = new SimpleChessBoard(fenMatch.Groups[1].Value);
+                // Read PGN file
+                var pgnContent = File.ReadAllText(filePath);
+                
+                // Parse PGN headers for game info
+                game.GameInfo = ExtractGameInfo(pgnContent);
+                
+                // Start with standard chess position
+                var startingFEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+                
+                // Check if there's a custom FEN starting position
+                var fenMatch = System.Text.RegularExpressions.Regex.Match(pgnContent, @"\[FEN ""([^""]+)""\]");
+                if (fenMatch.Success)
+                {
+                    startingFEN = fenMatch.Groups[1].Value;
+                }
+                
+                game.InitialPosition = new SimpleChessBoard(startingFEN);
+                
+                // Parse all moves from the PGN
+                game.GameMoves = ParsePGNMoves(pgnContent);
+                
+                // CRITICAL: Make sure GetCurrentPosition() applies all the moves
+                // This ensures analysis starts from the FINAL position, not initial
+                var finalPosition = game.GetCurrentPosition();
+                
+                Console.WriteLine($"PGN loaded: {game.GameMoves.Count} moves played");
+                Console.WriteLine($"Starting position FEN: {startingFEN}");
+                Console.WriteLine($"Final position FEN: {finalPosition.FEN}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading PGN: {ex.Message}");
+                // Fallback to starting position
+                game.InitialPosition = new SimpleChessBoard();
+                game.GameMoves.Clear();
             }
             
             return game;
@@ -94,13 +113,25 @@ namespace ChessTreeAnalyzer.Models
 
         public SimpleChessBoard GetCurrentPosition()
         {
+            // Start from the initial position
             var board = new SimpleChessBoard(InitialPosition.FEN);
             
-            // Apply all game moves
+            // Apply all game moves to get to the FINAL position
             foreach (var move in GameMoves)
             {
-                board = board.MakeMove(move.SAN);
+                try 
+                {
+                    board = board.MakeMove(move);  // Use SimpleMove directly
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error applying move {move.SAN}: {ex.Message}");
+                    break;
+                }
             }
+            
+            Console.WriteLine($"GetCurrentPosition: Applied {GameMoves.Count} moves");
+            Console.WriteLine($"Final position: {board.FEN}");
             
             return board;
         }
@@ -151,37 +182,57 @@ namespace ChessTreeAnalyzer.Models
         {
             var moves = new List<SimpleMove>();
             
-            // Extract move text (everything after headers)
-            var lines = pgnContent.Split('\n');
-            bool inMoveText = false;
-            var moveText = "";
-            
-            foreach (var line in lines)
+            try
             {
-                if (string.IsNullOrWhiteSpace(line) && !inMoveText)
+                // Extract move text from PGN (everything after headers)
+                var lines = pgnContent.Split('\n');
+                var moveText = "";
+                bool inMoves = false;
+                
+                foreach (var line in lines)
                 {
-                    inMoveText = true;
-                    continue;
+                    if (!line.StartsWith("[") && !string.IsNullOrWhiteSpace(line))
+                    {
+                        inMoves = true;
+                        moveText += line + " ";
+                    }
                 }
                 
-                if (inMoveText && !line.StartsWith("["))
+                if (inMoves)
                 {
-                    moveText += line + " ";
+                    // For your PGN: "1. e4 e5 2. Nc3 Nf6 3. f4 d5 4. fxe5 Nxe4 5. d3 Nxc3 6. bxc3 d4 7. Nf3 dxc3 *"
+                    Console.WriteLine($"Parsing move text: {moveText}");
+                    
+                    // Clean up the move text and split by spaces
+                    var cleanedText = moveText.Replace("*", "").Trim();
+                    var tokens = cleanedText.Split(new char[] { ' ', '\t', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
+                    
+                    foreach (var token in tokens)
+                    {
+                        var cleanToken = token.Trim();
+                        
+                        // Skip move numbers (1., 2., etc.), result symbols, and empty tokens
+                        if (string.IsNullOrEmpty(cleanToken) ||
+                            cleanToken.EndsWith(".") ||
+                            cleanToken == "*" || 
+                            cleanToken == "1-0" || 
+                            cleanToken == "0-1" || 
+                            cleanToken == "1/2-1/2")
+                        {
+                            continue;
+                        }
+                        
+                        // This should be a move in Standard Algebraic Notation
+                        Console.WriteLine($"Adding move: {cleanToken}");
+                        moves.Add(new SimpleMove(cleanToken, cleanToken, 0));
+                    }
                 }
+                
+                Console.WriteLine($"Parsed {moves.Count} moves from PGN");
             }
-            
-            // Simple move parsing - extract SAN notation
-            // This is simplified - real implementation would use proper PGN parser
-            var moveMatches = System.Text.RegularExpressions.Regex.Matches(moveText, 
-                @"\d+\.(?:\.\.)?\s*([NBRQK]?[a-h]?[1-8]?x?[a-h][1-8](?:=[NBRQ])?[+#]?)");
-            
-            foreach (System.Text.RegularExpressions.Match match in moveMatches)
+            catch (Exception ex)
             {
-                if (match.Groups[1].Success)
-                {
-                    var san = match.Groups[1].Value.Trim();
-                    moves.Add(new SimpleMove(san, san));
-                }
+                Console.WriteLine($"Error parsing PGN moves: {ex.Message}");
             }
             
             return moves;
