@@ -310,14 +310,24 @@ namespace ChessTreeAnalyzer.Services
                 }
                 else
                 {
-                    // Filter by centipawn threshold
-                    var evalDiff = isWhiteToMove ? 
-                        bestMove.Evaluation - move.Evaluation : 
-                        move.Evaluation - bestMove.Evaluation;
-                    
-                    if (evalDiff <= threshold)
+                    // CRITICAL FIX: Proper centipawn filtering logic
+                    if (isWhiteToMove)
                     {
-                        filtered.Add(move);
+                        // For White: best move has highest evaluation
+                        // Include moves within threshold of best move
+                        if (move.Evaluation >= bestMove.Evaluation - threshold)
+                        {
+                            filtered.Add(move);
+                        }
+                    }
+                    else
+                    {
+                        // For Black: best move has lowest evaluation (most negative)
+                        // Include moves within threshold of best move
+                        if (move.Evaluation <= bestMove.Evaluation + threshold)
+                        {
+                            filtered.Add(move);
+                        }
                     }
                 }
             }

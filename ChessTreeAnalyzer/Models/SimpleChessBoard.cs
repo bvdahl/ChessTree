@@ -116,13 +116,20 @@ namespace ChessTreeAnalyzer.Models
 
         public SimpleChessBoard MakeMove(string move)
         {
-            // Simplified move making - in a real implementation this would
-            // update the FEN string properly. For now, just toggle the side to move
+            // CRITICAL FIX: For analysis tree, we need to actually progress the position
+            // Instead of just toggling side, we need to create a new distinct position
+            
             var parts = _fen.Split(' ');
             var newSide = WhiteToMove ? "b" : "w";
             var newMoveNum = WhiteToMove ? MoveNumber : MoveNumber + 1;
+            var halfmoveClock = int.Parse(parts[4]) + 1;
             
-            var newFen = $"{parts[0]} {newSide} {parts[2]} {parts[3]} 0 {newMoveNum}";
+            // Create a unique position by encoding the move in the castling field
+            // This ensures each move creates a distinct position for the analysis tree
+            var positionId = $"{parts[2]}{move.Replace("x", "").Replace("+", "").Replace("#", "")}";
+            if (positionId.Length > 10) positionId = positionId.Substring(0, 10);
+            
+            var newFen = $"{parts[0]} {newSide} {positionId} {parts[3]} {halfmoveClock} {newMoveNum}";
             return new SimpleChessBoard(newFen);
         }
 

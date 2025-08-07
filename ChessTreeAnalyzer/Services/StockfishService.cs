@@ -145,7 +145,9 @@ namespace ChessTreeAnalyzer.Services
                         case "cp":
                             if (i + 1 < parts.Length && int.TryParse(parts[i + 1], out int cp))
                             {
-                                analyzedMove.Evaluation = cp;
+                                // Stockfish always gives evaluation from White's perspective
+                                // Convert to current side's perspective
+                                analyzedMove.Evaluation = position.WhiteToMove ? cp : -cp;
                                 analyzedMove.IsMate = false;
                             }
                             break;
@@ -161,10 +163,11 @@ namespace ChessTreeAnalyzer.Services
                         case "pv":
                             if (i + 1 < parts.Length)
                             {
-                                var moveStr = parts[i + 1];
-                                // Simplified move parsing - in real implementation would parse UCI moves
-                                analyzedMove.Move = new SimpleMove(moveStr, moveStr);
-                                analyzedMove.MoveNotation = moveStr;
+                                var uciMove = parts[i + 1];
+                                // Convert UCI to SAN notation
+                                var sanMove = ConvertUciToSan(uciMove, position);
+                                analyzedMove.Move = new SimpleMove(sanMove, uciMove, 0);
+                                analyzedMove.MoveNotation = sanMove; // Use SAN for display
                             }
                             break;
 
@@ -207,6 +210,53 @@ namespace ChessTreeAnalyzer.Services
             }
             
             return false;
+        }
+
+        private string ConvertUciToSan(string uciMove, SimpleChessBoard position)
+        {
+            try
+            {
+                // Simple UCI to SAN conversion for common cases
+                if (uciMove.Length < 4) return uciMove;
+                
+                var from = uciMove.Substring(0, 2);
+                var to = uciMove.Substring(2, 2);
+                var piece = position.GetPieceAt(GetSquareIndex(from));
+                
+                // Basic conversion - this would need full chess logic for accurate SAN
+                if (string.IsNullOrEmpty(piece))
+                {
+                    // Pawn move
+                    if (from[0] != to[0]) // Capture
+                        return $"{from[0]}x{to}";
+                    else
+                        return to;
+                }
+                else
+                {
+                    var pieceSymbol = piece.ToUpper();
+                    if (pieceSymbol == "P") pieceSymbol = ""; // Pawns don't show symbol
+                    
+                    // Check for capture
+                    var targetPiece = position.GetPieceAt(GetSquareIndex(to));
+                    var capture = !string.IsNullOrEmpty(targetPiece) ? "x" : "";
+                    
+                    return $"{pieceSymbol}{capture}{to}";
+                }
+            }
+            catch
+            {
+                // Fallback to UCI if conversion fails
+                return uciMove;
+            }
+        }
+        
+        private int GetSquareIndex(string square)
+        {
+            if (square.Length != 2) return -1;
+            var file = square[0] - 'a';
+            var rank = square[1] - '1';
+            return rank * 8 + file;
         }
 
         public void Dispose()
