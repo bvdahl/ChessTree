@@ -1,0 +1,74 @@
+[22:45:31] Starting chess analysis...
+[22:45:31] Initializing Stockfish engine...
+[22:45:33] Stockfish initialized successfully.
+[22:45:33] Starting position FEN: rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 8
+[22:45:33] Analysis depth: 3, time: 5s per position
+[22:45:33] White: 3 moves, threshold 50cp
+[22:45:33] Black: 3 moves, threshold 50cp
+[22:45:33] Analyzing position at depth 0: Starting position
+[22:45:38] Found 3 moves, using 3 after filtering
+[22:45:38]   8.d2d4 +35
+[22:45:38]   8.e2e4 +31
+[22:45:38]   8.g1f3 +30
+[22:45:38] Analyzing position at depth 1: 7.d2d4
+[22:45:43] Found 3 moves, using 3 after filtering
+[22:45:43]   8...e7e5 +35
+[22:45:43]   8...g8f6 +27
+[22:45:43]   8...d7d5 +27
+[22:45:43] Analyzing position at depth 1: 7.e2e4
+[22:45:48] Found 3 moves, using 3 after filtering
+[22:45:48]   8...e7e5 +30
+[22:45:48]   8...d7d5 +22
+[22:45:48]   8...g8f6 +22
+[22:45:48] Analyzing position at depth 1: 7.g1f3
+[22:45:53] Found 3 moves, using 3 after filtering
+[22:45:53]   8...d7d5 +29
+[22:45:53]   8...g8f6 +26
+[22:45:53]   8...e7e5 +22
+[22:45:53] Analyzing position at depth 2: 7.d2d4 8...e7e5
+[22:45:58] Found 3 moves, using 3 after filtering
+[22:45:58]   9.d2d4 +31
+[22:45:58]   9.e2e4 +31
+[22:45:58]   9.g1f3 +27
+[22:45:58] Analyzing position at depth 2: 7.d2d4 8...g8f6
+[22:46:03] Found 3 moves, using 3 after filtering
+[22:46:03]   9.e2e4 +32
+[22:46:03]   9.d2d4 +30
+[22:46:03]   9.g1f3 +27
+[22:46:03] Analyzing position at depth 2: 7.d2d4 8...d7d5
+[22:46:08] Found 3 moves, using 3 after filtering
+[22:46:08]   9.e2e4 +31
+[22:46:08]   9.d2d4 +31
+[22:46:08]   9.g1f3 +30
+[22:46:08] Analyzing position at depth 2: 7.e2e4 8...e7e5
+[22:46:13] Found 3 moves, using 3 after filtering
+[22:46:13]   9.e2e4 +29
+[22:46:13]   9.d2d4 +26
+[22:46:13]   9.g1f3 +30
+[22:46:13] Analyzing position at depth 2: 7.e2e4 8...d7d5
+[22:46:18] Found 3 moves, using 3 after filtering
+[22:46:18]   9.e2e4 +32
+[22:46:18]   9.d2d4 +31
+[22:46:18]   9.g1f3 +30
+[22:46:18] Analyzing position at depth 2: 7.e2e4 8...g8f6
+[22:46:23] Found 3 moves, using 3 after filtering
+[22:46:23]   9.e2e4 +30
+[22:46:23]   9.d2d4 +27
+[22:46:23]   9.g1f3 +25
+[22:46:23] Analyzing position at depth 2: 7.g1f3 8...d7d5
+[22:46:28] Found 3 moves, using 3 after filtering
+[22:46:28]   9.e2e4 +34
+[22:46:28]   9.d2d4 +26
+[22:46:28]   9.g1f3 +23
+[22:46:28] Analyzing position at depth 2: 7.g1f3 8...g8f6
+[22:46:33] Found 3 moves, using 3 after filtering
+[22:46:33]   9.e2e4 +27
+[22:46:33]   9.d2d4 +27
+[22:46:33]   9.g1f3 +22
+[22:46:33] Analyzing position at depth 2: 7.g1f3 8...e7e5
+[22:46:38] Found 3 moves, using 3 after filtering
+[22:46:38]   9.e2e4 +26
+[22:46:38]   9.d2d4 +24
+[22:46:38]   9.g1f3 +22
+[22:46:38] Analysis completed in 66.9 seconds
+[22:46:38] Total positions analyzed: 13
