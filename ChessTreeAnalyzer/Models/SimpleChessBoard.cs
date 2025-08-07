@@ -147,7 +147,7 @@ namespace ChessTreeAnalyzer.Models
                 else if (originalRank.Contains('p'))
                     boardParts[rankIndex] = originalRank.Replace('p', '1');
                 else if (originalRank.Contains('1'))
-                    boardParts[rankIndex] = originalRank.Replace('1', 'p', 1);
+                    boardParts[rankIndex] = originalRank.Replace("1", "p");
             }
             
             var newBoardPosition = string.Join("/", boardParts);
