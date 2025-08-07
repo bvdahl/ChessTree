@@ -12,9 +12,9 @@ TRACE;RELEASE;NET;NET8_0;NETCOREAPP
 /home/runner/workspace/ChessTreeAnalyzer/App.xaml
 5-717067767
 
-13-687035438
+15-1698925829
 199-478851764
 Dialogs/AnalysisSettingsDialog.xaml;Dialogs/FENInputDialog.xaml;MainWindow.xaml;Styles/ChessTheme.xaml;Views/ChessBoardView.xaml;
 
-False
+True
 
