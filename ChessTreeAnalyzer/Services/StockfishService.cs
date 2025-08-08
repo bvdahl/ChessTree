@@ -100,7 +100,11 @@ namespace ChessTreeAnalyzer.Services
                     {
                         cancellationToken.ThrowIfCancellationRequested();
                         
-                        System.Diagnostics.Debug.WriteLine($"[STOCKFISH OUTPUT] {line}");
+                        // Log raw Stockfish output for debugging
+                        if (line.Contains(" cp ") || line.Contains(" mate "))
+                        {
+                            System.Diagnostics.Debug.WriteLine($"[STOCKFISH EVAL LINE] {line}");
+                        }
 
                         if (line.StartsWith("bestmove"))
                         {
@@ -110,11 +114,12 @@ namespace ChessTreeAnalyzer.Services
 
                         if (line.StartsWith("info") && line.Contains("multipv"))
                         {
+                            System.Diagnostics.Debug.WriteLine($"[STOCKFISH RAW] {line}");
                             var analyzedMove = ParseInfoLine(line, position);
                             if (analyzedMove != null)
                             {
                                 multiPvResults[analyzedMove.MultiPvIndex] = analyzedMove;
-                                System.Diagnostics.Debug.WriteLine($"[STOCKFISH] Parsed move {analyzedMove.MultiPvIndex}: {analyzedMove.Move?.UCI} eval={analyzedMove.Evaluation}");
+                                System.Diagnostics.Debug.WriteLine($"[STOCKFISH] Parsed move {analyzedMove.MultiPvIndex}: {analyzedMove.Move?.UCI} eval={analyzedMove.Evaluation} (from raw line)");
                             }
                         }
                     }
@@ -157,8 +162,8 @@ namespace ChessTreeAnalyzer.Services
                             if (i + 1 < parts.Length && int.TryParse(parts[i + 1], out int cp))
                             {
                                 // Stockfish gives evaluation from perspective of side to move
-                                // Keep it as-is for now
-                                analyzedMove.Evaluation = cp;
+                                // Convert to White's perspective: negate if Black to move
+                                analyzedMove.Evaluation = position.WhiteToMove ? cp : -cp;
                                 analyzedMove.IsMate = false;
                             }
                             break;
