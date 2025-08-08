@@ -168,16 +168,35 @@ namespace ChessTreeAnalyzer.Services
                             {
                                 if (parts[i + 1] == "cp" && int.TryParse(parts[i + 2], out int scoreCp))
                                 {
-                                    // Stockfish always gives scores where positive = White is better, negative = Black is better
-                                    // This is already from White's perspective, so we use it directly
+                                    // CRITICAL FIX: Stockfish reports scores from the perspective of the side to move
+                                    // We need to convert to White's perspective for consistency
+                                    // If Black is to move and score is positive (good for Black), negate it
+                                    // If Black is to move and score is negative (bad for Black), negate it
+                                    // Result: Always store from White's perspective
+                                    if (!position.WhiteToMove)
+                                    {
+                                        scoreCp = -scoreCp;
+                                    }
+                                    
                                     analyzedMove.Evaluation = scoreCp;
                                     analyzedMove.IsMate = false;
                                     i += 2; // Skip the next two tokens
                                 }
                                 else if (parts[i + 1] == "mate" && int.TryParse(parts[i + 2], out int mate))
                                 {
+                                    // CRITICAL FIX: Convert mate scores to White's perspective
+                                    if (!position.WhiteToMove)
+                                    {
+                                        mate = -mate;
+                                    }
+                                    
                                     analyzedMove.MateInMoves = mate;
                                     analyzedMove.IsMate = true;
+                                    
+                                    // Convert to centipawn equivalent for consistency
+                                    // Positive mate = White wins, negative = Black wins
+                                    analyzedMove.Evaluation = mate > 0 ? (100000 - Math.Abs(mate) * 100) : (-100000 + Math.Abs(mate) * 100);
+                                    
                                     i += 2; // Skip the next two tokens
                                 }
                             }
