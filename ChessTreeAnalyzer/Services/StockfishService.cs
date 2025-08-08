@@ -177,7 +177,7 @@ namespace ChessTreeAnalyzer.Services
                                 var uciMove = parts[i + 1];
                                 // Convert UCI to SAN notation
                                 var sanMove = ConvertUciToSan(uciMove, position);
-                                analyzedMove.Move = new SimpleMove(sanMove, uciMove, 0);
+                                analyzedMove.Move = new SimpleMove(uciMove, sanMove, 0); // Fixed: UCI first, then SAN
                                 analyzedMove.MoveNotation = sanMove; // Use SAN for display
                             }
                             break;
