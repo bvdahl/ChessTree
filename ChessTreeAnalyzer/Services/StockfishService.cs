@@ -100,10 +100,11 @@ namespace ChessTreeAnalyzer.Services
                     {
                         cancellationToken.ThrowIfCancellationRequested();
                         
-                        // Log raw Stockfish output for debugging
-                        if (line.Contains(" cp ") || line.Contains(" mate "))
+                        // Log ALL Stockfish output for debugging
+                        if (line.Contains("info") && (line.Contains(" cp ") || line.Contains(" mate ")))
                         {
-                            System.Diagnostics.Debug.WriteLine($"[STOCKFISH EVAL LINE] {line}");
+                            // Log to console for diagnostics file
+                            Console.WriteLine($"[STOCKFISH RAW OUTPUT]: {line}");
                         }
 
                         if (line.StartsWith("bestmove"))
@@ -114,12 +115,12 @@ namespace ChessTreeAnalyzer.Services
 
                         if (line.StartsWith("info") && line.Contains("multipv"))
                         {
-                            System.Diagnostics.Debug.WriteLine($"[STOCKFISH RAW] {line}");
                             var analyzedMove = ParseInfoLine(line, position);
                             if (analyzedMove != null)
                             {
                                 multiPvResults[analyzedMove.MultiPvIndex] = analyzedMove;
-                                System.Diagnostics.Debug.WriteLine($"[STOCKFISH] Parsed move {analyzedMove.MultiPvIndex}: {analyzedMove.Move?.UCI} eval={analyzedMove.Evaluation} (from raw line)");
+                                // Log parsed values to console for diagnostics
+                                Console.WriteLine($"[STOCKFISH PARSED]: Move={analyzedMove.Move?.UCI}, RawEval={analyzedMove.Evaluation}cp, WhiteToMove={position.WhiteToMove}");
                             }
                         }
                     }

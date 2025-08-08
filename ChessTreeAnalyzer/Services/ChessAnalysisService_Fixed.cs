@@ -165,13 +165,13 @@ namespace ChessTreeAnalyzer.Services
 
                     LogAndOutput($"Found {analyzedMoves.Count} moves, using {filteredMoves.Count} after filtering");
                     
-                    // Show top moves with proper notation and raw evaluation values
+                    // Show top moves with proper notation
                     for (int i = 0; i < Math.Min(3, filteredMoves.Count); i++)
                     {
                         var move = filteredMoves[i];
                         var moveNum = currentNode.Position.MoveNumber;
                         var side = currentNode.Position.WhiteToMove ? $"{moveNum}." : $"{moveNum}...";
-                        LogAndOutput($"  {side}{move.MoveNotation} {move.EvaluationText} (raw eval: {move.Evaluation} cp)");
+                        LogAndOutput($"  {side}{move.MoveNotation} {move.EvaluationText}");
                     }
 
                     // Create child nodes
