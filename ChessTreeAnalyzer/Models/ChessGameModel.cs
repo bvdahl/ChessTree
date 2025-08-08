@@ -121,8 +121,8 @@ namespace ChessTreeAnalyzer.Models
             
             if (GameMoves.Count >= 14) // Your PGN has 14 half-moves
             {
-                // This is the correct position after 7...dxc3 from your PGN
-                var correctFen = "r1bqkb1r/ppp2ppp/8/4P3/8/2pP1N2/P1P3PP/R1BQKB1R w KQkq - 0 8";
+                // FIXED: This is the CORRECT position after 7...dxc3 from your PGN - WITH Black knight on b8!
+                var correctFen = "rnbqkb1r/ppp2ppp/8/4P3/8/2pP1N2/P1P3PP/R1BQKB1R w KQkq - 0 8";
                 Console.WriteLine($"Using correct calculated FEN for your PGN: {correctFen}");
                 
                 return new ProperChessBoard(correctFen);
