@@ -13,8 +13,9 @@ Based on your screenshot showing Stockfish evaluating the position at -1.08 to -
 
 ## Immediate Fix to Try
 
-### Download Available
-**ChessTreeAnalyzer_Diagnostics_Enhanced.tar.gz** - This version logs raw Stockfish output
+### Downloads Available
+1. **ChessTreeAnalyzer_Debug_Eval.tar.gz** - Latest version with comprehensive Stockfish output logging
+2. **ChessTreeAnalyzer_Diagnostics_Enhanced.tar.gz** - Previous enhanced diagnostics version
 
 ### Manual Fix for Evaluation Issue
 In `StockfishService.cs`, find the ParseInfoLine method around line 156-165:

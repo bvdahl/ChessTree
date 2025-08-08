@@ -150,6 +150,9 @@ namespace ChessTreeAnalyzer.Services
                 var parts = infoLine.Split(' ');
                 var analyzedMove = new AnalyzedMove();
 
+                // Log the full info line for debugging
+                Console.WriteLine($"[STOCKFISH INFO LINE]: {infoLine}");
+                
                 for (int i = 0; i < parts.Length; i++)
                 {
                     switch (parts[i])
@@ -158,14 +161,39 @@ namespace ChessTreeAnalyzer.Services
                             if (i + 1 < parts.Length && int.TryParse(parts[i + 1], out int pvIndex))
                                 analyzedMove.MultiPvIndex = pvIndex;
                             break;
+                            
+                        case "score":
+                            // Look for cp or mate after "score"
+                            if (i + 2 < parts.Length)
+                            {
+                                if (parts[i + 1] == "cp" && int.TryParse(parts[i + 2], out int scoreCp))
+                                {
+                                    Console.WriteLine($"[DEBUG EVAL FROM SCORE]: Raw cp={scoreCp}, WhiteToMove={position.WhiteToMove}");
+                                    analyzedMove.Evaluation = scoreCp;
+                                    analyzedMove.IsMate = false;
+                                    i += 2; // Skip the next two tokens
+                                }
+                                else if (parts[i + 1] == "mate" && int.TryParse(parts[i + 2], out int mate))
+                                {
+                                    analyzedMove.MateInMoves = mate;
+                                    analyzedMove.IsMate = true;
+                                    i += 2; // Skip the next two tokens
+                                }
+                            }
+                            break;
 
                         case "cp":
                             if (i + 1 < parts.Length && int.TryParse(parts[i + 1], out int cp))
                             {
-                                // Stockfish gives evaluation from perspective of side to move
-                                // Convert to White's perspective: negate if Black to move
-                                analyzedMove.Evaluation = position.WhiteToMove ? cp : -cp;
+                                // Log raw cp value for debugging
+                                Console.WriteLine($"[DEBUG EVAL]: Raw cp={cp}, WhiteToMove={position.WhiteToMove}");
+                                
+                                // Based on testing: Stockfish gives evaluation from White's perspective
+                                // We just need to use it directly
+                                analyzedMove.Evaluation = cp;
                                 analyzedMove.IsMate = false;
+                                
+                                Console.WriteLine($"[DEBUG EVAL]: Final eval={analyzedMove.Evaluation}");
                             }
                             break;
 
