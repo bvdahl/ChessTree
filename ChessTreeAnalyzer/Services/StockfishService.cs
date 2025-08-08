@@ -168,8 +168,10 @@ namespace ChessTreeAnalyzer.Services
                             {
                                 if (parts[i + 1] == "cp" && int.TryParse(parts[i + 2], out int scoreCp))
                                 {
-                                    Console.WriteLine($"[DEBUG EVAL FROM SCORE]: Raw cp={scoreCp}, WhiteToMove={position.WhiteToMove}");
-                                    analyzedMove.Evaluation = scoreCp;
+                                    // IMPORTANT: Stockfish gives score from the perspective of the side to move
+                                    // We need to convert it to White's perspective (like python-chess score.white())
+                                    // If it's Black's turn, negate the score to get White's perspective
+                                    analyzedMove.Evaluation = position.WhiteToMove ? scoreCp : -scoreCp;
                                     analyzedMove.IsMate = false;
                                     i += 2; // Skip the next two tokens
                                 }
@@ -182,28 +184,7 @@ namespace ChessTreeAnalyzer.Services
                             }
                             break;
 
-                        case "cp":
-                            if (i + 1 < parts.Length && int.TryParse(parts[i + 1], out int cp))
-                            {
-                                // Log raw cp value for debugging
-                                Console.WriteLine($"[DEBUG EVAL]: Raw cp={cp}, WhiteToMove={position.WhiteToMove}");
-                                
-                                // Based on testing: Stockfish gives evaluation from White's perspective
-                                // We just need to use it directly
-                                analyzedMove.Evaluation = cp;
-                                analyzedMove.IsMate = false;
-                                
-                                Console.WriteLine($"[DEBUG EVAL]: Final eval={analyzedMove.Evaluation}");
-                            }
-                            break;
-
-                        case "mate":
-                            if (i + 1 < parts.Length && int.TryParse(parts[i + 1], out int mateIn))
-                            {
-                                analyzedMove.MateInMoves = mateIn;
-                                analyzedMove.IsMate = true;
-                            }
-                            break;
+                        // Note: "cp" and "mate" cases removed - we handle scores in the "score" case above
 
                         case "pv":
                             if (i + 1 < parts.Length)
