@@ -140,6 +140,7 @@ namespace ChessTreeAnalyzer.Services
                     });
 
                     LogAndOutput($"Analyzing position at depth {currentNode.Depth}: {moveSequence}");
+                    LogAndOutput($"  FEN: {currentNode.Position.FEN}");
 
                     // Determine moves to analyze
                     var movesToAnalyze = currentNode.Position.WhiteToMove ? 
