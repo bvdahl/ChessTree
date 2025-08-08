@@ -8,7 +8,7 @@ namespace ChessTreeAnalyzer.Models
     public class ChessGameModel
     {
         public string GameInfo { get; set; } = "";
-        public SimpleChessBoard InitialPosition { get; set; }
+        public ProperChessBoard InitialPosition { get; set; }
         public List<SimpleMove> GameMoves { get; set; } = new List<SimpleMove>();
         public AnalysisTreeNode AnalysisTree { get; set; }
         public string SourceFile { get; set; } = "";
@@ -16,7 +16,7 @@ namespace ChessTreeAnalyzer.Models
 
         public ChessGameModel()
         {
-            InitialPosition = new SimpleChessBoard();
+            InitialPosition = new ProperChessBoard();
         }
 
 
@@ -46,7 +46,7 @@ namespace ChessTreeAnalyzer.Models
                     startingFEN = fenMatch.Groups[1].Value;
                 }
                 
-                game.InitialPosition = new SimpleChessBoard(startingFEN);
+                game.InitialPosition = new ProperChessBoard(startingFEN);
                 
                 // Parse all moves from the PGN
                 game.GameMoves = ParsePGNMoves(pgnContent);
@@ -63,7 +63,7 @@ namespace ChessTreeAnalyzer.Models
             {
                 Console.WriteLine($"Error loading PGN: {ex.Message}");
                 // Fallback to starting position
-                game.InitialPosition = new SimpleChessBoard();
+                game.InitialPosition = new ProperChessBoard();
                 game.GameMoves.Clear();
             }
             
@@ -74,7 +74,7 @@ namespace ChessTreeAnalyzer.Models
         {
             var game = new ChessGameModel
             {
-                InitialPosition = new SimpleChessBoard(fenString),
+                InitialPosition = new ProperChessBoard(fenString),
                 GameInfo = $"FEN Position: {fenString.Substring(0, Math.Min(30, fenString.Length))}..."
             };
             
@@ -111,7 +111,7 @@ namespace ChessTreeAnalyzer.Models
             return "";
         }
 
-        public SimpleChessBoard GetCurrentPosition()
+        public ProperChessBoard GetCurrentPosition()
         {
             Console.WriteLine($"GetCurrentPosition: Starting with {GameMoves.Count} moves to apply");
             Console.WriteLine($"Initial position FEN: {InitialPosition.FEN}");
@@ -125,19 +125,19 @@ namespace ChessTreeAnalyzer.Models
                 var correctFen = "r1bqkb1r/ppp2ppp/8/4P3/8/2pP1N2/P1P3PP/R1BQKB1R w KQkq - 0 8";
                 Console.WriteLine($"Using correct calculated FEN for your PGN: {correctFen}");
                 
-                return new SimpleChessBoard(correctFen);
+                return new ProperChessBoard(correctFen);
             }
             else if (GameMoves.Count > 0)
             {
                 // For other PGNs, we'll need proper move application
                 // This is a temporary fallback - the correct position would require proper chess engine
                 Console.WriteLine("Warning: Using starting position as fallback - proper move application needed");
-                return new SimpleChessBoard(InitialPosition.FEN);
+                return new ProperChessBoard(InitialPosition.FEN);
             }
             else
             {
                 Console.WriteLine("No moves to apply, returning initial position");
-                return new SimpleChessBoard(InitialPosition.FEN);
+                return new ProperChessBoard(InitialPosition.FEN);
             }
         }
 

@@ -121,7 +121,7 @@ namespace ChessTreeAnalyzer.Services
                     continue;
 
                 // Skip if game over
-                if (currentNode.Position.IsGameOver)
+                if (currentNode.Position.IsGameOver())
                     continue;
 
                 try
@@ -176,7 +176,7 @@ namespace ChessTreeAnalyzer.Services
                     {
                         if (analyzedMove.Move == null) continue;
 
-                        var childPosition = currentNode.Position.MakeMove(analyzedMove.Move);
+                        var childPosition = currentNode.Position.MakeMove(analyzedMove.Move.UCI);
 
                         var childNode = new AnalysisTreeNode
                         {

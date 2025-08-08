@@ -4,7 +4,7 @@ namespace ChessTreeAnalyzer.Models
 {
     public class AnalysisTreeNode
     {
-        public SimpleChessBoard Position { get; set; }
+        public ProperChessBoard Position { get; set; }
         public SimpleMove Move { get; set; }
         public int Evaluation { get; set; } // In centipawns
         public bool IsMateScore { get; set; }

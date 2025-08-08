@@ -24,7 +24,7 @@ namespace ChessTreeAnalyzer
             StatusText.Text = "Chess Tree Analyzer Ready";
             
             // Initialize with a starting position
-            var startingBoard = new SimpleChessBoard();
+            var startingBoard = new ProperChessBoard();
             ChessBoard.SetPosition(startingBoard);
             _currentGame = ChessGameModel.LoadFromFEN(startingBoard.FEN);
             

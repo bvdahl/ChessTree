@@ -17,7 +17,7 @@ namespace ChessTreeAnalyzer.Views
         };
 
         private ChessGameModel _currentGame;
-        private SimpleChessBoard _currentPosition;
+        private ProperChessBoard _currentPosition;
         private bool _flipped = false;
         private readonly Border[,] _squares = new Border[8, 8];
         private readonly TextBlock[,] _pieces = new TextBlock[8, 8];
@@ -64,7 +64,7 @@ namespace ChessTreeAnalyzer.Views
             }
 
             // Set starting position
-            SetPosition(new SimpleChessBoard());
+            SetPosition(new ProperChessBoard());
         }
 
         private Brush GetSquareColor(int rank, int file)
@@ -80,7 +80,7 @@ namespace ChessTreeAnalyzer.Views
             SetPosition(game.GetCurrentPosition());
         }
 
-        public void SetPosition(SimpleChessBoard position)
+        public void SetPosition(ProperChessBoard position)
         {
             _currentPosition = position;
             UpdatePieces();

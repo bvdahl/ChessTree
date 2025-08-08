@@ -130,7 +130,7 @@ namespace ChessTreeAnalyzer.Services
                     continue;
 
                 // Skip if game is over
-                if (currentNode.Position.IsGameOver)
+                if (currentNode.Position.IsGameOver())
                     continue;
 
                 try
@@ -194,7 +194,7 @@ namespace ChessTreeAnalyzer.Services
                     {
                         if (analyzedMove.Move == null) continue;
 
-                        var childPosition = currentNode.Position.MakeMove(analyzedMove.Move);
+                        var childPosition = currentNode.Position.MakeMove(analyzedMove.Move.UCI);
 
                         var childNode = new AnalysisTreeNode
                         {
@@ -243,7 +243,7 @@ namespace ChessTreeAnalyzer.Services
             {
                 // Show last few moves for context
                 var contextMoves = game.GameMoves.TakeLast(2).ToList();
-                var tempBoard = new SimpleChessBoard(game.InitialPosition.FEN);
+                var tempBoard = new ProperChessBoard(game.InitialPosition.FEN);
                 
                 // Apply moves before context
                 for (int i = 0; i < game.GameMoves.Count - contextMoves.Count; i++)

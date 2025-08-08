@@ -64,7 +64,7 @@ namespace ChessTreeAnalyzer.Services
             }
         }
 
-        public async Task<List<AnalyzedMove>> AnalyzePositionAsync(SimpleChessBoard position, 
+        public async Task<List<AnalyzedMove>> AnalyzePositionAsync(ProperChessBoard position, 
             int movesToAnalyze, TimeSpan analysisTime, CancellationToken cancellationToken = default)
         {
             if (!_isInitialized)
@@ -126,7 +126,7 @@ namespace ChessTreeAnalyzer.Services
             }
         }
 
-        private AnalyzedMove ParseInfoLine(string infoLine, SimpleChessBoard position)
+        private AnalyzedMove ParseInfoLine(string infoLine, ProperChessBoard position)
         {
             try
             {
@@ -212,7 +212,7 @@ namespace ChessTreeAnalyzer.Services
             return false;
         }
 
-        private string ConvertUciToSan(string uciMove, SimpleChessBoard position)
+        private string ConvertUciToSan(string uciMove, ProperChessBoard position)
         {
             try
             {
