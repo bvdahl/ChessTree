@@ -1,0 +1,30 @@
+[00:33:10] Starting chess analysis...
+[00:33:10] Initializing Stockfish engine...
+[00:33:12] Stockfish initialized successfully.
+[00:33:12] Starting position FEN: r1bqkb1r/ppp2ppp/8/4P3/8/2pP1N2/P1P3PP/R1BQKB1R w KQkq - 0 8
+[00:33:12] Analysis depth: 3, time: 5s per position
+[00:33:12] White: 3 moves, threshold 50cp
+[00:33:12] Black: 3 moves, threshold 50cp
+[00:33:12] 
+=== Analyzing position at depth 0: Starting position ===
+[00:33:12]   Current FEN: r1bqkb1r/ppp2ppp/8/4P3/8/2pP1N2/P1P3PP/R1BQKB1R w KQkq - 0 8
+[00:33:12]   Side to move: White
+[00:33:12]   Move number: 8
+[00:33:17] Found 3 moves, using 3 after filtering
+[00:33:17]   8.Be2 +451
+[00:33:17]   8.d4 +439
+[00:33:17]   8.a4 +425
+[00:33:17]   Applying move: Be2
+[00:33:17]   ERROR: Position unchanged after move Be2!
+[00:33:17]     From FEN: r1bqkb1r/ppp2ppp/8/4P3/8/2pP1N2/P1P3PP/R1BQKB1R w KQkq - 0 8
+[00:33:17]     To FEN:   r1bqkb1r/ppp2ppp/8/4P3/8/2pP1N2/P1P3PP/R1BQKB1R w KQkq - 0 8
+[00:33:17]   Applying move: d4
+[00:33:17]   ERROR: Position unchanged after move d4!
+[00:33:17]     From FEN: r1bqkb1r/ppp2ppp/8/4P3/8/2pP1N2/P1P3PP/R1BQKB1R w KQkq - 0 8
+[00:33:17]     To FEN:   r1bqkb1r/ppp2ppp/8/4P3/8/2pP1N2/P1P3PP/R1BQKB1R w KQkq - 0 8
+[00:33:17]   Applying move: a4
+[00:33:17]   ERROR: Position unchanged after move a4!
+[00:33:17]     From FEN: r1bqkb1r/ppp2ppp/8/4P3/8/2pP1N2/P1P3PP/R1BQKB1R w KQkq - 0 8
+[00:33:17]     To FEN:   r1bqkb1r/ppp2ppp/8/4P3/8/2pP1N2/P1P3PP/R1BQKB1R w KQkq - 0 8
+[00:33:17] Analysis completed in 6.8 seconds
+[00:33:17] Total positions analyzed: 1
