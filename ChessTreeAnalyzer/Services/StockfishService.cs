@@ -168,10 +168,9 @@ namespace ChessTreeAnalyzer.Services
                             {
                                 if (parts[i + 1] == "cp" && int.TryParse(parts[i + 2], out int scoreCp))
                                 {
-                                    // IMPORTANT: Stockfish gives score from the perspective of the side to move
-                                    // We need to convert it to White's perspective (like python-chess score.white())
-                                    // If it's Black's turn, negate the score to get White's perspective
-                                    analyzedMove.Evaluation = position.WhiteToMove ? scoreCp : -scoreCp;
+                                    // Stockfish always gives scores where positive = White is better, negative = Black is better
+                                    // This is already from White's perspective, so we use it directly
+                                    analyzedMove.Evaluation = scoreCp;
                                     analyzedMove.IsMate = false;
                                     i += 2; // Skip the next two tokens
                                 }
