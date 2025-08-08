@@ -183,7 +183,8 @@ namespace ChessTreeAnalyzer.Services
                             continue;
                         }
 
-                        LogAndOutput($"  Applying move: {analyzedMove.Move.UCI}");
+                        // Debug: Show both UCI and SAN to verify they're correct
+                        LogAndOutput($"  Applying move - UCI: {analyzedMove.Move.UCI}, SAN: {analyzedMove.Move.SAN}");
                         var childPosition = currentNode.Position.MakeMove(analyzedMove.Move.UCI);
                         
                         // Verify the position actually changed

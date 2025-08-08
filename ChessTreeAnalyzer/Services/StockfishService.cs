@@ -175,8 +175,10 @@ namespace ChessTreeAnalyzer.Services
                             if (i + 1 < parts.Length)
                             {
                                 var uciMove = parts[i + 1];
+                                System.Diagnostics.Debug.WriteLine($"[STOCKFISH] Raw UCI move from engine: {uciMove}");
                                 // Convert UCI to SAN notation
                                 var sanMove = ConvertUciToSan(uciMove, position);
+                                System.Diagnostics.Debug.WriteLine($"[STOCKFISH] Converted to SAN: {sanMove}");
                                 analyzedMove.Move = new SimpleMove(uciMove, sanMove, 0); // Fixed: UCI first, then SAN
                                 analyzedMove.MoveNotation = sanMove; // Use SAN for display
                             }
