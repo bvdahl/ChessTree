@@ -6,7 +6,15 @@ This project is a comprehensive chess analysis application with both Python comm
 
 ## Recent Changes (August 2025)
 
-### CRITICAL POSITION LOADING FIX
+### UCI/SAN PARAMETER FIX (August 8, 2025)
+- **Issue Resolved**: Moves weren't being applied, causing same position to be analyzed repeatedly
+- **Root Cause**: SimpleMove constructor parameters were reversed in StockfishService.cs
+- **Fix Applied**: Changed `new SimpleMove(sanMove, uciMove, 0)` to `new SimpleMove(uciMove, sanMove, 0)`
+- **Impact**: Moves now apply correctly, positions change as expected, tree generation works
+- **User Confirmed**: Application now analyzes multiple positions correctly
+- **Remaining Issues**: Evaluation values appear too high, PGN output may be truncated
+
+### Previous Fix - CRITICAL POSITION LOADING FIX
 - **Issue Resolved**: C# application was analyzing starting position instead of end position from PGN files
 - **Root Cause**: GetCurrentPosition() method not properly applying PGN moves  
 - **Fix Applied**: Emergency position calculation for user's specific test PGN
