@@ -1,0 +1,87 @@
+[14:32:16] Starting chess analysis...
+[14:32:16] Initializing Stockfish engine...
+[14:32:18] Stockfish initialized successfully.
+[14:32:18] Starting position FEN: r1bqkb1r/ppp2ppp/8/4P3/8/2pP1N2/P1P3PP/R1BQKB1R w KQkq - 0 8
+[14:32:18] Analysis depth: 3, time: 5s per position
+[14:32:18] White: 3 moves, threshold 50cp
+[14:32:18] Black: 3 moves, threshold 50cp
+[14:32:18] Analyzing position at depth 0: Starting position
+[14:32:18]   FEN: r1bqkb1r/ppp2ppp/8/4P3/8/2pP1N2/P1P3PP/R1BQKB1R w KQkq - 0 8
+[14:32:23] Found 3 moves, using 3 after filtering
+[14:32:23]   8.d4 +453
+[14:32:23]   8.Be2 +442
+[14:32:23]   8.Be3 +428
+[14:32:23] Analyzing position at depth 1: 7...d3d4
+[14:32:23]   FEN: r1bqkb1r/ppp2ppp/8/4P3/8/2pP1N2/P1P3PP/R1BQKB1R w KQkq - 0 8
+[14:32:28] Found 3 moves, using 3 after filtering
+[14:32:28]   8.d4 +447
+[14:32:28]   8.Be2 +434
+[14:32:28]   8.Be3 +413
+[14:32:28] Analyzing position at depth 1: 7...f1e2
+[14:32:28]   FEN: r1bqkb1r/ppp2ppp/8/4P3/8/2pP1N2/P1P3PP/R1BQKB1R w KQkq - 0 8
+[14:32:33] Found 3 moves, using 3 after filtering
+[14:32:33]   8.d4 +448
+[14:32:33]   8.Be2 +442
+[14:32:33]   8.Be3 +423
+[14:32:33] Analyzing position at depth 1: 7...c1e3
+[14:32:33]   FEN: r1bqkb1r/ppp2ppp/8/4P3/8/2pP1N2/P1P3PP/R1BQKB1R w KQkq - 0 8
+[14:32:38] Found 3 moves, using 3 after filtering
+[14:32:38]   8.d4 +443
+[14:32:38]   8.Be2 +438
+[14:32:38]   8.Be3 +431
+[14:32:38] Analyzing position at depth 2: 7...d3d4 d3d4
+[14:32:38]   FEN: r1bqkb1r/ppp2ppp/8/4P3/8/2pP1N2/P1P3PP/R1BQKB1R w KQkq - 0 8
+[14:32:43] Found 3 moves, using 3 after filtering
+[14:32:43]   8.d4 +448
+[14:32:43]   8.Be2 +442
+[14:32:43]   8.Be3 +423
+[14:32:43] Analyzing position at depth 2: 7...d3d4 f1e2
+[14:32:43]   FEN: r1bqkb1r/ppp2ppp/8/4P3/8/2pP1N2/P1P3PP/R1BQKB1R w KQkq - 0 8
+[14:32:48] Found 3 moves, using 3 after filtering
+[14:32:48]   8.Be2 +431
+[14:32:48]   8.d4 +430
+[14:32:48]   8.Be3 +425
+[14:32:48] Analyzing position at depth 2: 7...d3d4 c1e3
+[14:32:48]   FEN: r1bqkb1r/ppp2ppp/8/4P3/8/2pP1N2/P1P3PP/R1BQKB1R w KQkq - 0 8
+[14:32:53] Found 3 moves, using 3 after filtering
+[14:32:53]   8.Be2 +443
+[14:32:53]   8.d4 +431
+[14:32:53]   8.Be3 +423
+[14:32:53] Analyzing position at depth 2: 7...f1e2 d3d4
+[14:32:53]   FEN: r1bqkb1r/ppp2ppp/8/4P3/8/2pP1N2/P1P3PP/R1BQKB1R w KQkq - 0 8
+[14:32:58] Found 3 moves, using 3 after filtering
+[14:32:58]   8.Be2 +438
+[14:32:58]   8.d4 +430
+[14:32:58]   8.Be3 +415
+[14:32:58] Analyzing position at depth 2: 7...f1e2 f1e2
+[14:32:58]   FEN: r1bqkb1r/ppp2ppp/8/4P3/8/2pP1N2/P1P3PP/R1BQKB1R w KQkq - 0 8
+[14:33:03] Found 3 moves, using 3 after filtering
+[14:33:03]   8.Be2 +426
+[14:33:03]   8.d4 +431
+[14:33:03]   8.Be3 +421
+[14:33:03] Analyzing position at depth 2: 7...f1e2 c1e3
+[14:33:03]   FEN: r1bqkb1r/ppp2ppp/8/4P3/8/2pP1N2/P1P3PP/R1BQKB1R w KQkq - 0 8
+[14:33:08] Found 3 moves, using 3 after filtering
+[14:33:08]   8.d4 +429
+[14:33:08]   8.Be2 +428
+[14:33:08]   8.Be3 +422
+[14:33:08] Analyzing position at depth 2: 7...c1e3 d3d4
+[14:33:08]   FEN: r1bqkb1r/ppp2ppp/8/4P3/8/2pP1N2/P1P3PP/R1BQKB1R w KQkq - 0 8
+[14:33:13] Found 3 moves, using 3 after filtering
+[14:33:13]   8.d4 +428
+[14:33:13]   8.Be2 +427
+[14:33:13]   8.Be3 +421
+[14:33:13] Analyzing position at depth 2: 7...c1e3 f1e2
+[14:33:13]   FEN: r1bqkb1r/ppp2ppp/8/4P3/8/2pP1N2/P1P3PP/R1BQKB1R w KQkq - 0 8
+[14:33:18] Found 3 moves, using 3 after filtering
+[14:33:18]   8.Be2 +431
+[14:33:18]   8.d4 +424
+[14:33:18]   8.Be3 +418
+[14:33:18] Analyzing position at depth 2: 7...c1e3 c1e3
+[14:33:18]   FEN: r1bqkb1r/ppp2ppp/8/4P3/8/2pP1N2/P1P3PP/R1BQKB1R w KQkq - 0 8
+[14:33:23] Found 3 moves, using 3 after filtering
+[14:33:23]   8.Be2 +442
+[14:33:23]   8.d4 +431
+[14:33:23]   8.Be3 +420
+[14:33:23] Analysis completed in 67.0 seconds
+[14:33:23] Total positions analyzed: 13

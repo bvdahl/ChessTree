@@ -74,7 +74,10 @@ namespace ChessTreeAnalyzer.Models
         {
             // Parse UCI move format (e.g., "e2e4", "e7e8q")
             if (uciMove.Length < 4)
+            {
+                System.Diagnostics.Debug.WriteLine($"Invalid UCI move length: {uciMove}");
                 return new ProperChessBoard(cachedFen);
+            }
             
             int fromFile = uciMove[0] - 'a';
             int fromRank = uciMove[1] - '1';
@@ -85,6 +88,7 @@ namespace ChessTreeAnalyzer.Models
             if (fromFile < 0 || fromFile > 7 || fromRank < 0 || fromRank > 7 ||
                 toFile < 0 || toFile > 7 || toRank < 0 || toRank > 7)
             {
+                System.Diagnostics.Debug.WriteLine($"Invalid coordinates in UCI move: {uciMove} (from: {fromFile},{fromRank} to: {toFile},{toRank})");
                 return new ProperChessBoard(cachedFen);
             }
             
@@ -95,6 +99,21 @@ namespace ChessTreeAnalyzer.Models
             // Get the piece being moved
             char piece = newBoard[fromRank, fromFile];
             char captured = newBoard[toRank, toFile];
+            
+            // Validate there's a piece to move
+            if (piece == ' ')
+            {
+                System.Diagnostics.Debug.WriteLine($"No piece at source square {uciMove.Substring(0,2)} in position: {cachedFen}");
+                return new ProperChessBoard(cachedFen);
+            }
+            
+            // Validate the piece belongs to the side to move
+            bool pieceIsWhite = char.IsUpper(piece);
+            if (pieceIsWhite != whiteToMove)
+            {
+                System.Diagnostics.Debug.WriteLine($"Wrong color piece at {uciMove.Substring(0,2)}: {piece}, white to move: {whiteToMove}");
+                return new ProperChessBoard(cachedFen);
+            }
             
             // Make the move
             newBoard[toRank, toFile] = piece;
@@ -151,6 +170,10 @@ namespace ChessTreeAnalyzer.Models
             
             // Build new FEN
             string newFen = BuildFEN(newBoard, !whiteToMove, newCastlingRights, newEnPassant, newHalfmove, newFullmove);
+            
+            System.Diagnostics.Debug.WriteLine($"Move {uciMove} applied successfully:");
+            System.Diagnostics.Debug.WriteLine($"  Old FEN: {cachedFen}");
+            System.Diagnostics.Debug.WriteLine($"  New FEN: {newFen}");
             
             return new ProperChessBoard(newFen);
         }

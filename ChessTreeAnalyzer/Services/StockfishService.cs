@@ -76,27 +76,37 @@ namespace ChessTreeAnalyzer.Services
                 {
                     var results = new List<AnalyzedMove>();
 
-                    // Set position
+                    // Set position with proper UCI protocol
                     var fen = position.FEN;
+                    System.Diagnostics.Debug.WriteLine($"[STOCKFISH] Setting position: {fen}");
                     SendCommand($"position fen {fen}");
+                    SendCommand("isready");
+                    WaitForResponse("readyok", 1000);
                     
                     // Configure multipv for analyzing multiple moves
                     SendCommand($"setoption name MultiPV value {movesToAnalyze}");
                     
-                    // Start analysis
+                    // Start analysis with proper time control
                     var timeMs = (int)analysisTime.TotalMilliseconds;
+                    System.Diagnostics.Debug.WriteLine($"[STOCKFISH] Starting analysis for {timeMs}ms with MultiPV={movesToAnalyze}");
                     SendCommand($"go movetime {timeMs}");
 
                     // Read analysis output until bestmove
                     string line;
                     var multiPvResults = new Dictionary<int, AnalyzedMove>();
+                    var timeout = DateTime.Now.AddMilliseconds(timeMs + 2000); // Add buffer for engine overhead
 
-                    while ((line = _stockfishOutput.ReadLine()) != null)
+                    while ((line = _stockfishOutput.ReadLine()) != null && DateTime.Now < timeout)
                     {
                         cancellationToken.ThrowIfCancellationRequested();
+                        
+                        System.Diagnostics.Debug.WriteLine($"[STOCKFISH OUTPUT] {line}");
 
                         if (line.StartsWith("bestmove"))
+                        {
+                            System.Diagnostics.Debug.WriteLine($"[STOCKFISH] Analysis complete, found {multiPvResults.Count} moves");
                             break;
+                        }
 
                         if (line.StartsWith("info") && line.Contains("multipv"))
                         {
@@ -104,6 +114,7 @@ namespace ChessTreeAnalyzer.Services
                             if (analyzedMove != null)
                             {
                                 multiPvResults[analyzedMove.MultiPvIndex] = analyzedMove;
+                                System.Diagnostics.Debug.WriteLine($"[STOCKFISH] Parsed move {analyzedMove.MultiPvIndex}: {analyzedMove.Move?.UCI} eval={analyzedMove.Evaluation}");
                             }
                         }
                     }
@@ -145,9 +156,9 @@ namespace ChessTreeAnalyzer.Services
                         case "cp":
                             if (i + 1 < parts.Length && int.TryParse(parts[i + 1], out int cp))
                             {
-                                // Stockfish always gives evaluation from White's perspective
-                                // Convert to current side's perspective
-                                analyzedMove.Evaluation = position.WhiteToMove ? cp : -cp;
+                                // Stockfish gives evaluation from perspective of side to move
+                                // Keep it as-is for now
+                                analyzedMove.Evaluation = cp;
                                 analyzedMove.IsMate = false;
                             }
                             break;
@@ -205,6 +216,20 @@ namespace ChessTreeAnalyzer.Services
             while (DateTime.Now < timeout)
             {
                 var line = await _stockfishOutput.ReadLineAsync();
+                if (line != null && line.Trim() == expectedResponse)
+                    return true;
+            }
+            
+            return false;
+        }
+        
+        private bool WaitForResponse(string expectedResponse, int timeoutMs = 5000)
+        {
+            var timeout = DateTime.Now.AddMilliseconds(timeoutMs);
+            
+            while (DateTime.Now < timeout)
+            {
+                var line = _stockfishOutput.ReadLine();
                 if (line != null && line.Trim() == expectedResponse)
                     return true;
             }

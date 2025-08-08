@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using ChessTreeAnalyzer.Models;
@@ -139,8 +140,10 @@ namespace ChessTreeAnalyzer.Services
                         CurrentMove = moveSequence
                     });
 
-                    LogAndOutput($"Analyzing position at depth {currentNode.Depth}: {moveSequence}");
-                    LogAndOutput($"  FEN: {currentNode.Position.FEN}");
+                    LogAndOutput($"\n=== Analyzing position at depth {currentNode.Depth}: {moveSequence} ===");
+                    LogAndOutput($"  Current FEN: {currentNode.Position.FEN}");
+                    LogAndOutput($"  Side to move: {(currentNode.Position.WhiteToMove ? "White" : "Black")}");
+                    LogAndOutput($"  Move number: {currentNode.Position.MoveNumber}");
 
                     // Determine moves to analyze
                     var movesToAnalyze = currentNode.Position.WhiteToMove ? 
@@ -174,9 +177,25 @@ namespace ChessTreeAnalyzer.Services
                     // Create child nodes
                     foreach (var analyzedMove in filteredMoves)
                     {
-                        if (analyzedMove.Move == null) continue;
+                        if (analyzedMove.Move == null) 
+                        {
+                            LogAndOutput($"  WARNING: Null move in analyzed results");
+                            continue;
+                        }
 
+                        LogAndOutput($"  Applying move: {analyzedMove.Move.UCI}");
                         var childPosition = currentNode.Position.MakeMove(analyzedMove.Move.UCI);
+                        
+                        // Verify the position actually changed
+                        if (childPosition.FEN == currentNode.Position.FEN)
+                        {
+                            LogAndOutput($"  ERROR: Position unchanged after move {analyzedMove.Move.UCI}!");
+                            LogAndOutput($"    From FEN: {currentNode.Position.FEN}");
+                            LogAndOutput($"    To FEN:   {childPosition.FEN}");
+                            continue;
+                        }
+                        
+                        LogAndOutput($"  New FEN after {analyzedMove.Move.UCI}: {childPosition.FEN}");
 
                         var childNode = new AnalysisTreeNode
                         {
@@ -310,7 +329,8 @@ namespace ChessTreeAnalyzer.Services
                 if (settings.SaveJSON)
                 {
                     var jsonFileName = baseFileName + ".json";
-                    var jsonContent = Newtonsoft.Json.JsonConvert.SerializeObject(root, Newtonsoft.Json.Formatting.Indented);
+                    var jsonOptions = new JsonSerializerOptions { WriteIndented = true };
+                    var jsonContent = JsonSerializer.Serialize(root, jsonOptions);
                     await File.WriteAllTextAsync(jsonFileName, jsonContent);
                     LogAndOutput($"Analysis saved to JSON: {Path.GetFileName(jsonFileName)}");
                 }

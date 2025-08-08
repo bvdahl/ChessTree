@@ -21,7 +21,16 @@ namespace ChessTreeAnalyzer
         {
             InitializeComponent();
             InitializeServices();
-            StatusText.Text = "Chess Tree Analyzer Ready";
+            StatusText.Text = "Chess Tree Analyzer Ready - Press F12 to test position changes";
+            
+            // Add F12 shortcut for position test
+            this.KeyDown += (s, e) => 
+            {
+                if (e.Key == System.Windows.Input.Key.F12)
+                {
+                    RunPositionTest();
+                }
+            };
             
             // Initialize with a starting position
             var startingBoard = new ProperChessBoard();
@@ -195,6 +204,48 @@ namespace ChessTreeAnalyzer
                 StatusText.Text = "Stopping analysis...";
             }
         }
+        
+        // Quick test to verify position changes are working
+        private void RunPositionTest()
+        {
+            OutputTextBox.Clear();
+            OutputTextBox.Text = "=== TESTING POSITION CHANGES ===\n\n";
+            
+            try
+            {
+                // Test your specific position from PGN
+                var testPos = new ProperChessBoard("r1bqkb1r/ppp2ppp/8/4P3/8/2pP1N2/P1P3PP/R1BQKB1R w KQkq - 0 8");
+                OutputTextBox.Text += $"Test Position FEN: {testPos.FEN}\n";
+                OutputTextBox.Text += $"White to move: {testPos.WhiteToMove}\n\n";
+                
+                // Try making moves that Stockfish might suggest
+                string[] testMoves = { "f3g5", "f3d4", "f3e1", "c1d2" };
+                
+                foreach (var move in testMoves)
+                {
+                    OutputTextBox.Text += $"\nTrying move: {move}\n";
+                    var newPos = testPos.MakeMove(move);
+                    
+                    if (newPos.FEN != testPos.FEN)
+                    {
+                        OutputTextBox.Text += "  ✓ SUCCESS: Position changed!\n";
+                        OutputTextBox.Text += $"  New FEN: {newPos.FEN}\n";
+                    }
+                    else
+                    {
+                        OutputTextBox.Text += "  ✗ FAILED: Position unchanged\n";
+                    }
+                }
+                
+                OutputTextBox.Text += "\n=== TEST COMPLETE ===\n";
+            }
+            catch (Exception ex)
+            {
+                OutputTextBox.Text += $"\nERROR: {ex.Message}\n{ex.StackTrace}\n";
+            }
+            
+            OutputTextBox.ScrollToEnd();
+        }
 
         private void AnalysisSettings_Click(object sender, RoutedEventArgs e)
         {
@@ -302,6 +353,9 @@ namespace ChessTreeAnalyzer
             Dispatcher.Invoke(() =>
             {
                 OutputTextBox.Text += output + "\n";
+                
+                // Also output to Debug console for diagnostics
+                System.Diagnostics.Debug.WriteLine(output);
                 
                 // Auto-scroll to bottom
                 OutputTextBox.ScrollToEnd();
