@@ -1,0 +1,6 @@
+/home/runner/workspace/ChessTreeAnalyzer/publish_final_debug/ChessTreeAnalyzer.exe
+/home/runner/workspace/ChessTreeAnalyzer/publish_final_debug/ChessTreeAnalyzer.dll
+/home/runner/workspace/ChessTreeAnalyzer/publish_final_debug/ChessTreeAnalyzer.deps.json
+/home/runner/workspace/ChessTreeAnalyzer/publish_final_debug/ChessTreeAnalyzer.runtimeconfig.json
+/home/runner/workspace/ChessTreeAnalyzer/publish_final_debug/ChessTreeAnalyzer.pdb
+/home/runner/workspace/ChessTreeAnalyzer/publish_final_debug/Newtonsoft.Json.dll

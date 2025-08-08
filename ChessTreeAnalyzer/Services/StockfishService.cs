@@ -101,10 +101,10 @@ namespace ChessTreeAnalyzer.Services
                         cancellationToken.ThrowIfCancellationRequested();
                         
                         // Log ALL Stockfish output for debugging
-                        if (line.Contains("info") && (line.Contains(" cp ") || line.Contains(" mate ")))
+                        if (line.Contains("info") && line.Contains("score"))
                         {
-                            // Log to console for diagnostics file
-                            Console.WriteLine($"[STOCKFISH RAW OUTPUT]: {line}");
+                            // Write directly to debug output
+                            System.Diagnostics.Debug.WriteLine($"[STOCKFISH RAW]: {line}");
                         }
 
                         if (line.StartsWith("bestmove"))

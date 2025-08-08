@@ -150,8 +150,19 @@ namespace ChessTreeAnalyzer.Services
                         settings.WhiteMovesToAnalyze : settings.BlackMovesToAnalyze;
 
                     // Analyze position
+                    LogAndOutput($"[DEBUG] Sending position to Stockfish: FEN={currentNode.Position.FEN}");
                     var analyzedMoves = await _stockfishService.AnalyzePositionAsync(
                         currentNode.Position, movesToAnalyze, settings.TimePerPosition, cancellationToken);
+                    
+                    // Log raw evaluation values for debugging
+                    if (analyzedMoves.Count > 0)
+                    {
+                        LogAndOutput($"[DEBUG] Stockfish returned {analyzedMoves.Count} moves:");
+                        foreach (var move in analyzedMoves.Take(3))
+                        {
+                            LogAndOutput($"[DEBUG] Move: {move.Move?.UCI}, Raw Eval: {move.Evaluation}cp");
+                        }
+                    }
 
                     if (analyzedMoves.Count == 0)
                     {
