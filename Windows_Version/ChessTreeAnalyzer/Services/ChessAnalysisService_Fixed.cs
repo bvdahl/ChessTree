@@ -149,10 +149,12 @@ namespace ChessTreeAnalyzer.Services
                     }
                     
                     // Create node for this game move
+                    // IMPORTANT: Don't increment depth for game moves - keep depth at 0
+                    // This allows analysis to start from depth 0 at the final position
                     var moveNode = new AnalysisTreeNode
                     {
                         Position = tempPosition,
-                        Depth = currentNode.Depth + 1,
+                        Depth = 0,  // Keep depth at 0 for game moves
                         Move = gameMove,
                         Evaluation = 0,
                         Children = new List<AnalysisTreeNode>()
@@ -168,6 +170,7 @@ namespace ChessTreeAnalyzer.Services
                 // Now currentNode points to the position after all game moves
                 leafNode = currentNode;
                 LogAndOutput($"Game moves added. Starting analysis from move {game.GameMoves.Count}.");
+                LogAndOutput($"Leaf node depth: {leafNode.Depth}, Max analysis depth: {settings.MaxDepth}");
             }
             else
             {
