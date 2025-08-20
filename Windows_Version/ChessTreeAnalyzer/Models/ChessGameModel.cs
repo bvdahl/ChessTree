@@ -34,7 +34,9 @@ namespace ChessTreeAnalyzer.Models
                 var pgnContent = File.ReadAllText(filePath);
                 
                 // Parse PGN headers for game info
-                game.GameInfo = ExtractGameInfo(pgnContent);
+                var gameDetails = ExtractGameInfo(pgnContent);
+                var fileName = System.IO.Path.GetFileName(filePath);
+                game.GameInfo = $"[{fileName}] {gameDetails}";
                 
                 // Start with standard chess position
                 var startingFEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";

@@ -105,6 +105,7 @@ namespace ChessTreeAnalyzer.Services
 
             // Get the ACTUAL current position from loaded game
             var currentPosition = game.GetCurrentPosition();
+            LogAndOutput($"Analyzing game: {game.GameInfo ?? "Custom position"}");
             LogAndOutput($"Starting position FEN: {currentPosition.FEN}");
             LogAndOutput($"Analysis depth: {settings.MaxDepth}, time: {settings.TimePerPosition.TotalSeconds}s per position");
             LogAndOutput($"White: {settings.WhiteMovesToAnalyze} moves, threshold {settings.WhiteThreshold}cp");

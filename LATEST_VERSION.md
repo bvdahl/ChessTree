@@ -15,6 +15,7 @@
 ✅ **Perspective Consistency** - All evaluations from White's perspective  
 ✅ **PGN Output Format** - Proper nested variations with evaluations as comments, matching Python version  
 ✅ **Multiple Analysis Support** - Can now run new analyses without restarting app, properly clears previous results  
+✅ **File Loading Fix** - App now correctly uses the newly loaded file for analysis instead of previous file  
 
 ## Quick Installation
 

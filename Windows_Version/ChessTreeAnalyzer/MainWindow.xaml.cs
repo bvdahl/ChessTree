@@ -69,10 +69,35 @@ namespace ChessTreeAnalyzer
             {
                 try
                 {
+                    // Stop any ongoing analysis first
+                    if (_analysisService.IsAnalyzing)
+                    {
+                        _analysisService.StopAnalysis();
+                        System.Threading.Thread.Sleep(500); // Brief pause to ensure analysis stops
+                    }
+                    
+                    // Clear any previous game and analysis
+                    if (_currentGame != null)
+                    {
+                        _currentGame.AnalysisTree = null;
+                    }
+                    
+                    // Load the new PGN file
                     _currentGame = ChessGameModel.LoadFromPGN(dialog.FileName);
-                    ChessBoard.SetPosition(_currentGame.GetCurrentPosition()); // Use current position after moves
+                    
+                    // Clear UI elements
+                    AnalysisTreeView.Items.Clear();
+                    OutputTextBox.Clear();
+                    
+                    // Update the chess board display
+                    ChessBoard.SetPosition(_currentGame.GetCurrentPosition());
+                    
+                    // Update status
                     StatusText.Text = $"Loaded PGN: {System.IO.Path.GetFileName(dialog.FileName)}";
-                    OutputTextBox.Text = $"PGN file loaded successfully:\n{_currentGame.GameInfo}\n\nCurrent position loaded. Ready for analysis.";
+                    OutputTextBox.Text = $"PGN file loaded successfully:\n{_currentGame.GameInfo}\n\n";
+                    OutputTextBox.AppendText($"Initial FEN: {_currentGame.InitialPosition.FEN}\n");
+                    OutputTextBox.AppendText($"Current FEN: {_currentGame.GetCurrentPosition().FEN}\n\n");
+                    OutputTextBox.AppendText("Current position loaded. Ready for analysis.");
                 }
                 catch (Exception ex)
                 {
@@ -92,7 +117,27 @@ namespace ChessTreeAnalyzer
             {
                 try
                 {
+                    // Stop any ongoing analysis first
+                    if (_analysisService.IsAnalyzing)
+                    {
+                        _analysisService.StopAnalysis();
+                        System.Threading.Thread.Sleep(500);
+                    }
+                    
+                    // Clear any previous game and analysis
+                    if (_currentGame != null)
+                    {
+                        _currentGame.AnalysisTree = null;
+                    }
+                    
+                    // Load the new FEN position
                     _currentGame = ChessGameModel.LoadFromFEN(fen);
+                    
+                    // Clear UI elements
+                    AnalysisTreeView.Items.Clear();
+                    OutputTextBox.Clear();
+                    
+                    // Update display
                     ChessBoard.SetPosition(_currentGame.InitialPosition);
                     StatusText.Text = "FEN position loaded";
                     OutputTextBox.Text = $"FEN position loaded:\n{fen}\n\nPosition ready for analysis.";
