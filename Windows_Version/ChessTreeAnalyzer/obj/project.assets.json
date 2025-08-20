@@ -2,6 +2,15 @@
   "version": 3,
   "targets": {
     "net8.0-windows7.0": {
+      "ChessDotNet/0.9.4": {
+        "type": "package",
+        "compile": {
+          "lib/netstandard1.3/ChessDotNet.dll": {}
+        },
+        "runtime": {
+          "lib/netstandard1.3/ChessDotNet.dll": {}
+        }
+      },
       "Microsoft.NETCore.Platforms/1.1.0": {
         "type": "package",
         "compile": {
@@ -408,6 +417,15 @@
       }
     },
     "net8.0-windows7.0/win-x64": {
+      "ChessDotNet/0.9.4": {
+        "type": "package",
+        "compile": {
+          "lib/netstandard1.3/ChessDotNet.dll": {}
+        },
+        "runtime": {
+          "lib/netstandard1.3/ChessDotNet.dll": {}
+        }
+      },
       "Microsoft.NETCore.Platforms/1.1.0": {
         "type": "package",
         "compile": {
@@ -1053,6 +1071,63 @@
     }
   },
   "libraries": {
+    "ChessDotNet/0.9.4": {
+      "sha512": "4p28lOacKfoUdabP6HzYLNmqIVQKLq0Hc3Sqll+E0NQzcozHksBBR6IWeSPeOvdj4Nuxqbid8nfmMzBReUHltA==",
+      "type": "package",
+      "path": "chessdotnet/0.9.4",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Cache.cs",
+        "CastlingType.cs",
+        "ChessDotNet.csproj",
+        "ChessDotNetKey.snk",
+        "ChessGame.cs",
+        "ChessUtilities.cs",
+        "DetailedMove.cs",
+        "GameCreationData.cs",
+        "Move.cs",
+        "MoveType.cs",
+        "PgnException.cs",
+        "PgnReader.cs",
+        "Piece.cs",
+        "Pieces/Bishop.cs",
+        "Pieces/King.cs",
+        "Pieces/Knight.cs",
+        "Pieces/Pawn.cs",
+        "Pieces/Queen.cs",
+        "Pieces/Rook.cs",
+        "Players.cs",
+        "Position.cs",
+        "PositionDistance.cs",
+        "Properties/AssemblyInfo.cs",
+        "bin/Debug/ChessDotNet.dll",
+        "bin/Debug/ChessDotNet.pdb",
+        "bin/Release/ChessDotNet.dll",
+        "bin/Release/ChessDotNet.pdb",
+        "chessdotnet.0.9.4.nupkg.sha512",
+        "chessdotnet.nuspec",
+        "lib/netstandard1.3/ChessDotNet.dll",
+        "obj/Debug/ChessDotNet.csproj.FileListAbsolute.txt",
+        "obj/Debug/ChessDotNet.dll",
+        "obj/Debug/ChessDotNet.pdb",
+        "obj/Debug/DesignTimeResolveAssemblyReferences.cache",
+        "obj/Debug/DesignTimeResolveAssemblyReferencesInput.cache",
+        "obj/Debug/TemporaryGeneratedFile_036C0B5B-1481-4323-8D20-8F5ADCB23D92.cs",
+        "obj/Debug/TemporaryGeneratedFile_5937a670-0e60-4077-877b-f7221da3dda1.cs",
+        "obj/Debug/TemporaryGeneratedFile_E7A71F73-0F8D-4B9B-B56E-8E70B10BC5D3.cs",
+        "obj/Release/ChessDotNet.csproj.FileListAbsolute.txt",
+        "obj/Release/ChessDotNet.csprojResolveAssemblyReference.cache",
+        "obj/Release/ChessDotNet.dll",
+        "obj/Release/ChessDotNet.pdb",
+        "obj/Release/DesignTimeResolveAssemblyReferencesInput.cache",
+        "obj/Release/TemporaryGeneratedFile_036C0B5B-1481-4323-8D20-8F5ADCB23D92.cs",
+        "obj/Release/TemporaryGeneratedFile_5937a670-0e60-4077-877b-f7221da3dda1.cs",
+        "obj/Release/TemporaryGeneratedFile_E7A71F73-0F8D-4B9B-B56E-8E70B10BC5D3.cs",
+        "project.json",
+        "project.lock.json"
+      ]
+    },
     "Microsoft.NETCore.Platforms/1.1.0": {
       "sha512": "kz0PEW2lhqygehI/d6XsPCQzD7ff7gUJaVGPVETX611eadGsA3A877GdSlU0LRVMCTH/+P3o2iDTak+S08V2+A==",
       "type": "package",
@@ -3094,6 +3169,7 @@
   },
   "projectFileDependencyGroups": {
     "net8.0-windows7.0": [
+      "ChessDotNet >= 0.9.4",
       "Microsoft.VisualBasic >= 10.3.0",
       "Newtonsoft.Json >= 13.0.3",
       "System.Diagnostics.Process >= 4.3.0"
@@ -3141,6 +3217,10 @@
       "net8.0-windows7.0": {
         "targetAlias": "net8.0-windows",
         "dependencies": {
+          "ChessDotNet": {
+            "target": "Package",
+            "version": "[0.9.4, )"
+          },
           "Microsoft.VisualBasic": {
             "target": "Package",
             "version": "[10.3.0, )"

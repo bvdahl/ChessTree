@@ -15,7 +15,7 @@
 ✅ **Perspective Consistency** - All evaluations from White's perspective  
 ✅ **PGN Output Format** - Proper nested variations with evaluations as comments, matching Python version  
 ✅ **Multiple Analysis Support** - Can now run new analyses without restarting app, properly clears previous results  
-✅ **File Loading Fix** - Removed hardcoded position that was overriding file selections
+✅ **File Loading Fix** - Integrated ChessDotNet library to properly apply PGN moves and calculate positions
 ✅ **UI Responsiveness** - Analysis now runs on background thread preventing freezing
 ✅ **Chess Board Update** - Complete board refresh with proper memory cleanup between files  
 

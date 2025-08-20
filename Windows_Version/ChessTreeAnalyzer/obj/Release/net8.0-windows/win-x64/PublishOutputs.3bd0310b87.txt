@@ -3,4 +3,5 @@
 /home/runner/workspace/Windows_Version/ChessTreeAnalyzer/publish/ChessTreeAnalyzer.deps.json
 /home/runner/workspace/Windows_Version/ChessTreeAnalyzer/publish/ChessTreeAnalyzer.runtimeconfig.json
 /home/runner/workspace/Windows_Version/ChessTreeAnalyzer/publish/ChessTreeAnalyzer.pdb
+/home/runner/workspace/Windows_Version/ChessTreeAnalyzer/publish/ChessDotNet.dll
 /home/runner/workspace/Windows_Version/ChessTreeAnalyzer/publish/Newtonsoft.Json.dll

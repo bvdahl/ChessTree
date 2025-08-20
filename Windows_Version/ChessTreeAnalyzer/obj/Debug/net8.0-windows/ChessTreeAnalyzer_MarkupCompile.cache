@@ -13,8 +13,8 @@ TRACE;DEBUG;NET;NET8_0;NETCOREAPP
 5-717067767
 
 15431987160
-199-478851764
+200-664266144
 Dialogs/AnalysisSettingsDialog.xaml;Dialogs/FENInputDialog.xaml;MainWindow.xaml;Styles/ChessTheme.xaml;Views/ChessBoardView.xaml;
 
-False
+True
 

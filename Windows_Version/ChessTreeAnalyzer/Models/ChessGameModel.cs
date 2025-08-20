@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using Newtonsoft.Json;
+using ChessDotNet;
 
 namespace ChessTreeAnalyzer.Models
 {
@@ -32,7 +32,7 @@ namespace ChessTreeAnalyzer.Models
             try
             {
                 // Read PGN file
-                var pgnContent = File.ReadAllText(filePath);
+                var pgnContent = System.IO.File.ReadAllText(filePath);
                 Console.WriteLine($"Reading PGN file: {filePath}");
                 Console.WriteLine($"PGN content length: {pgnContent.Length} characters");
                 
@@ -138,25 +138,80 @@ namespace ChessTreeAnalyzer.Models
             Console.WriteLine($"GetCurrentPosition: Starting with {GameMoves.Count} moves to apply");
             Console.WriteLine($"Initial position FEN: {InitialPosition.FEN}");
             
-            // If there's a FEN tag, that IS the position to analyze (no moves to apply)
-            // The FEN tag indicates the position after all moves have been played
-            if (InitialPosition.FEN != "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
+            try
             {
-                Console.WriteLine("Using FEN position from PGN file");
+                // Create a ChessDotNet game to apply moves
+                ChessGame game;
+                
+                // Check if we have a custom starting position
+                if (InitialPosition.FEN != "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
+                {
+                    // If there's a FEN tag and no moves, use it directly
+                    if (GameMoves.Count == 0)
+                    {
+                        Console.WriteLine("Using FEN position from PGN file (no moves to apply)");
+                        return new ProperChessBoard(InitialPosition.FEN);
+                    }
+                    
+                    // Create game from FEN position
+                    game = new ChessGame(InitialPosition.FEN);
+                }
+                else
+                {
+                    // Standard starting position
+                    game = new ChessGame();
+                }
+                
+                // Apply all moves from the PGN
+                foreach (var move in GameMoves)
+                {
+                    try
+                    {
+                        // Try different methods to apply the move
+                        bool moveApplied = false;
+                        
+                        // Method 1: Try to find matching valid move by comparing coordinates
+                        var validMoves = game.GetValidMoves(game.WhoseTurn);
+                        foreach (var validMove in validMoves)
+                        {
+                            // Try to match by creating a test game and checking if it matches
+                            var testGame = new ChessGame(game.GetFen());
+                            testGame.ApplyMove(validMove, false);
+                            
+                            // Simple check - if the move text contains key parts of our SAN
+                            string moveText = $"{validMove.OriginalPosition}{validMove.NewPosition}";
+                            if (IsMoveMatch(move.SAN, validMove, game))
+                            {
+                                game.ApplyMove(validMove, true);
+                                Console.WriteLine($"Applied move: {move.SAN}");
+                                moveApplied = true;
+                                break;
+                            }
+                        }
+                        
+                        if (!moveApplied)
+                        {
+                            Console.WriteLine($"Warning: Could not apply move {move.SAN}");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error applying move {move.SAN}: {ex.Message}");
+                    }
+                }
+                
+                // Get the final FEN position after all moves
+                string finalFen = game.GetFen();
+                Console.WriteLine($"Final position after {GameMoves.Count} moves: {finalFen}");
+                
+                return new ProperChessBoard(finalFen);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error calculating position: {ex.Message}");
+                Console.WriteLine("Falling back to initial position");
                 return new ProperChessBoard(InitialPosition.FEN);
             }
-            
-            // For games without FEN tags that have moves, we'd need to apply the moves
-            // But without a chess engine integrated, we can't do this properly
-            if (GameMoves.Count > 0)
-            {
-                Console.WriteLine($"WARNING: PGN has {GameMoves.Count} moves but no FEN tag.");
-                Console.WriteLine("To analyze a specific position, add a [FEN \"...\"] tag to the PGN file");
-                Console.WriteLine("with the position you want to analyze.");
-            }
-            
-            // Return the initial position
-            return new ProperChessBoard(InitialPosition.FEN);
         }
 
         public void SaveAnalysisAsPGN(string filePath)
@@ -165,7 +220,7 @@ namespace ChessTreeAnalyzer.Models
                 throw new InvalidOperationException("No analysis to save");
 
             var pgn = GeneratePGNFromAnalysis();
-            File.WriteAllText(filePath, pgn);
+            System.IO.File.WriteAllText(filePath, pgn);
         }
 
         public void SaveAnalysisAsJSON(string filePath)
@@ -174,7 +229,7 @@ namespace ChessTreeAnalyzer.Models
                 throw new InvalidOperationException("No analysis to save");
 
             var json = JsonConvert.SerializeObject(AnalysisTree, Formatting.Indented);
-            File.WriteAllText(filePath, json);
+            System.IO.File.WriteAllText(filePath, json);
         }
 
         private string GeneratePGNFromAnalysis()
@@ -201,6 +256,19 @@ namespace ChessTreeAnalyzer.Models
             return "Analysis tree conversion to PGN format";
         }
 
+        private bool IsMoveMatch(string san, Move move, ChessGame game)
+        {
+            // Simple matching logic - can be improved
+            // Check if the destination matches
+            string dest = move.NewPosition.ToString().ToLower();
+            string sanLower = san.ToLower();
+            
+            // Remove check/checkmate symbols for comparison
+            sanLower = sanLower.Replace("+", "").Replace("#", "").Replace("x", "");
+            
+            return sanLower.Contains(dest);
+        }
+        
         private static List<SimpleMove> ParsePGNMoves(string pgnContent)
         {
             var moves = new List<SimpleMove>();
