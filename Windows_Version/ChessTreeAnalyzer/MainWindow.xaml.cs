@@ -110,31 +110,38 @@ namespace ChessTreeAnalyzer
                     OutputTextBox.AppendText($"Starting FEN: {_currentGame.InitialPosition.FEN}\n");
                     OutputTextBox.AppendText($"Number of moves in PGN: {_currentGame.GameMoves.Count}\n");
                     
+                    // Calculate the position (this populates PositionHistory)
+                    var finalPosition = _currentGame.GetCurrentPosition();
+                    
                     if (_currentGame.GameMoves.Count > 0)
                     {
-                        OutputTextBox.AppendText($"\nMoves from PGN file:\n");
+                        OutputTextBox.AppendText($"\n--- Move-by-Move Positions ---\n");
+                        OutputTextBox.AppendText($"Starting: {_currentGame.InitialPosition.FEN}\n\n");
                         
-                        // Show moves and calculate positions step by step
-                        var tempGame = new ChessDotNet.ChessGame();
-                        OutputTextBox.AppendText($"Starting: {tempGame.GetFen()}\n");
-                        
-                        for (int i = 0; i < _currentGame.GameMoves.Count; i++)
+                        // Display the position history
+                        if (_currentGame.PositionHistory != null && _currentGame.PositionHistory.Count > 0)
                         {
-                            string moveNum = (i % 2 == 0) ? $"{(i/2)+1}." : "...";
-                            OutputTextBox.AppendText($"\n{moveNum} {_currentGame.GameMoves[i].SAN}");
-                            
-                            // Note: Actual position calculation happens in GetCurrentPosition()
-                            // This is just for display purposes
+                            foreach (var positionEntry in _currentGame.PositionHistory)
+                            {
+                                OutputTextBox.AppendText(positionEntry + "\n\n");
+                            }
                         }
-                        OutputTextBox.AppendText($"\n");
+                        else
+                        {
+                            OutputTextBox.AppendText("WARNING: Position history not available.\n");
+                            OutputTextBox.AppendText("Check if moves were applied correctly.\n\n");
+                        }
                     }
                     
-                    var finalPosition = _currentGame.GetCurrentPosition();
-                    OutputTextBox.AppendText($"\n--- Final Position ---\n");
-                    OutputTextBox.AppendText($"FEN after applying all moves: {finalPosition.FEN}\n\n");
+                    OutputTextBox.AppendText($"--- Final Position ---\n");
+                    OutputTextBox.AppendText($"FEN: {finalPosition.FEN}\n\n");
                     
-                    OutputTextBox.AppendText("IMPORTANT: Check the console window for detailed move-by-move FEN positions.\n");
-                    OutputTextBox.AppendText("The console shows the exact position after each move is applied.\n\n");
+                    if (_currentGame.PositionHistory == null || 
+                        _currentGame.PositionHistory.Count < _currentGame.GameMoves.Count)
+                    {
+                        OutputTextBox.AppendText($"⚠️ WARNING: Only {_currentGame.PositionHistory?.Count ?? 0} of {_currentGame.GameMoves.Count} moves were applied successfully.\n\n");
+                    }
+                    
                     OutputTextBox.AppendText("Position ready for analysis. Click 'Analyze' to start.");
                 }
                 catch (Exception ex)

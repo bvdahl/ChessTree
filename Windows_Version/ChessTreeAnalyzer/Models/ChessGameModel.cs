@@ -14,6 +14,7 @@ namespace ChessTreeAnalyzer.Models
         public AnalysisTreeNode AnalysisTree { get; set; }
         public string SourceFile { get; set; } = "";
         public DateTime CreatedDate { get; set; } = DateTime.Now;
+        public List<string> PositionHistory { get; set; } = new List<string>();
 
         public ChessGameModel()
         {
@@ -183,8 +184,9 @@ namespace ChessTreeAnalyzer.Models
                 foreach (var move in GameMoves)
                 {
                     moveNumber++;
+                    string fenBefore = game.GetFen();
                     Console.WriteLine($"\n--- Processing move {moveNumber}: {move.SAN} ---");
-                    Console.WriteLine($"Position before move: {game.GetFen()}");
+                    Console.WriteLine($"Position before: {fenBefore}");
                     
                     try
                     {
@@ -198,7 +200,13 @@ namespace ChessTreeAnalyzer.Models
                             {
                                 successfulMoves++;
                                 string newFen = game.GetFen();
-                                positionHistory.Add($"After {move.SAN}: {newFen}");
+                                
+                                // Format move number
+                                string moveLabel = (moveNumber % 2 == 1) ? 
+                                    $"{(moveNumber + 1) / 2}. {move.SAN}" : 
+                                    $"{moveNumber / 2}... {move.SAN}";
+                                
+                                positionHistory.Add($"{moveLabel}\n   FEN: {newFen}");
                                 Console.WriteLine($"SUCCESS: Applied {move.SAN} as {coordMove.OriginalPosition}->{coordMove.NewPosition}");
                                 Console.WriteLine($"New position: {newFen}");
                             }
@@ -206,6 +214,7 @@ namespace ChessTreeAnalyzer.Models
                             {
                                 Console.WriteLine($"FAILED: Move {move.SAN} was invalid");
                                 Console.WriteLine($"Attempted: {coordMove.OriginalPosition}->{coordMove.NewPosition}");
+                                positionHistory.Add($"ERROR at move {moveNumber}: {move.SAN} - Invalid move");
                                 break;
                             }
                         }
@@ -213,15 +222,20 @@ namespace ChessTreeAnalyzer.Models
                         {
                             Console.WriteLine($"FAILED: Could not parse move {move.SAN}");
                             Console.WriteLine($"Position stuck at: {game.GetFen()}");
+                            positionHistory.Add($"ERROR at move {moveNumber}: {move.SAN} - Could not parse");
                             break;
                         }
                     }
                     catch (Exception ex)
                     {
                         Console.WriteLine($"EXCEPTION on move {moveNumber} ({move.SAN}): {ex.Message}");
+                        positionHistory.Add($"ERROR at move {moveNumber}: {move.SAN} - {ex.Message}");
                         break;
                     }
                 }
+                
+                // Store position history for UI display
+                PositionHistory = positionHistory;
                 
                 Console.WriteLine($"\n=== POSITION HISTORY ===");
                 foreach (var pos in positionHistory)
@@ -294,6 +308,10 @@ namespace ChessTreeAnalyzer.Models
             var validMoves = game.GetValidMoves(game.WhoseTurn);
             string sanClean = san.Replace("+", "").Replace("#", "").Replace("!", "").Replace("?", "");
             
+            // Log for debugging
+            System.Diagnostics.Debug.WriteLine($"Converting SAN '{san}' for {game.WhoseTurn}");
+            System.Diagnostics.Debug.WriteLine($"Found {validMoves.Count()} valid moves");
+            
             // Handle castling
             if (san == "O-O" || san == "0-0")
             {
@@ -318,51 +336,87 @@ namespace ChessTreeAnalyzer.Models
                 }
             }
             
-            // Parse regular moves
+            // Clean up the SAN for easier parsing
+            bool isCapture = sanClean.Contains("x");
+            sanClean = sanClean.Replace("x", "");
+            
+            // Try to match each valid move
             foreach (var move in validMoves)
             {
-                // Test this move to see if it produces the expected result
-                var testGame = new ChessGame(game.GetFen());
-                var result = testGame.ApplyMove(move, true);
+                string from = move.OriginalPosition.ToString().ToUpper();
+                string to = move.NewPosition.ToString().ToUpper();
                 
-                if (result != ChessDotNet.MoveType.Invalid)
+                // For debugging
+                System.Diagnostics.Debug.WriteLine($"  Testing move {from}->{to}");
+                
+                // Check if destination matches
+                if (!sanClean.ToUpper().Contains(to))
+                    continue;
+                
+                // For pawn moves (starts with lowercase letter or is 2 chars like "e4")
+                if (char.IsLower(san[0]))
                 {
-                    // Check if this move matches the SAN
-                    string dest = move.NewPosition.ToString().ToLower();
-                    string sanLower = sanClean.ToLower();
+                    var piece = game.GetPieceAt(move.OriginalPosition);
+                    if (piece == null) continue;
                     
-                    // Remove capture notation
-                    sanLower = sanLower.Replace("x", "");
-                    
-                    // For pawn moves (e4, d5, exd5, etc.)
-                    if (char.IsLower(san[0]))
+                    // Check if it's a pawn
+                    if (piece.GetType().Name.Contains("Pawn"))
                     {
-                        // Pawn move - check if destination matches
-                        if (sanLower.EndsWith(dest))
+                        // For pawn captures, check the file
+                        if (isCapture)
                         {
-                            return move;
-                        }
-                    }
-                    // For piece moves (Nf3, Bc4, etc.)
-                    else
-                    {
-                        // Get the piece at the origin
-                        var piece = game.GetPieceAt(move.OriginalPosition);
-                        if (piece != null)
-                        {
-                            char pieceLetter = GetPieceLetter(piece);
-                            if (san[0] == pieceLetter && sanLower.Contains(dest))
+                            char fromFile = char.ToUpper(san[0]);
+                            if (from[0] == fromFile && to == sanClean.ToUpper().Substring(sanClean.Length - 2))
                             {
-                                // Additional disambiguation checks if needed
-                                // For now, just return the first matching move
+                                System.Diagnostics.Debug.WriteLine($"  Matched pawn capture: {san} -> {from}->{to}");
                                 return move;
                             }
                         }
+                        // For regular pawn moves
+                        else if (sanClean.ToUpper() == to)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"  Matched pawn move: {san} -> {from}->{to}");
+                            return move;
+                        }
+                    }
+                }
+                // For piece moves (starts with uppercase letter)
+                else
+                {
+                    var piece = game.GetPieceAt(move.OriginalPosition);
+                    if (piece == null) continue;
+                    
+                    char expectedPiece = san[0];
+                    char actualPiece = GetPieceLetter(piece);
+                    
+                    if (expectedPiece == actualPiece)
+                    {
+                        // Check for disambiguation (like Nbd2 vs Nfd2)
+                        if (sanClean.Length > 3)
+                        {
+                            // There's disambiguation
+                            char disambig = sanClean[1];
+                            if (char.IsLower(disambig))
+                            {
+                                // File disambiguation
+                                if (from[0] != char.ToUpper(disambig))
+                                    continue;
+                            }
+                            else if (char.IsDigit(disambig))
+                            {
+                                // Rank disambiguation
+                                if (from[1] != disambig)
+                                    continue;
+                            }
+                        }
+                        
+                        System.Diagnostics.Debug.WriteLine($"  Matched piece move: {san} -> {from}->{to}");
+                        return move;
                     }
                 }
             }
             
-            Console.WriteLine($"WARNING: Could not find valid move for SAN: {san}");
+            System.Diagnostics.Debug.WriteLine($"WARNING: Could not find valid move for SAN: {san}");
             return null;
         }
         
