@@ -135,8 +135,19 @@ namespace ChessTreeAnalyzer.Models
 
         public ProperChessBoard GetCurrentPosition()
         {
-            Console.WriteLine($"GetCurrentPosition: Starting with {GameMoves.Count} moves to apply");
-            Console.WriteLine($"Initial position FEN: {InitialPosition.FEN}");
+            Console.WriteLine($"=== CALCULATING POSITION FROM PGN ===");
+            Console.WriteLine($"Number of moves to apply: {GameMoves.Count}");
+            Console.WriteLine($"Initial FEN from PGN tags: {InitialPosition.FEN}");
+            
+            // Log the moves we're about to apply
+            if (GameMoves.Count > 0)
+            {
+                Console.WriteLine("Moves to apply:");
+                for (int i = 0; i < GameMoves.Count; i++)
+                {
+                    Console.WriteLine($"  {i + 1}. {GameMoves[i].SAN}");
+                }
+            }
             
             try
             {
@@ -161,6 +172,8 @@ namespace ChessTreeAnalyzer.Models
                     // Standard starting position
                     game = new ChessGame();
                 }
+                
+                Console.WriteLine($"Position before applying moves: {game.GetFen()}");
                 
                 // Apply all moves from the PGN
                 int moveNumber = 0;
@@ -269,7 +282,9 @@ namespace ChessTreeAnalyzer.Models
                 
                 // Get the final FEN position after all moves
                 string finalFen = game.GetFen();
-                Console.WriteLine($"Final position after {GameMoves.Count} moves: {finalFen}");
+                Console.WriteLine($"=== POSITION CALCULATION COMPLETE ===");
+                Console.WriteLine($"Final position after applying {GameMoves.Count} moves:");
+                Console.WriteLine($"FEN: {finalFen}");
                 
                 return new ProperChessBoard(finalFen);
             }

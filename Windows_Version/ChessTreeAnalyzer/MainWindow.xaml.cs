@@ -102,10 +102,28 @@ namespace ChessTreeAnalyzer
                     
                     // Update status
                     StatusText.Text = $"Loaded PGN: {System.IO.Path.GetFileName(dialog.FileName)}";
-                    OutputTextBox.Text = $"PGN file loaded successfully:\n{_currentGame.GameInfo}\n\n";
-                    OutputTextBox.AppendText($"Initial FEN: {_currentGame.InitialPosition.FEN}\n");
-                    OutputTextBox.AppendText($"Current FEN: {_currentGame.GetCurrentPosition().FEN}\n\n");
-                    OutputTextBox.AppendText("Current position loaded. Ready for analysis.");
+                    // Show detailed position calculation info
+                    OutputTextBox.Text = $"=== PGN FILE LOADED ===\n";
+                    OutputTextBox.AppendText($"Game: {_currentGame.GameInfo}\n\n");
+                    
+                    OutputTextBox.AppendText($"--- Position Calculation ---\n");
+                    OutputTextBox.AppendText($"Starting FEN: {_currentGame.InitialPosition.FEN}\n");
+                    OutputTextBox.AppendText($"Number of moves in PGN: {_currentGame.GameMoves.Count}\n");
+                    
+                    if (_currentGame.GameMoves.Count > 0)
+                    {
+                        OutputTextBox.AppendText($"\nMoves from PGN file:\n");
+                        for (int i = 0; i < _currentGame.GameMoves.Count; i++)
+                        {
+                            OutputTextBox.AppendText($"  {(i/2)+1}.{(i%2==0 ? "" : "..")} {_currentGame.GameMoves[i].SAN}\n");
+                        }
+                    }
+                    
+                    var finalPosition = _currentGame.GetCurrentPosition();
+                    OutputTextBox.AppendText($"\n--- Final Position ---\n");
+                    OutputTextBox.AppendText($"FEN after applying moves: {finalPosition.FEN}\n\n");
+                    OutputTextBox.AppendText("Position ready for analysis. Click 'Analyze' to start.\n");
+                    OutputTextBox.AppendText("\n(Check console for detailed move application diagnostics)");
                 }
                 catch (Exception ex)
                 {
