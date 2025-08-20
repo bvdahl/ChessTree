@@ -8,6 +8,12 @@ Chess Tree Generator is a desktop application that performs deep chess position 
 - Version details documented in `LATEST_VERSION.md`
 - After each iteration: old files → Archive, new build → root
 
+## Recent Achievements (August 20, 2025)
+- ✅ PGN output format completely fixed - proper nested variations with evaluations
+- ✅ All core functionality working: position analysis, evaluations, move notation
+- ✅ Output matches Python version's format exactly
+- ✅ Compatible with ChessBase and standard chess software
+
 # User Preferences
 
 Preferred communication style: Simple, everyday language.
