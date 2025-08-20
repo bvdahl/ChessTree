@@ -88,11 +88,20 @@ See `Archive/Documentation/` for:
 
 ## Latest Build
 
-The most recent stable Windows build with all fixes:
-**`Archive/Builds/ChessTreeAnalyzer_Castling_Fix.tar.gz`**
+The most recent stable Windows build is always in the root folder:
+**`ChessTreeAnalyzer_Latest.tar.gz`**
 
 This includes:
-- Fixed knight position parsing
-- Correct evaluation perspective
-- Proper castling notation
+- Fixed knight position parsing (Black knight on b8)
+- Correct evaluation perspective (~-60 to -70 cp for test position)
+- Proper castling notation (O-O, O-O-O)
 - All previous bug fixes
+
+See `LATEST_VERSION.md` for detailed version information.
+
+## Version Management
+
+- **Root Folder**: Always contains the latest stable build
+- **Archive/Builds/**: Historical builds from previous iterations
+- After each update, the new version replaces the root package
+- Previous versions are automatically archived with timestamps

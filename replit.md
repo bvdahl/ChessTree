@@ -2,6 +2,12 @@
 
 Chess Tree Generator is a desktop application that performs deep chess position analysis using the Stockfish engine. The application generates comprehensive game trees from chess positions, exploring multiple variations at configurable depths. It supports both command-line operation and a GUI interface, with the ability to import PGN files or analyze specific FEN positions. The tool is designed for chess players and analysts who need to explore positions in depth and export results in standard formats compatible with ChessBase and other chess software.
 
+## Version Management
+- Latest stable build always in root: `ChessTreeAnalyzer_Latest.tar.gz`
+- Previous versions archived in `Archive/Builds/`
+- Version details documented in `LATEST_VERSION.md`
+- After each iteration: old files → Archive, new build → root
+
 # User Preferences
 
 Preferred communication style: Simple, everyday language.
