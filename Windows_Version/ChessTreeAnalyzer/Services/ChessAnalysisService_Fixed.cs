@@ -120,18 +120,63 @@ namespace ChessTreeAnalyzer.Services
             LogAndOutput($"White: {settings.WhiteMovesToAnalyze} moves, threshold {settings.WhiteThreshold}cp");
             LogAndOutput($"Black: {settings.BlackMovesToAnalyze} moves, threshold {settings.BlackThreshold}cp");
 
-            // Create root node from CURRENT position (not initial)
+            // Create root node from initial position of game
             var root = new AnalysisTreeNode
             {
-                Position = currentPosition,
+                Position = game.InitialPosition,
                 Depth = 0,
                 Move = null,
                 Evaluation = 0
             };
 
-            // BFS tree generation
+            // Add the game moves from PGN as the main line
+            AnalysisTreeNode leafNode = root;
+            if (game.GameMoves != null && game.GameMoves.Count > 0)
+            {
+                LogAndOutput($"Adding {game.GameMoves.Count} moves from PGN to the tree...");
+                var currentNode = root;
+                
+                // Build the main line from the game moves
+                for (int i = 0; i < game.GameMoves.Count; i++)
+                {
+                    var gameMove = game.GameMoves[i];
+                    
+                    // Calculate the position after this move by replaying from initial
+                    var tempPosition = game.InitialPosition;
+                    for (int j = 0; j <= i; j++)
+                    {
+                        tempPosition = tempPosition.MakeMove(game.GameMoves[j].SAN);
+                    }
+                    
+                    // Create node for this game move
+                    var moveNode = new AnalysisTreeNode
+                    {
+                        Position = tempPosition,
+                        Depth = currentNode.Depth + 1,
+                        Move = gameMove,
+                        Evaluation = 0,
+                        Children = new List<AnalysisTreeNode>()
+                    };
+
+                    // Add as first child (main line)
+                    currentNode.Children.Insert(0, moveNode);
+                    
+                    // Move to this node for next iteration
+                    currentNode = moveNode;
+                }
+
+                // Now currentNode points to the position after all game moves
+                leafNode = currentNode;
+                LogAndOutput($"Game moves added. Starting analysis from move {game.GameMoves.Count}.");
+            }
+            else
+            {
+                LogAndOutput("No game moves to add - analyzing from starting position.");
+            }
+
+            // BFS tree generation - start from the leaf node (end of game moves)
             var queue = new Queue<AnalysisTreeNode>();
-            queue.Enqueue(root);
+            queue.Enqueue(leafNode);
             int positionsAnalyzed = 0;
 
             while (queue.Count > 0 && !cancellationToken.IsCancellationRequested)

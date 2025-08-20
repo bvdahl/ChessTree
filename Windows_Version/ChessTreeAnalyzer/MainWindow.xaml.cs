@@ -509,7 +509,27 @@ namespace ChessTreeAnalyzer
 
             foreach (var child in node.Children)
             {
-                var moveText = child.Move?.SAN ?? "Unknown";
+                // Get the move text - ensure we have the full SAN notation
+                var moveText = "Unknown";
+                if (child.Move != null)
+                {
+                    moveText = child.Move.SAN;
+                    
+                    // If the move starts with just 'x' (capture without piece), it might be a pawn capture
+                    // that lost its file letter. Let's check and fix it using the UCI notation
+                    if (moveText.StartsWith("x") && moveText.Length > 1)
+                    {
+                        // This is likely a pawn capture that lost its file letter
+                        // Try to reconstruct it from the UCI notation if available
+                        if (!string.IsNullOrEmpty(child.Move.UCI) && child.Move.UCI.Length >= 4)
+                        {
+                            // UCI format is like "e4e5" - get the file letter from first character
+                            char fromFile = child.Move.UCI[0];
+                            moveText = fromFile + moveText;
+                        }
+                    }
+                }
+                
                 var evalText = child.IsMateScore ? $"Mate {child.MateInMoves}" : $"{child.Evaluation:+0;-#}";
                 var childDisplayText = $"{moveText} ({evalText})";
                 
