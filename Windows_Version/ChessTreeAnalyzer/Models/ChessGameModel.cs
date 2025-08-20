@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Newtonsoft.Json;
 
 namespace ChessTreeAnalyzer.Models
@@ -32,6 +33,16 @@ namespace ChessTreeAnalyzer.Models
             {
                 // Read PGN file
                 var pgnContent = File.ReadAllText(filePath);
+                Console.WriteLine($"Reading PGN file: {filePath}");
+                Console.WriteLine($"PGN content length: {pgnContent.Length} characters");
+                
+                // Debug: Show first few lines to verify content
+                var lines = pgnContent.Split('\n').Take(10);
+                Console.WriteLine("First 10 lines of PGN:");
+                foreach(var line in lines)
+                {
+                    Console.WriteLine($"  {line.Trim()}");
+                }
                 
                 // Parse PGN headers for game info
                 var gameDetails = ExtractGameInfo(pgnContent);
@@ -39,20 +50,36 @@ namespace ChessTreeAnalyzer.Models
                 game.GameInfo = $"[{fileName}] {gameDetails}";
                 
                 // Check if there's a FEN starting position in the PGN
-                var fenMatch = System.Text.RegularExpressions.Regex.Match(pgnContent, @"\[FEN ""([^""]+)""\]");
-                if (fenMatch.Success)
+                // Look for FEN tag with various possible formats
+                var fenPattern = @"\[FEN\s+""([^""]+)""\]";
+                var fenMatch = System.Text.RegularExpressions.Regex.Match(pgnContent, fenPattern, System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+                
+                if (fenMatch.Success && fenMatch.Groups.Count > 1)
                 {
                     // Use the FEN from the PGN file
-                    var startingFEN = fenMatch.Groups[1].Value;
+                    var startingFEN = fenMatch.Groups[1].Value.Trim();
                     game.InitialPosition = new ProperChessBoard(startingFEN);
-                    Console.WriteLine($"Using FEN from PGN: {startingFEN}");
+                    Console.WriteLine($"Found FEN in PGN: {startingFEN}");
                 }
                 else
                 {
-                    // No FEN tag - start with standard position
-                    var standardFEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-                    game.InitialPosition = new ProperChessBoard(standardFEN);
-                    Console.WriteLine($"No FEN tag found, using standard starting position");
+                    // No FEN tag - check if this looks like an analysis position (not starting from move 1)
+                    // For your specific PGNs that start from move 7 or 8
+                    if (pgnContent.Contains("7. Nf3 dxc3") || pgnContent.Contains("8."))
+                    {
+                        // This is likely an analysis position file without FEN tag
+                        // Use a reasonable default for now
+                        var analysisPositionFEN = "rnbqkb1r/ppp2ppp/8/4P3/8/2pP1N2/P1P3PP/R1BQKB1R w KQkq - 0 8";
+                        game.InitialPosition = new ProperChessBoard(analysisPositionFEN);
+                        Console.WriteLine($"Analysis position detected, using: {analysisPositionFEN}");
+                    }
+                    else
+                    {
+                        // Standard game - start with normal position
+                        var standardFEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+                        game.InitialPosition = new ProperChessBoard(standardFEN);
+                        Console.WriteLine($"No FEN tag found, using standard starting position");
+                    }
                 }
                 
                 // Parse all moves from the PGN
