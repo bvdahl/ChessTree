@@ -63,23 +63,13 @@ namespace ChessTreeAnalyzer.Models
                 }
                 else
                 {
-                    // No FEN tag - check if this looks like an analysis position (not starting from move 1)
-                    // For your specific PGNs that start from move 7 or 8
-                    if (pgnContent.Contains("7. Nf3 dxc3") || pgnContent.Contains("8."))
-                    {
-                        // This is likely an analysis position file without FEN tag
-                        // Use a reasonable default for now
-                        var analysisPositionFEN = "rnbqkb1r/ppp2ppp/8/4P3/8/2pP1N2/P1P3PP/R1BQKB1R w KQkq - 0 8";
-                        game.InitialPosition = new ProperChessBoard(analysisPositionFEN);
-                        Console.WriteLine($"Analysis position detected, using: {analysisPositionFEN}");
-                    }
-                    else
-                    {
-                        // Standard game - start with normal position
-                        var standardFEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-                        game.InitialPosition = new ProperChessBoard(standardFEN);
-                        Console.WriteLine($"No FEN tag found, using standard starting position");
-                    }
+                    // No FEN tag found - this must be a complete game from the starting position
+                    var standardFEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+                    game.InitialPosition = new ProperChessBoard(standardFEN);
+                    Console.WriteLine($"No FEN tag found, using standard starting position");
+                    
+                    // Note: If this PGN file should start from a specific position,
+                    // it needs to include a [FEN "..."] tag in the headers
                 }
                 
                 // Parse all moves from the PGN
@@ -148,33 +138,25 @@ namespace ChessTreeAnalyzer.Models
             Console.WriteLine($"GetCurrentPosition: Starting with {GameMoves.Count} moves to apply");
             Console.WriteLine($"Initial position FEN: {InitialPosition.FEN}");
             
-            // Create a new board from the initial position
-            var currentBoard = new ProperChessBoard(InitialPosition.FEN);
-            
-            // Apply all the game moves to get to the current position
-            if (GameMoves.Count > 0)
+            // If there's a FEN tag, that IS the position to analyze (no moves to apply)
+            // The FEN tag indicates the position after all moves have been played
+            if (InitialPosition.FEN != "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1")
             {
-                try
-                {
-                    // Since we don't have a full chess engine integrated yet,
-                    // we'll use the position stored in the ChessBoard after parsing
-                    // For now, return initial position with a note
-                    Console.WriteLine($"Note: Full move application requires chess engine integration");
-                    Console.WriteLine($"Returning position after {GameMoves.Count} moves parsed from PGN");
-                    
-                    // If this is from a PGN with FEN annotation, use that
-                    // Otherwise use the initial position
-                    return currentBoard;
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Error applying moves: {ex.Message}");
-                    return currentBoard;
-                }
+                Console.WriteLine("Using FEN position from PGN file");
+                return new ProperChessBoard(InitialPosition.FEN);
             }
             
-            Console.WriteLine("No moves to apply, returning initial position");
-            return currentBoard;
+            // For games without FEN tags that have moves, we'd need to apply the moves
+            // But without a chess engine integrated, we can't do this properly
+            if (GameMoves.Count > 0)
+            {
+                Console.WriteLine($"WARNING: PGN has {GameMoves.Count} moves but no FEN tag.");
+                Console.WriteLine("To analyze a specific position, add a [FEN \"...\"] tag to the PGN file");
+                Console.WriteLine("with the position you want to analyze.");
+            }
+            
+            // Return the initial position
+            return new ProperChessBoard(InitialPosition.FEN);
         }
 
         public void SaveAnalysisAsPGN(string filePath)
