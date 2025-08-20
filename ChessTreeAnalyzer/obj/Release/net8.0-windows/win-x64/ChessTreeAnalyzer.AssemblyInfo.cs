@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyCopyrightAttribute("Copyright © 2025")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+3ecfb32da3eb83ca3317d561e690e76fa9d993a6")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f271640086fc2f432937985ea272001a85169034")]
 [assembly: System.Reflection.AssemblyProductAttribute("Chess Tree Analyzer")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Chess Tree Analyzer")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
