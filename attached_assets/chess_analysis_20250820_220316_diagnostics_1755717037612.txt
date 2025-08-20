@@ -1,0 +1,314 @@
+[22:03:16] Starting analysis for: [analysis.pgn] Enter New Game vs ? (????.??.??) *
+[22:03:16] File path: C:\Users\baard\OneDrive\Documents\ChessBase\MyWork\Automated\Generator\Inputs\analysis.pgn
+[22:03:16] Starting chess analysis...
+[22:03:16] Initializing Stockfish engine...
+[22:03:17] Stockfish initialized successfully.
+[22:03:17] Analyzing game: [analysis.pgn] Enter New Game vs ? (????.??.??) *
+[22:03:17] Starting position FEN: rnbqkb1r/ppp2ppp/8/4P3/8/2pP1N2/P1P3PP/R1BQKB1R w KQkq - 0 8
+[22:03:17] Analysis depth: 3, time: 5s per position
+[22:03:17] White: 3 moves, threshold 50cp
+[22:03:17] Black: 3 moves, threshold 50cp
+[22:03:17] 
+=== Analyzing position at depth 0: Starting position ===
+[22:03:17]   Current FEN: rnbqkb1r/ppp2ppp/8/4P3/8/2pP1N2/P1P3PP/R1BQKB1R w KQkq - 0 8
+[22:03:17]   Side to move: White
+[22:03:17]   Move number: 8
+[22:03:17] [DEBUG] Sending position to Stockfish: FEN=rnbqkb1r/ppp2ppp/8/4P3/8/2pP1N2/P1P3PP/R1BQKB1R w KQkq - 0 8
+[22:03:22] [DEBUG] Stockfish returned 3 moves:
+[22:03:22] [DEBUG] Move: d3d4, Raw Eval: -82cp
+[22:03:22] [DEBUG] Move: a1b1, Raw Eval: -74cp
+[22:03:22] [DEBUG] Move: f1e2, Raw Eval: -90cp
+[22:03:22] Found 3 moves, using 3 after filtering
+[22:03:22]   8.d4 -82
+[22:03:22]   8.Rb1 -74
+[22:03:22]   8.Be2 -90
+[22:03:22]   DEBUG: Move object - UCI field contains: 'd3d4'
+[22:03:22]   DEBUG: Move object - SAN field contains: 'd4'
+[22:03:22]   Applying move: d3d4
+[22:03:22]   New FEN after d3d4: rnbqkb1r/ppp2ppp/8/4P3/3P4/2p2N2/P1P3PP/R1BQKB1R b KQkq - 0 8
+[22:03:22]   DEBUG: Move object - UCI field contains: 'a1b1'
+[22:03:22]   DEBUG: Move object - SAN field contains: 'Rb1'
+[22:03:22]   Applying move: a1b1
+[22:03:22]   New FEN after a1b1: rnbqkb1r/ppp2ppp/8/4P3/8/2pP1N2/P1P3PP/1RBQKB1R b Kkq - 1 8
+[22:03:22]   DEBUG: Move object - UCI field contains: 'f1e2'
+[22:03:22]   DEBUG: Move object - SAN field contains: 'Be2'
+[22:03:22]   Applying move: f1e2
+[22:03:22]   New FEN after f1e2: rnbqkb1r/ppp2ppp/8/4P3/8/2pP1N2/P1P1B1PP/R1BQK2R b KQkq - 1 8
+[22:03:22] 
+=== Analyzing position at depth 1: 7.d4 ===
+[22:03:22]   Current FEN: rnbqkb1r/ppp2ppp/8/4P3/3P4/2p2N2/P1P3PP/R1BQKB1R b KQkq - 0 8
+[22:03:22]   Side to move: Black
+[22:03:22]   Move number: 8
+[22:03:22] [DEBUG] Sending position to Stockfish: FEN=rnbqkb1r/ppp2ppp/8/4P3/3P4/2p2N2/P1P3PP/R1BQKB1R b KQkq - 0 8
+[22:03:27] [DEBUG] Stockfish returned 3 moves:
+[22:03:27] [DEBUG] Move: d8d5, Raw Eval: -79cp
+[22:03:27] [DEBUG] Move: c8e6, Raw Eval: -53cp
+[22:03:27] [DEBUG] Move: f8e7, Raw Eval: -12cp
+[22:03:27] Found 3 moves, using 2 after filtering
+[22:03:27]   8...Qd5 -79
+[22:03:27]   8...Be6 -53
+[22:03:27]   DEBUG: Move object - UCI field contains: 'd8d5'
+[22:03:27]   DEBUG: Move object - SAN field contains: 'Qd5'
+[22:03:27]   Applying move: d8d5
+[22:03:27]   New FEN after d8d5: rnb1kb1r/ppp2ppp/8/3qP3/3P4/2p2N2/P1P3PP/R1BQKB1R w KQkq - 1 9
+[22:03:27]   DEBUG: Move object - UCI field contains: 'c8e6'
+[22:03:27]   DEBUG: Move object - SAN field contains: 'Be6'
+[22:03:27]   Applying move: c8e6
+[22:03:27]   New FEN after c8e6: rn1qkb1r/ppp2ppp/4b3/4P3/3P4/2p2N2/P1P3PP/R1BQKB1R w KQkq - 1 9
+[22:03:27] 
+=== Analyzing position at depth 1: 7.Rb1 ===
+[22:03:27]   Current FEN: rnbqkb1r/ppp2ppp/8/4P3/8/2pP1N2/P1P3PP/1RBQKB1R b Kkq - 1 8
+[22:03:27]   Side to move: Black
+[22:03:27]   Move number: 8
+[22:03:27] [DEBUG] Sending position to Stockfish: FEN=rnbqkb1r/ppp2ppp/8/4P3/8/2pP1N2/P1P3PP/1RBQKB1R b Kkq - 1 8
+[22:03:32] [DEBUG] Stockfish returned 3 moves:
+[22:03:32] [DEBUG] Move: b8c6, Raw Eval: -96cp
+[22:03:32] [DEBUG] Move: d8d5, Raw Eval: -90cp
+[22:03:32] [DEBUG] Move: c8e6, Raw Eval: -70cp
+[22:03:32] Found 3 moves, using 3 after filtering
+[22:03:32]   8...Nc6 -96
+[22:03:32]   8...Qd5 -90
+[22:03:32]   8...Be6 -70
+[22:03:32]   DEBUG: Move object - UCI field contains: 'b8c6'
+[22:03:32]   DEBUG: Move object - SAN field contains: 'Nc6'
+[22:03:32]   Applying move: b8c6
+[22:03:32]   New FEN after b8c6: r1bqkb1r/ppp2ppp/2n5/4P3/8/2pP1N2/P1P3PP/1RBQKB1R w Kkq - 2 9
+[22:03:32]   DEBUG: Move object - UCI field contains: 'd8d5'
+[22:03:32]   DEBUG: Move object - SAN field contains: 'Qd5'
+[22:03:32]   Applying move: d8d5
+[22:03:32]   New FEN after d8d5: rnb1kb1r/ppp2ppp/8/3qP3/8/2pP1N2/P1P3PP/1RBQKB1R w Kkq - 2 9
+[22:03:32]   DEBUG: Move object - UCI field contains: 'c8e6'
+[22:03:32]   DEBUG: Move object - SAN field contains: 'Be6'
+[22:03:32]   Applying move: c8e6
+[22:03:32]   New FEN after c8e6: rn1qkb1r/ppp2ppp/4b3/4P3/8/2pP1N2/P1P3PP/1RBQKB1R w Kkq - 2 9
+[22:03:32] 
+=== Analyzing position at depth 1: 7.Be2 ===
+[22:03:32]   Current FEN: rnbqkb1r/ppp2ppp/8/4P3/8/2pP1N2/P1P1B1PP/R1BQK2R b KQkq - 1 8
+[22:03:32]   Side to move: Black
+[22:03:32]   Move number: 8
+[22:03:32] [DEBUG] Sending position to Stockfish: FEN=rnbqkb1r/ppp2ppp/8/4P3/8/2pP1N2/P1P1B1PP/R1BQK2R b KQkq - 1 8
+[22:03:37] [DEBUG] Stockfish returned 3 moves:
+[22:03:37] [DEBUG] Move: b8c6, Raw Eval: -88cp
+[22:03:37] [DEBUG] Move: d8d5, Raw Eval: -84cp
+[22:03:37] [DEBUG] Move: c8e6, Raw Eval: -72cp
+[22:03:37] Found 3 moves, using 3 after filtering
+[22:03:37]   8...Nc6 -88
+[22:03:37]   8...Qd5 -84
+[22:03:37]   8...Be6 -72
+[22:03:37]   DEBUG: Move object - UCI field contains: 'b8c6'
+[22:03:37]   DEBUG: Move object - SAN field contains: 'Nc6'
+[22:03:37]   Applying move: b8c6
+[22:03:37]   New FEN after b8c6: r1bqkb1r/ppp2ppp/2n5/4P3/8/2pP1N2/P1P1B1PP/R1BQK2R w KQkq - 2 9
+[22:03:37]   DEBUG: Move object - UCI field contains: 'd8d5'
+[22:03:37]   DEBUG: Move object - SAN field contains: 'Qd5'
+[22:03:37]   Applying move: d8d5
+[22:03:37]   New FEN after d8d5: rnb1kb1r/ppp2ppp/8/3qP3/8/2pP1N2/P1P1B1PP/R1BQK2R w KQkq - 2 9
+[22:03:37]   DEBUG: Move object - UCI field contains: 'c8e6'
+[22:03:37]   DEBUG: Move object - SAN field contains: 'Be6'
+[22:03:37]   Applying move: c8e6
+[22:03:37]   New FEN after c8e6: rn1qkb1r/ppp2ppp/4b3/4P3/8/2pP1N2/P1P1B1PP/R1BQK2R w KQkq - 2 9
+[22:03:37] 
+=== Analyzing position at depth 2: 7.d4 8...Qd5 ===
+[22:03:37]   Current FEN: rnb1kb1r/ppp2ppp/8/3qP3/3P4/2p2N2/P1P3PP/R1BQKB1R w KQkq - 1 9
+[22:03:37]   Side to move: White
+[22:03:37]   Move number: 9
+[22:03:37] [DEBUG] Sending position to Stockfish: FEN=rnb1kb1r/ppp2ppp/8/3qP3/3P4/2p2N2/P1P3PP/R1BQKB1R w KQkq - 1 9
+[22:03:42] [DEBUG] Stockfish returned 3 moves:
+[22:03:42] [DEBUG] Move: f1e2, Raw Eval: -82cp
+[22:03:42] [DEBUG] Move: d1d3, Raw Eval: -83cp
+[22:03:42] [DEBUG] Move: f1d3, Raw Eval: -90cp
+[22:03:42] Found 3 moves, using 3 after filtering
+[22:03:42]   9.Be2 -82
+[22:03:42]   9.Qd3 -83
+[22:03:42]   9.Bd3 -90
+[22:03:42]   DEBUG: Move object - UCI field contains: 'f1e2'
+[22:03:42]   DEBUG: Move object - SAN field contains: 'Be2'
+[22:03:42]   Applying move: f1e2
+[22:03:42]   New FEN after f1e2: rnb1kb1r/ppp2ppp/8/3qP3/3P4/2p2N2/P1P1B1PP/R1BQK2R b KQkq - 2 9
+[22:03:42]   DEBUG: Move object - UCI field contains: 'd1d3'
+[22:03:42]   DEBUG: Move object - SAN field contains: 'Qd3'
+[22:03:42]   Applying move: d1d3
+[22:03:42]   New FEN after d1d3: rnb1kb1r/ppp2ppp/8/3qP3/3P4/2pQ1N2/P1P3PP/R1B1KB1R b KQkq - 2 9
+[22:03:42]   DEBUG: Move object - UCI field contains: 'f1d3'
+[22:03:42]   DEBUG: Move object - SAN field contains: 'Bd3'
+[22:03:42]   Applying move: f1d3
+[22:03:42]   New FEN after f1d3: rnb1kb1r/ppp2ppp/8/3qP3/3P4/2pB1N2/P1P3PP/R1BQK2R b KQkq - 2 9
+[22:03:42] 
+=== Analyzing position at depth 2: 7.d4 8...Be6 ===
+[22:03:42]   Current FEN: rn1qkb1r/ppp2ppp/4b3/4P3/3P4/2p2N2/P1P3PP/R1BQKB1R w KQkq - 1 9
+[22:03:42]   Side to move: White
+[22:03:42]   Move number: 9
+[22:03:42] [DEBUG] Sending position to Stockfish: FEN=rn1qkb1r/ppp2ppp/4b3/4P3/3P4/2p2N2/P1P3PP/R1BQKB1R w KQkq - 1 9
+[22:03:47] [DEBUG] Stockfish returned 3 moves:
+[22:03:47] [DEBUG] Move: a1b1, Raw Eval: -75cp
+[22:03:47] [DEBUG] Move: d1d3, Raw Eval: -77cp
+[22:03:47] [DEBUG] Move: a2a3, Raw Eval: -80cp
+[22:03:47] Found 3 moves, using 3 after filtering
+[22:03:47]   9.Rb1 -75
+[22:03:47]   9.Qd3 -77
+[22:03:47]   9.a3 -80
+[22:03:47]   DEBUG: Move object - UCI field contains: 'a1b1'
+[22:03:47]   DEBUG: Move object - SAN field contains: 'Rb1'
+[22:03:47]   Applying move: a1b1
+[22:03:47]   New FEN after a1b1: rn1qkb1r/ppp2ppp/4b3/4P3/3P4/2p2N2/P1P3PP/1RBQKB1R b Kkq - 2 9
+[22:03:47]   DEBUG: Move object - UCI field contains: 'd1d3'
+[22:03:47]   DEBUG: Move object - SAN field contains: 'Qd3'
+[22:03:47]   Applying move: d1d3
+[22:03:47]   New FEN after d1d3: rn1qkb1r/ppp2ppp/4b3/4P3/3P4/2pQ1N2/P1P3PP/R1B1KB1R b KQkq - 2 9
+[22:03:47]   DEBUG: Move object - UCI field contains: 'a2a3'
+[22:03:47]   DEBUG: Move object - SAN field contains: 'a3'
+[22:03:47]   Applying move: a2a3
+[22:03:47]   New FEN after a2a3: rn1qkb1r/ppp2ppp/4b3/4P3/3P4/P1p2N2/2P3PP/R1BQKB1R b KQkq - 0 9
+[22:03:47] 
+=== Analyzing position at depth 2: 7.Rb1 8...Nc6 ===
+[22:03:47]   Current FEN: r1bqkb1r/ppp2ppp/2n5/4P3/8/2pP1N2/P1P3PP/1RBQKB1R w Kkq - 2 9
+[22:03:47]   Side to move: White
+[22:03:47]   Move number: 9
+[22:03:47] [DEBUG] Sending position to Stockfish: FEN=r1bqkb1r/ppp2ppp/2n5/4P3/8/2pP1N2/P1P3PP/1RBQKB1R w Kkq - 2 9
+[22:03:52] [DEBUG] Stockfish returned 3 moves:
+[22:03:52] [DEBUG] Move: d3d4, Raw Eval: -100cp
+[22:03:52] [DEBUG] Move: c1e3, Raw Eval: -144cp
+[22:03:52] [DEBUG] Move: c1g5, Raw Eval: -157cp
+[22:03:52] Found 3 moves, using 2 after filtering
+[22:03:52]   9.d4 -100
+[22:03:52]   9.Be3 -144
+[22:03:52]   DEBUG: Move object - UCI field contains: 'd3d4'
+[22:03:52]   DEBUG: Move object - SAN field contains: 'd4'
+[22:03:52]   Applying move: d3d4
+[22:03:52]   New FEN after d3d4: r1bqkb1r/ppp2ppp/2n5/4P3/3P4/2p2N2/P1P3PP/1RBQKB1R b Kkq - 0 9
+[22:03:52]   DEBUG: Move object - UCI field contains: 'c1e3'
+[22:03:52]   DEBUG: Move object - SAN field contains: 'Be3'
+[22:03:52]   Applying move: c1e3
+[22:03:52]   New FEN after c1e3: r1bqkb1r/ppp2ppp/2n5/4P3/8/2pPBN2/P1P3PP/1R1QKB1R b Kkq - 3 9
+[22:03:52] 
+=== Analyzing position at depth 2: 7.Rb1 8...Qd5 ===
+[22:03:52]   Current FEN: rnb1kb1r/ppp2ppp/8/3qP3/8/2pP1N2/P1P3PP/1RBQKB1R w Kkq - 2 9
+[22:03:52]   Side to move: White
+[22:03:52]   Move number: 9
+[22:03:52] [DEBUG] Sending position to Stockfish: FEN=rnb1kb1r/ppp2ppp/8/3qP3/8/2pP1N2/P1P3PP/1RBQKB1R w Kkq - 2 9
+[22:03:57] [DEBUG] Stockfish returned 3 moves:
+[22:03:57] [DEBUG] Move: d3d4, Raw Eval: -104cp
+[22:03:57] [DEBUG] Move: c1e3, Raw Eval: -112cp
+[22:03:57] [DEBUG] Move: f1e2, Raw Eval: -123cp
+[22:03:57] Found 3 moves, using 3 after filtering
+[22:03:57]   9.d4 -104
+[22:03:57]   9.Be3 -112
+[22:03:57]   9.Be2 -123
+[22:03:57]   DEBUG: Move object - UCI field contains: 'd3d4'
+[22:03:57]   DEBUG: Move object - SAN field contains: 'd4'
+[22:03:57]   Applying move: d3d4
+[22:03:57]   New FEN after d3d4: rnb1kb1r/ppp2ppp/8/3qP3/3P4/2p2N2/P1P3PP/1RBQKB1R b Kkq - 0 9
+[22:03:57]   DEBUG: Move object - UCI field contains: 'c1e3'
+[22:03:57]   DEBUG: Move object - SAN field contains: 'Be3'
+[22:03:57]   Applying move: c1e3
+[22:03:57]   New FEN after c1e3: rnb1kb1r/ppp2ppp/8/3qP3/8/2pPBN2/P1P3PP/1R1QKB1R b Kkq - 3 9
+[22:03:57]   DEBUG: Move object - UCI field contains: 'f1e2'
+[22:03:57]   DEBUG: Move object - SAN field contains: 'Be2'
+[22:03:57]   Applying move: f1e2
+[22:03:57]   New FEN after f1e2: rnb1kb1r/ppp2ppp/8/3qP3/8/2pP1N2/P1P1B1PP/1RBQK2R b Kkq - 3 9
+[22:03:57] 
+=== Analyzing position at depth 2: 7.Rb1 8...Be6 ===
+[22:03:57]   Current FEN: rn1qkb1r/ppp2ppp/4b3/4P3/8/2pP1N2/P1P3PP/1RBQKB1R w Kkq - 2 9
+[22:03:57]   Side to move: White
+[22:03:57]   Move number: 9
+[22:03:57] [DEBUG] Sending position to Stockfish: FEN=rn1qkb1r/ppp2ppp/4b3/4P3/8/2pP1N2/P1P3PP/1RBQKB1R w Kkq - 2 9
+[22:04:02] [DEBUG] Stockfish returned 3 moves:
+[22:04:02] [DEBUG] Move: d3d4, Raw Eval: -61cp
+[22:04:02] [DEBUG] Move: b1b7, Raw Eval: -80cp
+[22:04:02] [DEBUG] Move: c1g5, Raw Eval: -107cp
+[22:04:02] Found 3 moves, using 3 after filtering
+[22:04:02]   9.d4 -61
+[22:04:02]   9.Rxb7 -80
+[22:04:02]   9.Bg5 -107
+[22:04:02]   DEBUG: Move object - UCI field contains: 'd3d4'
+[22:04:02]   DEBUG: Move object - SAN field contains: 'd4'
+[22:04:02]   Applying move: d3d4
+[22:04:02]   New FEN after d3d4: rn1qkb1r/ppp2ppp/4b3/4P3/3P4/2p2N2/P1P3PP/1RBQKB1R b Kkq - 0 9
+[22:04:02]   DEBUG: Move object - UCI field contains: 'b1b7'
+[22:04:02]   DEBUG: Move object - SAN field contains: 'Rxb7'
+[22:04:02]   Applying move: b1b7
+[22:04:02]   New FEN after b1b7: rn1qkb1r/pRp2ppp/4b3/4P3/8/2pP1N2/P1P3PP/2BQKB1R b Kkq - 0 9
+[22:04:02]   DEBUG: Move object - UCI field contains: 'c1g5'
+[22:04:02]   DEBUG: Move object - SAN field contains: 'Bg5'
+[22:04:02]   Applying move: c1g5
+[22:04:02]   New FEN after c1g5: rn1qkb1r/ppp2ppp/4b3/4P1B1/8/2pP1N2/P1P3PP/1R1QKB1R b Kkq - 3 9
+[22:04:02] 
+=== Analyzing position at depth 2: 7.Be2 8...Nc6 ===
+[22:04:02]   Current FEN: r1bqkb1r/ppp2ppp/2n5/4P3/8/2pP1N2/P1P1B1PP/R1BQK2R w KQkq - 2 9
+[22:04:02]   Side to move: White
+[22:04:02]   Move number: 9
+[22:04:02] [DEBUG] Sending position to Stockfish: FEN=r1bqkb1r/ppp2ppp/2n5/4P3/8/2pP1N2/P1P1B1PP/R1BQK2R w KQkq - 2 9
+[22:04:07] [DEBUG] Stockfish returned 3 moves:
+[22:04:07] [DEBUG] Move: d3d4, Raw Eval: -95cp
+[22:04:07] [DEBUG] Move: e1g1, Raw Eval: -98cp
+[22:04:07] [DEBUG] Move: c1e3, Raw Eval: -120cp
+[22:04:07] Found 3 moves, using 3 after filtering
+[22:04:07]   9.d4 -95
+[22:04:07]   9.O-O -98
+[22:04:07]   9.Be3 -120
+[22:04:07]   DEBUG: Move object - UCI field contains: 'd3d4'
+[22:04:07]   DEBUG: Move object - SAN field contains: 'd4'
+[22:04:07]   Applying move: d3d4
+[22:04:07]   New FEN after d3d4: r1bqkb1r/ppp2ppp/2n5/4P3/3P4/2p2N2/P1P1B1PP/R1BQK2R b KQkq - 0 9
+[22:04:07]   DEBUG: Move object - UCI field contains: 'e1g1'
+[22:04:07]   DEBUG: Move object - SAN field contains: 'O-O'
+[22:04:07]   Applying move: e1g1
+[22:04:07]   New FEN after e1g1: r1bqkb1r/ppp2ppp/2n5/4P3/8/2pP1N2/P1P1B1PP/R1BQ1RK1 b kq - 3 9
+[22:04:07]   DEBUG: Move object - UCI field contains: 'c1e3'
+[22:04:07]   DEBUG: Move object - SAN field contains: 'Be3'
+[22:04:07]   Applying move: c1e3
+[22:04:07]   New FEN after c1e3: r1bqkb1r/ppp2ppp/2n5/4P3/8/2pPBN2/P1P1B1PP/R2QK2R b KQkq - 3 9
+[22:04:07] 
+=== Analyzing position at depth 2: 7.Be2 8...Qd5 ===
+[22:04:07]   Current FEN: rnb1kb1r/ppp2ppp/8/3qP3/8/2pP1N2/P1P1B1PP/R1BQK2R w KQkq - 2 9
+[22:04:07]   Side to move: White
+[22:04:07]   Move number: 9
+[22:04:07] [DEBUG] Sending position to Stockfish: FEN=rnb1kb1r/ppp2ppp/8/3qP3/8/2pP1N2/P1P1B1PP/R1BQK2R w KQkq - 2 9
+[22:04:12] [DEBUG] Stockfish returned 3 moves:
+[22:04:12] [DEBUG] Move: e1g1, Raw Eval: -86cp
+[22:04:12] [DEBUG] Move: d3d4, Raw Eval: -105cp
+[22:04:12] [DEBUG] Move: a1b1, Raw Eval: -121cp
+[22:04:12] Found 3 moves, using 3 after filtering
+[22:04:12]   9.O-O -86
+[22:04:12]   9.d4 -105
+[22:04:12]   9.Rb1 -121
+[22:04:12]   DEBUG: Move object - UCI field contains: 'e1g1'
+[22:04:12]   DEBUG: Move object - SAN field contains: 'O-O'
+[22:04:12]   Applying move: e1g1
+[22:04:12]   New FEN after e1g1: rnb1kb1r/ppp2ppp/8/3qP3/8/2pP1N2/P1P1B1PP/R1BQ1RK1 b kq - 3 9
+[22:04:12]   DEBUG: Move object - UCI field contains: 'd3d4'
+[22:04:12]   DEBUG: Move object - SAN field contains: 'd4'
+[22:04:12]   Applying move: d3d4
+[22:04:12]   New FEN after d3d4: rnb1kb1r/ppp2ppp/8/3qP3/3P4/2p2N2/P1P1B1PP/R1BQK2R b KQkq - 0 9
+[22:04:12]   DEBUG: Move object - UCI field contains: 'a1b1'
+[22:04:12]   DEBUG: Move object - SAN field contains: 'Rb1'
+[22:04:12]   Applying move: a1b1
+[22:04:12]   New FEN after a1b1: rnb1kb1r/ppp2ppp/8/3qP3/8/2pP1N2/P1P1B1PP/1RBQK2R b Kkq - 3 9
+[22:04:12] 
+=== Analyzing position at depth 2: 7.Be2 8...Be6 ===
+[22:04:12]   Current FEN: rn1qkb1r/ppp2ppp/4b3/4P3/8/2pP1N2/P1P1B1PP/R1BQK2R w KQkq - 2 9
+[22:04:12]   Side to move: White
+[22:04:12]   Move number: 9
+[22:04:12] [DEBUG] Sending position to Stockfish: FEN=rn1qkb1r/ppp2ppp/4b3/4P3/8/2pP1N2/P1P1B1PP/R1BQK2R w KQkq - 2 9
+[22:04:17] [DEBUG] Stockfish returned 3 moves:
+[22:04:17] [DEBUG] Move: e1g1, Raw Eval: -84cp
+[22:04:17] [DEBUG] Move: d3d4, Raw Eval: -113cp
+[22:04:17] [DEBUG] Move: c1e3, Raw Eval: -130cp
+[22:04:17] Found 3 moves, using 3 after filtering
+[22:04:17]   9.O-O -84
+[22:04:17]   9.d4 -113
+[22:04:17]   9.Be3 -130
+[22:04:17]   DEBUG: Move object - UCI field contains: 'e1g1'
+[22:04:17]   DEBUG: Move object - SAN field contains: 'O-O'
+[22:04:17]   Applying move: e1g1
+[22:04:17]   New FEN after e1g1: rn1qkb1r/ppp2ppp/4b3/4P3/8/2pP1N2/P1P1B1PP/R1BQ1RK1 b kq - 3 9
+[22:04:17]   DEBUG: Move object - UCI field contains: 'd3d4'
+[22:04:17]   DEBUG: Move object - SAN field contains: 'd4'
+[22:04:17]   Applying move: d3d4
+[22:04:17]   New FEN after d3d4: rn1qkb1r/ppp2ppp/4b3/4P3/3P4/2p2N2/P1P1B1PP/R1BQK2R b KQkq - 0 9
+[22:04:17]   DEBUG: Move object - UCI field contains: 'c1e3'
+[22:04:17]   DEBUG: Move object - SAN field contains: 'Be3'
+[22:04:17]   Applying move: c1e3
+[22:04:17]   New FEN after c1e3: rn1qkb1r/ppp2ppp/4b3/4P3/8/2pPBN2/P1P1B1PP/R2QK2R b KQkq - 3 9
+[22:04:17] Analysis completed in 61.7 seconds
+[22:04:17] Total positions analyzed: 12

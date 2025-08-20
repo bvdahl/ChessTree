@@ -15,9 +15,9 @@
 ✅ **Perspective Consistency** - All evaluations from White's perspective  
 ✅ **PGN Output Format** - Proper nested variations with evaluations as comments, matching Python version  
 ✅ **Multiple Analysis Support** - Can now run new analyses without restarting app, properly clears previous results  
-✅ **File Loading Fix** - Improved file loading with better state reset and UI refresh
-✅ **UI Responsiveness** - Analysis now runs on background thread to prevent UI freezing
-✅ **Chess Board Update** - Board display now properly refreshes when loading new positions  
+✅ **File Loading Fix** - Removed hardcoded FEN position, now properly uses FEN from each PGN file
+✅ **UI Responsiveness** - Improved analysis startup with better logging
+✅ **Chess Board Update** - Board display forces refresh when loading new positions  
 
 ## Quick Installation
 

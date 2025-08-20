@@ -254,11 +254,8 @@ namespace ChessTreeAnalyzer
                 OutputTextBox.AppendText($"Source: {_currentGame.SourceFile}\n");
                 OutputTextBox.AppendText($"Position FEN: {_currentGame.GetCurrentPosition().FEN}\n\n");
                 
-                // Start analysis on a background thread to prevent UI freeze
-                await Task.Run(async () => 
-                {
-                    await _analysisService.StartAnalysisAsync(_currentGame, _currentSettings);
-                });
+                // Start analysis with the current game (ensure it's the new one)
+                await _analysisService.StartAnalysisAsync(_currentGame, _currentSettings);
             }
             catch (Exception ex)
             {
