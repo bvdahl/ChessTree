@@ -32,9 +32,20 @@ namespace ChessTreeAnalyzer.Services
             if (_isAnalyzing)
                 throw new InvalidOperationException("Analysis already in progress");
 
+            // Reset all state for new analysis
             _isAnalyzing = true;
             _cancellationTokenSource = new CancellationTokenSource();
             _allDiagnostics.Clear();
+            
+            // Reset the game's analysis tree to ensure fresh start
+            game.AnalysisTree = null;
+            
+            // Force Stockfish to reset if needed
+            if (_stockfishService.IsInitialized)
+            {
+                LogAndOutput("Resetting Stockfish engine for new analysis...");
+                await _stockfishService.ResetEngineAsync();
+            }
 
             try
             {

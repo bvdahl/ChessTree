@@ -170,6 +170,14 @@ namespace ChessTreeAnalyzer
 
             try
             {
+                // CLEAR ALL PREVIOUS ANALYSIS DATA
+                OutputTextBox.Clear();
+                AnalysisTreeView.Items.Clear();
+                _currentGame.AnalysisTree = null; // Clear previous analysis from game model
+                
+                // Force UI update to show cleared state immediately
+                await Dispatcher.InvokeAsync(() => { }, System.Windows.Threading.DispatcherPriority.Render);
+                
                 // Update UI for analysis start
                 StartAnalysisButton.IsEnabled = false;
                 StopAnalysisButton.IsEnabled = true;
@@ -183,8 +191,13 @@ namespace ChessTreeAnalyzer
                     _currentSettings.TimePerPosition = TimeSpan.FromSeconds(timeSeconds);
 
                 StatusText.Text = "Starting analysis...";
-                OutputTextBox.Text = "Starting chess analysis...\n";
+                OutputTextBox.AppendText("Clearing previous analysis...\n");
+                OutputTextBox.AppendText("Starting new chess analysis...\n");
+                OutputTextBox.AppendText($"Settings: Depth={_currentSettings.MaxDepth}, Time={_currentSettings.TimePerPosition.TotalSeconds}s\n\n");
 
+                // Small delay to ensure UI updates are visible
+                await Task.Delay(100);
+                
                 // Start analysis
                 await _analysisService.StartAnalysisAsync(_currentGame, _currentSettings);
             }
@@ -352,7 +365,7 @@ namespace ChessTreeAnalyzer
         {
             Dispatcher.Invoke(() =>
             {
-                OutputTextBox.Text += output + "\n";
+                OutputTextBox.AppendText(output + "\n");
                 
                 // Also output to Debug console for diagnostics
                 System.Diagnostics.Debug.WriteLine(output);

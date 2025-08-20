@@ -3,7 +3,7 @@
 ## Current Build: ChessTreeAnalyzer_Latest.tar.gz
 
 **Version Date:** August 20, 2025  
-**File Size:** 392KB  
+**File Size:** 394KB  
 **Platform:** Windows x64 (.NET 8.0 required)
 
 ## What's Fixed in This Version
@@ -14,6 +14,7 @@
 ✅ **Move Application** - UCI/SAN parameter ordering corrected  
 ✅ **Perspective Consistency** - All evaluations from White's perspective  
 ✅ **PGN Output Format** - Proper nested variations with evaluations as comments, matching Python version  
+✅ **Multiple Analysis Support** - Can now run new analyses without restarting app, properly clears previous results  
 
 ## Quick Installation
 

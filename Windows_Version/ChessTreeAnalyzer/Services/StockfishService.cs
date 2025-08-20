@@ -17,6 +17,23 @@ namespace ChessTreeAnalyzer.Services
         private readonly object _lock = new object();
 
         public bool IsInitialized => _isInitialized;
+        
+        public async Task ResetEngineAsync()
+        {
+            if (!_isInitialized) return;
+            
+            try
+            {
+                // Send UCI new game command to reset engine state
+                await SendCommandAsync("ucinewgame");
+                await SendCommandAsync("isready");
+                await WaitForResponseAsync("readyok", 1000);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[STOCKFISH] Reset error: {ex.Message}");
+            }
+        }
 
         public async Task<bool> InitializeAsync(string stockfishPath, AnalysisSettings settings)
         {
