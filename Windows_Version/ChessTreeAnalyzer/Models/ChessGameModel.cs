@@ -177,108 +177,62 @@ namespace ChessTreeAnalyzer.Models
                 
                 // Apply all moves from the PGN
                 int moveNumber = 0;
+                int successfulMoves = 0;
+                
                 foreach (var move in GameMoves)
                 {
                     moveNumber++;
+                    Console.WriteLine($"\n--- Processing move {moveNumber}: {move.SAN} ---");
+                    
                     try
                     {
-                        // Try to find and apply the matching move
                         bool moveApplied = false;
-                        
-                        // Get all valid moves for the current player
                         var validMoves = game.GetValidMoves(game.WhoseTurn);
-                        Console.WriteLine($"Move {moveNumber}: Looking for {move.SAN}, found {validMoves.Count()} valid moves");
+                        Console.WriteLine($"Found {validMoves.Count()} valid moves for {game.WhoseTurn}");
                         
-                        // Special handling for castling
-                        if (move.SAN == "O-O" || move.SAN == "0-0")
+                        // Try to find the matching move
+                        foreach (var validMove in validMoves)
                         {
-                            // King-side castling
-                            foreach (var validMove in validMoves)
+                            // Create coordinates for the move
+                            string from = validMove.OriginalPosition.ToString();
+                            string to = validMove.NewPosition.ToString();
+                            
+                            // Apply the move to a test game to see if it matches
+                            var testGame = new ChessGame(game.GetFen());
+                            var result = testGame.ApplyMove(validMove, true);
+                            
+                            if (result != ChessDotNet.MoveType.Invalid)
                             {
-                                if ((game.WhoseTurn == Player.White && validMove.OriginalPosition.ToString() == "E1" && validMove.NewPosition.ToString() == "G1") ||
-                                    (game.WhoseTurn == Player.Black && validMove.OriginalPosition.ToString() == "E8" && validMove.NewPosition.ToString() == "G8"))
+                                // Now check if this move matches our SAN
+                                if (DoesMoveMathSAN(move.SAN, validMove, game))
                                 {
+                                    // This is our move!
                                     game.ApplyMove(validMove, true);
-                                    Console.WriteLine($"Applied castling: {move.SAN}");
+                                    Console.WriteLine($"SUCCESS: Applied {move.SAN} as {from}->{to}");
+                                    Console.WriteLine($"New position: {game.GetFen()}");
                                     moveApplied = true;
+                                    successfulMoves++;
                                     break;
-                                }
-                            }
-                        }
-                        else if (move.SAN == "O-O-O" || move.SAN == "0-0-0")
-                        {
-                            // Queen-side castling
-                            foreach (var validMove in validMoves)
-                            {
-                                if ((game.WhoseTurn == Player.White && validMove.OriginalPosition.ToString() == "E1" && validMove.NewPosition.ToString() == "C1") ||
-                                    (game.WhoseTurn == Player.Black && validMove.OriginalPosition.ToString() == "E8" && validMove.NewPosition.ToString() == "C8"))
-                                {
-                                    game.ApplyMove(validMove, true);
-                                    Console.WriteLine($"Applied castling: {move.SAN}");
-                                    moveApplied = true;
-                                    break;
-                                }
-                            }
-                        }
-                        else
-                        {
-                            // For regular moves, try each valid move and see which one matches
-                            foreach (var validMove in validMoves)
-                            {
-                                // Create a test game to see what SAN this move produces
-                                var testGame = new ChessGame(game.GetFen());
-                                var moveType = testGame.ApplyMove(validMove, true);
-                                
-                                if (!ChessDotNet.MoveType.Invalid.HasFlag(moveType))
-                                {
-                                    // Check if destination square matches
-                                    string dest = validMove.NewPosition.ToString().ToLower();
-                                    string sanClean = move.SAN.Replace("+", "").Replace("#", "").Replace("x", "").Replace("=", "");
-                                    
-                                    // For pawn moves (no piece letter)
-                                    if (char.IsLower(sanClean[0]) || sanClean.Length == 2)
-                                    {
-                                        if (sanClean.ToLower().EndsWith(dest))
-                                        {
-                                            game.ApplyMove(validMove, true);
-                                            Console.WriteLine($"Applied pawn move: {move.SAN} -> {validMove.OriginalPosition} to {validMove.NewPosition}");
-                                            moveApplied = true;
-                                            break;
-                                        }
-                                    }
-                                    // For piece moves
-                                    else if (sanClean.ToLower().Contains(dest))
-                                    {
-                                        // Check piece type matches
-                                        var piece = game.GetPieceAt(validMove.OriginalPosition);
-                                        if (piece != null)
-                                        {
-                                            char pieceLetter = GetPieceLetter(piece);
-                                            if (sanClean[0] == pieceLetter)
-                                            {
-                                                game.ApplyMove(validMove, true);
-                                                Console.WriteLine($"Applied piece move: {move.SAN} -> {validMove.OriginalPosition} to {validMove.NewPosition}");
-                                                moveApplied = true;
-                                                break;
-                                            }
-                                        }
-                                    }
                                 }
                             }
                         }
                         
                         if (!moveApplied)
                         {
-                            Console.WriteLine($"ERROR: Could not apply move {moveNumber}: {move.SAN}");
-                            Console.WriteLine($"Current FEN: {game.GetFen()}");
-                            // Try to continue anyway
+                            Console.WriteLine($"FAILED: Could not apply move {move.SAN}");
+                            Console.WriteLine($"Position stuck at: {game.GetFen()}");
+                            // Stop trying further moves if one fails
+                            break;
                         }
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine($"Error applying move {moveNumber} ({move.SAN}): {ex.Message}");
+                        Console.WriteLine($"EXCEPTION on move {moveNumber} ({move.SAN}): {ex.Message}");
+                        break;
                     }
                 }
+                
+                Console.WriteLine($"\nMove application summary: {successfulMoves}/{GameMoves.Count} moves applied successfully");
                 
                 // Get the final FEN position after all moves
                 string finalFen = game.GetFen();
@@ -338,6 +292,46 @@ namespace ChessTreeAnalyzer.Models
             return "Analysis tree conversion to PGN format";
         }
 
+        private bool DoesMoveMathSAN(string san, Move move, ChessGame game)
+        {
+            // Clean the SAN notation
+            string sanClean = san.Replace("+", "").Replace("#", "").Replace("x", "").Replace("=", "").ToLower();
+            string dest = move.NewPosition.ToString().ToLower();
+            
+            // Castling
+            if (san == "O-O" || san == "0-0")
+                return dest == "g1" || dest == "g8";
+            if (san == "O-O-O" || san == "0-0-0")
+                return dest == "c1" || dest == "c8";
+            
+            // Check if destination matches
+            if (!sanClean.Contains(dest))
+                return false;
+            
+            // For pawn moves (starts with file letter)
+            if (sanClean.Length <= 3 && char.IsLetter(sanClean[0]) && char.IsLower(sanClean[0]))
+            {
+                // It's a pawn move if it starts with a lowercase letter
+                return true;
+            }
+            
+            // For piece moves, verify piece type
+            var piece = game.GetPieceAt(move.OriginalPosition);
+            if (piece != null)
+            {
+                char expectedPiece = char.ToLower(sanClean[0]);
+                char actualPiece = char.ToLower(GetPieceLetter(piece));
+                
+                // Special case: pawn moves don't have piece letter
+                if (actualPiece == 'p' && char.IsLower(sanClean[0]))
+                    return true;
+                    
+                return expectedPiece == actualPiece;
+            }
+            
+            return false;
+        }
+        
         private char GetPieceLetter(Piece piece)
         {
             // Get the piece type name and return the first letter
