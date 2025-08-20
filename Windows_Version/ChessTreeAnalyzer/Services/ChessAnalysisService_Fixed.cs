@@ -30,12 +30,21 @@ namespace ChessTreeAnalyzer.Services
         public async Task StartAnalysisAsync(ChessGameModel game, AnalysisSettings settings)
         {
             if (_isAnalyzing)
-                throw new InvalidOperationException("Analysis already in progress");
+            {
+                // Force stop any running analysis
+                StopAnalysis();
+                await Task.Delay(500); // Wait for cleanup
+            }
 
             // Reset all state for new analysis
             _isAnalyzing = true;
+            _cancellationTokenSource?.Dispose();
             _cancellationTokenSource = new CancellationTokenSource();
             _allDiagnostics.Clear();
+            
+            // Verify we have the correct game
+            LogAndOutput($"Starting analysis for: {game.GameInfo}");
+            LogAndOutput($"File path: {game.SourceFile}");
             
             // Reset the game's analysis tree to ensure fresh start
             game.AnalysisTree = null;

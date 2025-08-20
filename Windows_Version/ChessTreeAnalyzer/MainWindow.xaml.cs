@@ -82,15 +82,19 @@ namespace ChessTreeAnalyzer
                         _currentGame.AnalysisTree = null;
                     }
                     
-                    // Load the new PGN file
-                    _currentGame = ChessGameModel.LoadFromPGN(dialog.FileName);
+                    // Load the new PGN file - ensure complete new instance
+                    var newGame = ChessGameModel.LoadFromPGN(dialog.FileName);
+                    _currentGame = newGame; // Replace reference completely
                     
                     // Clear UI elements
                     AnalysisTreeView.Items.Clear();
                     OutputTextBox.Clear();
                     
-                    // Update the chess board display
-                    ChessBoard.SetPosition(_currentGame.GetCurrentPosition());
+                    // Update the chess board display - force refresh
+                    var currentPos = _currentGame.GetCurrentPosition();
+                    ChessBoard.SetPosition(null); // Clear first
+                    ChessBoard.InvalidateVisual(); // Force redraw
+                    ChessBoard.SetPosition(currentPos); // Set new position
                     
                     // Update status
                     StatusText.Text = $"Loaded PGN: {System.IO.Path.GetFileName(dialog.FileName)}";
@@ -137,7 +141,9 @@ namespace ChessTreeAnalyzer
                     AnalysisTreeView.Items.Clear();
                     OutputTextBox.Clear();
                     
-                    // Update display
+                    // Update display - force refresh
+                    ChessBoard.SetPosition(null);
+                    ChessBoard.InvalidateVisual();
                     ChessBoard.SetPosition(_currentGame.InitialPosition);
                     StatusText.Text = "FEN position loaded";
                     OutputTextBox.Text = $"FEN position loaded:\n{fen}\n\nPosition ready for analysis.";
@@ -243,8 +249,16 @@ namespace ChessTreeAnalyzer
                 // Small delay to ensure UI updates are visible
                 await Task.Delay(100);
                 
-                // Start analysis
-                await _analysisService.StartAnalysisAsync(_currentGame, _currentSettings);
+                // Log which game is being analyzed
+                OutputTextBox.AppendText($"Analyzing file: {_currentGame.GameInfo}\n");
+                OutputTextBox.AppendText($"Source: {_currentGame.SourceFile}\n");
+                OutputTextBox.AppendText($"Position FEN: {_currentGame.GetCurrentPosition().FEN}\n\n");
+                
+                // Start analysis on a background thread to prevent UI freeze
+                await Task.Run(async () => 
+                {
+                    await _analysisService.StartAnalysisAsync(_currentGame, _currentSettings);
+                });
             }
             catch (Exception ex)
             {
