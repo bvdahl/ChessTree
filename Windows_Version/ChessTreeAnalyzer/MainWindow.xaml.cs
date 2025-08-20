@@ -113,17 +113,29 @@ namespace ChessTreeAnalyzer
                     if (_currentGame.GameMoves.Count > 0)
                     {
                         OutputTextBox.AppendText($"\nMoves from PGN file:\n");
+                        
+                        // Show moves and calculate positions step by step
+                        var tempGame = new ChessDotNet.ChessGame();
+                        OutputTextBox.AppendText($"Starting: {tempGame.GetFen()}\n");
+                        
                         for (int i = 0; i < _currentGame.GameMoves.Count; i++)
                         {
-                            OutputTextBox.AppendText($"  {(i/2)+1}.{(i%2==0 ? "" : "..")} {_currentGame.GameMoves[i].SAN}\n");
+                            string moveNum = (i % 2 == 0) ? $"{(i/2)+1}." : "...";
+                            OutputTextBox.AppendText($"\n{moveNum} {_currentGame.GameMoves[i].SAN}");
+                            
+                            // Note: Actual position calculation happens in GetCurrentPosition()
+                            // This is just for display purposes
                         }
+                        OutputTextBox.AppendText($"\n");
                     }
                     
                     var finalPosition = _currentGame.GetCurrentPosition();
                     OutputTextBox.AppendText($"\n--- Final Position ---\n");
-                    OutputTextBox.AppendText($"FEN after applying moves: {finalPosition.FEN}\n\n");
-                    OutputTextBox.AppendText("Position ready for analysis. Click 'Analyze' to start.\n");
-                    OutputTextBox.AppendText("\n(Check console for detailed move application diagnostics)");
+                    OutputTextBox.AppendText($"FEN after applying all moves: {finalPosition.FEN}\n\n");
+                    
+                    OutputTextBox.AppendText("IMPORTANT: Check the console window for detailed move-by-move FEN positions.\n");
+                    OutputTextBox.AppendText("The console shows the exact position after each move is applied.\n\n");
+                    OutputTextBox.AppendText("Position ready for analysis. Click 'Analyze' to start.");
                 }
                 catch (Exception ex)
                 {

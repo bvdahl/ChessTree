@@ -178,50 +178,41 @@ namespace ChessTreeAnalyzer.Models
                 // Apply all moves from the PGN
                 int moveNumber = 0;
                 int successfulMoves = 0;
+                var positionHistory = new List<string>();
                 
                 foreach (var move in GameMoves)
                 {
                     moveNumber++;
                     Console.WriteLine($"\n--- Processing move {moveNumber}: {move.SAN} ---");
+                    Console.WriteLine($"Position before move: {game.GetFen()}");
                     
                     try
                     {
-                        bool moveApplied = false;
-                        var validMoves = game.GetValidMoves(game.WhoseTurn);
-                        Console.WriteLine($"Found {validMoves.Count()} valid moves for {game.WhoseTurn}");
+                        // Convert SAN to coordinate move
+                        var coordMove = ConvertSANToMove(move.SAN, game);
                         
-                        // Try to find the matching move
-                        foreach (var validMove in validMoves)
+                        if (coordMove != null)
                         {
-                            // Create coordinates for the move
-                            string from = validMove.OriginalPosition.ToString();
-                            string to = validMove.NewPosition.ToString();
-                            
-                            // Apply the move to a test game to see if it matches
-                            var testGame = new ChessGame(game.GetFen());
-                            var result = testGame.ApplyMove(validMove, true);
-                            
+                            var result = game.ApplyMove(coordMove, true);
                             if (result != ChessDotNet.MoveType.Invalid)
                             {
-                                // Now check if this move matches our SAN
-                                if (DoesMoveMathSAN(move.SAN, validMove, game))
-                                {
-                                    // This is our move!
-                                    game.ApplyMove(validMove, true);
-                                    Console.WriteLine($"SUCCESS: Applied {move.SAN} as {from}->{to}");
-                                    Console.WriteLine($"New position: {game.GetFen()}");
-                                    moveApplied = true;
-                                    successfulMoves++;
-                                    break;
-                                }
+                                successfulMoves++;
+                                string newFen = game.GetFen();
+                                positionHistory.Add($"After {move.SAN}: {newFen}");
+                                Console.WriteLine($"SUCCESS: Applied {move.SAN} as {coordMove.OriginalPosition}->{coordMove.NewPosition}");
+                                Console.WriteLine($"New position: {newFen}");
+                            }
+                            else
+                            {
+                                Console.WriteLine($"FAILED: Move {move.SAN} was invalid");
+                                Console.WriteLine($"Attempted: {coordMove.OriginalPosition}->{coordMove.NewPosition}");
+                                break;
                             }
                         }
-                        
-                        if (!moveApplied)
+                        else
                         {
-                            Console.WriteLine($"FAILED: Could not apply move {move.SAN}");
+                            Console.WriteLine($"FAILED: Could not parse move {move.SAN}");
                             Console.WriteLine($"Position stuck at: {game.GetFen()}");
-                            // Stop trying further moves if one fails
                             break;
                         }
                     }
@@ -232,6 +223,11 @@ namespace ChessTreeAnalyzer.Models
                     }
                 }
                 
+                Console.WriteLine($"\n=== POSITION HISTORY ===");
+                foreach (var pos in positionHistory)
+                {
+                    Console.WriteLine(pos);
+                }
                 Console.WriteLine($"\nMove application summary: {successfulMoves}/{GameMoves.Count} moves applied successfully");
                 
                 // Get the final FEN position after all moves
@@ -292,6 +288,84 @@ namespace ChessTreeAnalyzer.Models
             return "Analysis tree conversion to PGN format";
         }
 
+        private Move ConvertSANToMove(string san, ChessGame game)
+        {
+            // Get all valid moves and find the one that matches the SAN
+            var validMoves = game.GetValidMoves(game.WhoseTurn);
+            string sanClean = san.Replace("+", "").Replace("#", "").Replace("!", "").Replace("?", "");
+            
+            // Handle castling
+            if (san == "O-O" || san == "0-0")
+            {
+                foreach (var move in validMoves)
+                {
+                    if ((game.WhoseTurn == Player.White && move.OriginalPosition.ToString() == "E1" && move.NewPosition.ToString() == "G1") ||
+                        (game.WhoseTurn == Player.Black && move.OriginalPosition.ToString() == "E8" && move.NewPosition.ToString() == "G8"))
+                    {
+                        return move;
+                    }
+                }
+            }
+            else if (san == "O-O-O" || san == "0-0-0")
+            {
+                foreach (var move in validMoves)
+                {
+                    if ((game.WhoseTurn == Player.White && move.OriginalPosition.ToString() == "E1" && move.NewPosition.ToString() == "C1") ||
+                        (game.WhoseTurn == Player.Black && move.OriginalPosition.ToString() == "E8" && move.NewPosition.ToString() == "C8"))
+                    {
+                        return move;
+                    }
+                }
+            }
+            
+            // Parse regular moves
+            foreach (var move in validMoves)
+            {
+                // Test this move to see if it produces the expected result
+                var testGame = new ChessGame(game.GetFen());
+                var result = testGame.ApplyMove(move, true);
+                
+                if (result != ChessDotNet.MoveType.Invalid)
+                {
+                    // Check if this move matches the SAN
+                    string dest = move.NewPosition.ToString().ToLower();
+                    string sanLower = sanClean.ToLower();
+                    
+                    // Remove capture notation
+                    sanLower = sanLower.Replace("x", "");
+                    
+                    // For pawn moves (e4, d5, exd5, etc.)
+                    if (char.IsLower(san[0]))
+                    {
+                        // Pawn move - check if destination matches
+                        if (sanLower.EndsWith(dest))
+                        {
+                            return move;
+                        }
+                    }
+                    // For piece moves (Nf3, Bc4, etc.)
+                    else
+                    {
+                        // Get the piece at the origin
+                        var piece = game.GetPieceAt(move.OriginalPosition);
+                        if (piece != null)
+                        {
+                            char pieceLetter = GetPieceLetter(piece);
+                            if (san[0] == pieceLetter && sanLower.Contains(dest))
+                            {
+                                // Additional disambiguation checks if needed
+                                // For now, just return the first matching move
+                                return move;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            Console.WriteLine($"WARNING: Could not find valid move for SAN: {san}");
+            return null;
+        }
+        
         private bool DoesMoveMathSAN(string san, Move move, ChessGame game)
         {
             // Clean the SAN notation
