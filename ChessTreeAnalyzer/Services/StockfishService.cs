@@ -281,6 +281,19 @@ namespace ChessTreeAnalyzer.Services
                 
                 var from = uciMove.Substring(0, 2);
                 var to = uciMove.Substring(2, 2);
+                
+                // Check for castling moves
+                // White castling: e1g1 (O-O) or e1c1 (O-O-O)
+                // Black castling: e8g8 (O-O) or e8c8 (O-O-O)
+                if ((from == "e1" && to == "g1") || (from == "e8" && to == "g8"))
+                {
+                    return "O-O"; // Short castling (kingside)
+                }
+                else if ((from == "e1" && to == "c1") || (from == "e8" && to == "c8"))
+                {
+                    return "O-O-O"; // Long castling (queenside)
+                }
+                
                 var piece = position.GetPieceAt(GetSquareIndex(from));
                 
                 // Basic conversion - this would need full chess logic for accurate SAN
