@@ -369,7 +369,20 @@ namespace ChessTreeAnalyzer.Services
             pgn.AppendLine();
             
             // Generate move tree
-            pgn.AppendLine(GeneratePGNFromTree(root, 0));
+            var moveText = GeneratePGNFromTree(root, 0);
+            if (!string.IsNullOrEmpty(moveText))
+            {
+                pgn.Append(moveText);
+                if (!moveText.TrimEnd().EndsWith("*"))
+                {
+                    pgn.Append(" *");
+                }
+            }
+            else
+            {
+                pgn.Append("*");
+            }
+            pgn.AppendLine();
             
             return pgn.ToString();
         }
@@ -379,37 +392,85 @@ namespace ChessTreeAnalyzer.Services
             if (node.Children.Count == 0) return "";
             
             var result = new System.Text.StringBuilder();
-            var moveNum = node.Position.MoveNumber;
             
+            // Process all children - first is main line, rest are variations
             for (int i = 0; i < node.Children.Count; i++)
             {
                 var child = node.Children[i];
-                var isMainLine = i == 0;
+                var isMainLine = (i == 0);
                 
-                if (!isMainLine) result.Append("( ");
-                
-                // Add move number if needed
-                if (node.Position.WhiteToMove)
+                if (isMainLine)
                 {
-                    result.Append($"{moveNum}.");
+                    // Main line move
+                    result.Append(FormatMove(child, node.Position, depth == 0));
+                    
+                    // Add any alternative variations first (before continuing main line)
+                    for (int j = 1; j < node.Children.Count; j++)
+                    {
+                        var altChild = node.Children[j];
+                        result.Append(" (");
+                        result.Append(FormatMove(altChild, node.Position, true));
+                        
+                        // Recursively add the continuation of this variation
+                        var varContinuation = GeneratePGNFromTree(altChild, depth + 1);
+                        if (!string.IsNullOrEmpty(varContinuation))
+                        {
+                            result.Append(" ");
+                            result.Append(varContinuation);
+                        }
+                        result.Append(")");
+                    }
+                    
+                    // Continue with main line
+                    var mainContinuation = GeneratePGNFromTree(child, depth + 1);
+                    if (!string.IsNullOrEmpty(mainContinuation))
+                    {
+                        result.Append(" ");
+                        result.Append(mainContinuation);
+                    }
+                    
+                    // Only process main line and its variations, then break
+                    break;
                 }
-                else if (isMainLine && result.Length == 0)
+            }
+            
+            return result.ToString();
+        }
+        
+        private string FormatMove(AnalysisTreeNode node, ProperChessBoard parentPosition, bool isVariationStart = false)
+        {
+            var result = new System.Text.StringBuilder();
+            
+            // Add move number if it's White's turn or if we're starting a variation with Black
+            if (parentPosition.WhiteToMove)
+            {
+                result.Append($"{parentPosition.MoveNumber}.");
+            }
+            else if (isVariationStart) // Starting a variation with Black move
+            {
+                result.Append($"{parentPosition.MoveNumber}...");
+            }
+            
+            // Add the move in SAN notation
+            result.Append(node.Move.SAN);
+            
+            // Add evaluation as comment
+            if (node.IsMateScore)
+            {
+                // Format mate scores (e.g., {#5} or {-#3})
+                if (node.MateInMoves > 0)
                 {
-                    result.Append($"{moveNum}...");
+                    result.Append($" {{#{node.MateInMoves}}}");
                 }
-                
-                result.Append($"{child.Move.SAN} ");
-                
-                // Add evaluation comment
-                var evalComment = child.IsMateScore ? 
-                    $"{{M{child.MateInMoves}}}" : 
-                    $"{{{child.Evaluation:+0;-#}}}";
-                result.Append($"{evalComment} ");
-                
-                // Recursively add child moves
-                result.Append(GeneratePGNFromTree(child, depth + 1));
-                
-                if (!isMainLine) result.Append(") ");
+                else
+                {
+                    result.Append($" {{-#{Math.Abs(node.MateInMoves)}}}");
+                }
+            }
+            else if (node.Evaluation != 0)
+            {
+                // Format centipawn evaluation with sign
+                result.Append($" {{{node.Evaluation:+0;-0}}}");
             }
             
             return result.ToString();

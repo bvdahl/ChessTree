@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "/home/runner/workspace/ChessTreeAnalyzer/ChessTreeAnalyzer.csproj": {}
+    "/home/runner/workspace/Windows_Version/ChessTreeAnalyzer/ChessTreeAnalyzer.csproj": {}
   },
   "projects": {
-    "/home/runner/workspace/ChessTreeAnalyzer/ChessTreeAnalyzer.csproj": {
+    "/home/runner/workspace/Windows_Version/ChessTreeAnalyzer/ChessTreeAnalyzer.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/home/runner/workspace/ChessTreeAnalyzer/ChessTreeAnalyzer.csproj",
+        "projectUniqueName": "/home/runner/workspace/Windows_Version/ChessTreeAnalyzer/ChessTreeAnalyzer.csproj",
         "projectName": "ChessTreeAnalyzer",
-        "projectPath": "/home/runner/workspace/ChessTreeAnalyzer/ChessTreeAnalyzer.csproj",
+        "projectPath": "/home/runner/workspace/Windows_Version/ChessTreeAnalyzer/ChessTreeAnalyzer.csproj",
         "packagesPath": "/home/runner/.nuget/packages/",
-        "outputPath": "/home/runner/workspace/ChessTreeAnalyzer/obj/",
+        "outputPath": "/home/runner/workspace/Windows_Version/ChessTreeAnalyzer/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "/home/runner/.nuget/NuGet/NuGet.Config"

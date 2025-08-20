@@ -13,6 +13,7 @@
 ✅ **Castling Notation** - Proper chess notation (O-O, O-O-O) instead of king moves (Kg1)  
 ✅ **Move Application** - UCI/SAN parameter ordering corrected  
 ✅ **Perspective Consistency** - All evaluations from White's perspective  
+✅ **PGN Output Format** - Proper nested variations with evaluations as comments, matching Python version  
 
 ## Quick Installation
 

@@ -4,12 +4,12 @@
 winexe
 C#
 .cs
-/home/runner/workspace/ChessTreeAnalyzer/obj/Release/net8.0-windows/win-x64/
+/home/runner/workspace/Windows_Version/ChessTreeAnalyzer/obj/Release/net8.0-windows/win-x64/
 ChessTreeAnalyzer
 none
 false
 TRACE;RELEASE;NET;NET8_0;NETCOREAPP
-/home/runner/workspace/ChessTreeAnalyzer/App.xaml
+/home/runner/workspace/Windows_Version/ChessTreeAnalyzer/App.xaml
 5-717067767
 
 15431987160

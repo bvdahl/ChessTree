@@ -8,6 +8,6 @@ build_property.PlatformNeutralAssembly =
 build_property.EnforceExtendedAnalyzerRules = 
 build_property._SupportedPlatformList = Linux,macOS,Windows
 build_property.RootNamespace = ChessTreeAnalyzer
-build_property.ProjectDir = /home/runner/workspace/ChessTreeAnalyzer/
+build_property.ProjectDir = /home/runner/workspace/Windows_Version/ChessTreeAnalyzer/
 build_property.EnableComHosting = 
 build_property.EnableGeneratedComInterfaceComImportInterop = 
