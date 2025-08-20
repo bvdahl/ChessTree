@@ -167,25 +167,30 @@ namespace ChessTreeAnalyzer.Models
                 {
                     try
                     {
-                        // Try different methods to apply the move
+                        // Parse the SAN move to find source and destination squares
                         bool moveApplied = false;
                         
-                        // Method 1: Try to find matching valid move by comparing coordinates
+                        // Get all valid moves for the current player
                         var validMoves = game.GetValidMoves(game.WhoseTurn);
+                        
                         foreach (var validMove in validMoves)
                         {
-                            // Try to match by creating a test game and checking if it matches
+                            // Check if this move matches our SAN notation
+                            // The SAN property is populated after making the move, so we need to test it
                             var testGame = new ChessGame(game.GetFen());
-                            testGame.ApplyMove(validMove, false);
-                            
-                            // Simple check - if the move text contains key parts of our SAN
-                            string moveText = $"{validMove.OriginalPosition}{validMove.NewPosition}";
-                            if (IsMoveMatch(move.SAN, validMove, game))
+                            var moveType = testGame.ApplyMove(validMove, true);
+                            if (!ChessDotNet.MoveType.Invalid.HasFlag(moveType))
                             {
-                                game.ApplyMove(validMove, true);
-                                Console.WriteLine($"Applied move: {move.SAN}");
-                                moveApplied = true;
-                                break;
+                                // Compare the move coordinates with our SAN
+                                // This is a simplified check - we'll improve it if needed
+                                if (IsMoveMatch(move.SAN, validMove, game))
+                                {
+                                    // This is the correct move! Apply it to our actual game
+                                    game.ApplyMove(validMove, true);
+                                    Console.WriteLine($"Applied move: {move.SAN}");
+                                    moveApplied = true;
+                                    break;
+                                }
                             }
                         }
                         
@@ -258,15 +263,25 @@ namespace ChessTreeAnalyzer.Models
 
         private bool IsMoveMatch(string san, Move move, ChessGame game)
         {
-            // Simple matching logic - can be improved
-            // Check if the destination matches
+            // More robust matching logic
+            string sanClean = san.Replace("+", "").Replace("#", "").Replace("x", "").Replace("=", "");
             string dest = move.NewPosition.ToString().ToLower();
-            string sanLower = san.ToLower();
             
-            // Remove check/checkmate symbols for comparison
-            sanLower = sanLower.Replace("+", "").Replace("#", "").Replace("x", "");
+            // Check for castling
+            if ((san == "O-O" || san == "0-0") && move.NewPosition.File == ChessDotNet.File.G)
+                return true;
+            if ((san == "O-O-O" || san == "0-0-0") && move.NewPosition.File == ChessDotNet.File.C)
+                return true;
             
-            return sanLower.Contains(dest);
+            // For pawn moves - they start with lowercase letters
+            if (char.IsLower(sanClean[0]) || sanClean.Length == 2)
+            {
+                // Pawn moves are simple: e4, exd5, etc.
+                return sanClean.ToLower().Contains(dest);
+            }
+            
+            // For piece moves - check if the destination matches
+            return sanClean.ToLower().Contains(dest);
         }
         
         private static List<SimpleMove> ParsePGNMoves(string pgnContent)
