@@ -22,7 +22,18 @@ Preferred communication style: Simple, everyday language.
 
 ## Project Organization
 
-The project is now organized into two separate implementations:
+The project now includes three implementations:
+
+**web/**: Modern browser-based version (React + Vite)
+- Runs entirely client-side — no backend, no install
+- Stockfish 16 via WebAssembly in a Web Worker (`web/public/stockfish/`)
+- chess.js for rules, PGN/FEN parsing, SAN/UCI conversion
+- Interactive board (react-chessboard) and a navigable variation tree
+- Keeps the proven core: breadth-first tree generation, per-side centipawn-threshold
+  move filtering, White-perspective evaluation, nested-variation PGN export, plus JSON export
+- Started by the "Start application" workflow (`npm run dev --prefix web`, port 5000)
+
+The two original desktop implementations are unchanged:
 
 **Windows_Version/**: Complete C# WPF desktop application
 - ChessTreeAnalyzer project with full GUI

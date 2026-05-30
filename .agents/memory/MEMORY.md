@@ -1,0 +1,1 @@
+- [Stockfish WASM in browser](stockfish-wasm-browser.md) — web/ runs single-threaded SF16 worker; no 40MB net; Node raw-module postMessage must NOT pass `true`.
