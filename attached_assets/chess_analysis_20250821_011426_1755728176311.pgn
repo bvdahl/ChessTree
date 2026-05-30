@@ -1,8 +1,0 @@
-[Event "Chess Tree Analysis"]
-[Date "2025.08.21"]
-[White "Analysis"]
-[Black "Analysis"]
-[Result "*"]
-[FEN "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"]
-
-1.e4 1.e5 1.Nc3 1.Nf6 1.f4 1.d5 1.fxe5 1.Nxe4 1.d3 1.Nxc3 1.bxc3 1.d4 1.Nf3 1.dxc3 *

@@ -1,18 +1,15 @@
 # Overview
 
-Chess Tree Generator is a desktop application that performs deep chess position analysis using the Stockfish engine. The application generates comprehensive game trees from chess positions, exploring multiple variations at configurable depths. It supports both command-line operation and a GUI interface, with the ability to import PGN files or analyze specific FEN positions. The tool is designed for chess players and analysts who need to explore positions in depth and export results in standard formats compatible with ChessBase and other chess software.
+Chess Tree Analyzer is a browser-based application that performs deep chess
+position analysis using the Stockfish engine. It generates comprehensive game
+trees from chess positions, exploring multiple variations at configurable depths.
+Users can import PGN files, analyze a specific FEN position, or play moves on an
+interactive board. Results can be exported as nested-variation PGN (compatible
+with ChessBase and other chess software) or JSON. The tool is designed for chess
+players and analysts who need to explore positions in depth.
 
-## Version Management
-- Latest stable build always in root: `ChessTreeAnalyzer_Latest.tar.gz`
-- Previous versions archived in `Archive/Builds/`
-- Version details documented in `LATEST_VERSION.md`
-- After each iteration: old files → Archive, new build → root
-
-## Recent Achievements (August 20, 2025)
-- ✅ PGN output format completely fixed - proper nested variations with evaluations
-- ✅ All core functionality working: position analysis, evaluations, move notation
-- ✅ Output matches Python version's format exactly
-- ✅ Compatible with ChessBase and standard chess software
+The app runs entirely client-side in the browser — there is no backend and
+nothing to install.
 
 # User Preferences
 
@@ -22,73 +19,89 @@ Preferred communication style: Simple, everyday language.
 
 ## Project Organization
 
-The project now includes three implementations:
+This project is a single browser-based web app (React + Vite) living at the
+project root.
 
-**web/**: Modern browser-based version (React + Vite)
 - Runs entirely client-side — no backend, no install
-- Stockfish 16 via WebAssembly in a Web Worker (`web/public/stockfish/`)
+- Stockfish 16 via WebAssembly in a Web Worker (`public/stockfish/`)
 - chess.js for rules, PGN/FEN parsing, SAN/UCI conversion
 - Interactive board (react-chessboard) and a navigable variation tree
-- Keeps the proven core: breadth-first tree generation, per-side centipawn-threshold
-  move filtering, White-perspective evaluation, nested-variation PGN export, plus JSON export
-- In-app user guide (`web/src/components/HelpModal.jsx`, opened from the header "Help"
+- Core engine: breadth-first tree generation, per-side centipawn-threshold move
+  filtering, White-perspective evaluation, nested-variation PGN export, plus JSON
+  export
+- In-app user guide (`src/components/HelpModal.jsx`, opened from the header "Help"
   link) plus hover tooltips on every control
-- Started by the "Start application" workflow (`npm run dev --prefix web`, port 5000)
+- Started by the "Start application" workflow (`npm run dev`, port 5000)
 
 > **Keep help in sync:** Whenever you change any control, setting, default value,
-> range, label, behavior, or output in the web app, also update the in-app user
-> guide (`web/src/components/HelpModal.jsx`) and the matching control tooltips so
-> the documentation never describes the app inaccurately.
+> range, label, behavior, or output in the app, also update the in-app user guide
+> (`src/components/HelpModal.jsx`) and the matching control tooltips so the
+> documentation never describes the app inaccurately.
 
-The two original desktop implementations are unchanged:
+## Source Layout
 
-**Windows_Version/**: Complete C# WPF desktop application
-- ChessTreeAnalyzer project with full GUI
-- .NET 8.0 based implementation
-- Professional Windows desktop interface
-
-**Python_Version/**: Python implementation with command-line and GUI options
-- chess_tree_generator.py - Main analysis engine
-- stockfish_analyzer.py - Stockfish interface
-- chess_gui.py - Tkinter GUI
-- Cross-platform compatibility
+```
+index.html             App entry HTML
+vite.config.js         Vite config (port 5000, COOP/COEP headers for WASM threads)
+package.json           Dependencies and scripts (dev/build/preview)
+src/
+  App.jsx              App shell and state
+  main.jsx             Entry point
+  index.css            Styles
+  components/          Board, InputPanel, SettingsPanel, VariationTree, HelpModal
+  analysis/            Tree generation, evaluation, PGN/JSON output
+  engine/              Stockfish Web Worker interface
+public/
+  stockfish/           Stockfish WASM engine files
+```
 
 ## Core Components
 
-**Chess Analysis Engine**: The main analysis system orchestrates position analysis using Stockfish. Both implementations use a tree-based data structure to represent chess variations hierarchically, with each node containing a chess position, the move that led to it, and engine evaluation.
+**Chess Analysis Engine** (`src/analysis/`): Orchestrates position analysis using
+Stockfish. Uses a tree-based data structure to represent chess variations
+hierarchically, with each node containing a chess position, the move that led to
+it, and an engine evaluation.
 
-**Stockfish Integration**: Manages UCI protocol communication with the Stockfish engine. Handles engine configuration including hash memory allocation, thread count optimization based on system resources, and multi-PV analysis for generating multiple move candidates per position.
+**Stockfish Integration** (`src/engine/`): Manages UCI protocol communication with
+the Stockfish WebAssembly engine running in a Web Worker, including multi-PV
+analysis for generating multiple candidate moves per position.
 
-**GUI Applications**: 
-- C# WPF: Professional Windows desktop interface with interactive chess board
-- Python Tkinter: Cross-platform GUI with analysis parameter configuration
+**User Interface** (`src/components/`): Interactive chess board, input panel
+(PGN / FEN / play-on-board), settings panel, navigable variation tree, and the
+in-app Help guide.
 
 ## Data Processing Pipeline
 
-**Input Processing**: The system accepts either PGN files (extracting positions from games) or direct FEN notation for single position analysis. The chess library handles move validation and board state management throughout the analysis process.
+**Input Processing**: Accepts PGN (extracting positions from a game), a direct FEN
+position, or moves played on the board. chess.js handles move validation and board
+state throughout.
 
-**Analysis Configuration**: Configurable parameters include analysis depth (half-moves), time per position, move count per side, and centipawn thresholds for move filtering. Different thresholds can be set for White and Black positions to accommodate playing style differences.
+**Analysis Configuration**: Configurable parameters include analysis depth
+(half-moves), time per position, move count per side, and centipawn thresholds for
+move filtering. Separate thresholds can be set for White and Black.
 
-**Tree Generation**: The analysis proceeds depth-first, analyzing the best moves from each position and recursively building the game tree. Move filtering is applied based on centipawn thresholds to focus on the most relevant variations.
-
-## Performance Optimization
-
-**System Resource Management**: The application automatically detects CPU core count and available RAM to optimize Stockfish configuration. Hash table memory is allocated based on system capacity, and thread count is set to match available CPU cores.
-
-**Memory Management**: The tree structure is built incrementally to manage memory usage during deep analysis. The system includes progress tracking and the ability to stop analysis mid-process without losing partial results.
+**Tree Generation**: Builds the game tree by analyzing the strongest moves from
+each position. Move filtering is applied based on centipawn thresholds to focus on
+the most relevant variations.
 
 ## Output Generation
 
-**Multiple Export Formats**: Results can be exported as formatted text trees (showing move sequences with evaluations), JSON data (for programmatic processing), or PGN format (compatible with chess databases). The PGN output includes all analyzed variations as alternative lines.
-
-**Diagnostic Logging**: Comprehensive logging captures analysis progress, engine communication, and timing information for debugging and performance analysis.
+**Export Formats**: Results can be exported as nested-variation **PGN** (compatible
+with chess databases such as ChessBase) or **JSON** for programmatic processing.
 
 # External Dependencies
 
-**Stockfish Chess Engine**: Requires separate Stockfish executable for position analysis. The application communicates with Stockfish via UCI protocol, supporting various Stockfish versions and configurations.
+- **Stockfish 16 (WebAssembly)**: The chess engine, bundled in
+  `public/stockfish/` and run in a Web Worker. Communicates via the UCI protocol.
+- **chess.js**: Chess rules, move validation, and PGN/FEN parsing and notation
+  conversion.
+- **react-chessboard**: Interactive chess board UI component.
+- **React + Vite**: Application framework and build tooling.
 
-**Python Chess Library**: Uses python-chess for chess position representation, move validation, PGN parsing, and UCI engine communication. This library handles all chess-specific logic and notation conversions.
+# Version Control / GitHub
 
-**System Libraries**: Depends on psutil for system resource detection (CPU cores, memory) to optimize engine configuration. Tkinter is used for the GUI interface and comes with Python standard library.
-
-**File System Integration**: Reads PGN files for position import and writes various output formats. Settings persistence uses JSON format for configuration storage between sessions.
+The web app lives at the project root so it can be synced to GitHub directly. A
+`.gitignore` keeps Replit/workspace-only files (`.replit`, `replit.md`, `.local`,
+`.agents`, caches, etc.) out of the published repository, leaving a clean
+web-only project (`index.html`, `package.json`, `package-lock.json`,
+`vite.config.js`, `README.md`, `.gitignore`, `src/`, `public/`).

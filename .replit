@@ -1,4 +1,4 @@
-modules = ["python-3.11", "dotnet-8.0", "nodejs-20"]
+modules = ["nodejs-20"]
 
 [nix]
 channel = "stable-25_05"
@@ -19,13 +19,13 @@ args = "Start application"
 name = "Start application"
 author = "agent"
 
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "npm run dev --prefix web"
-waitForPort = 5000
-
 [workflows.workflow.metadata]
 outputType = "webview"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npm run dev"
+waitForPort = 5000
 
 [deployment]
 deploymentTarget = "cloudrun"

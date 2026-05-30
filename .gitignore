@@ -1,0 +1,17 @@
+node_modules
+dist
+.vite
+*.log
+.DS_Store
+
+# Replit / workspace-only files (kept out of the published repo)
+.replit
+replit.md
+.config
+.upm
+.cache
+.pythonlibs
+.local
+.agents
+attached_assets
+__pycache__
