@@ -25,6 +25,12 @@ function TreeNode({ node, selectedId, onSelect }) {
           "node-row" + (node.id === selectedId ? " selected" : "")
         }
         onClick={() => onSelect(node)}
+        title={
+          (node.isGameMove
+            ? "Game move — click to view this position on the board"
+            : "Suggested move — click to view this position on the board") +
+          (node.eval ? " · Evaluation shown from White's point of view" : "")
+        }
       >
         <span className="node-num">{moveNumberLabel(node)}</span>
         <span
@@ -75,6 +81,7 @@ export default function VariationTree({ root, selectedId, onSelect }) {
                 "node-row" + (root.id === selectedId ? " selected" : "")
               }
               onClick={() => onSelect(root)}
+              title="The starting position — click to view it on the board"
             >
               <span className="node-move" style={{ color: "var(--text-dim)" }}>
                 Start

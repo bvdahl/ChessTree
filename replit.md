@@ -31,7 +31,14 @@ The project now includes three implementations:
 - Interactive board (react-chessboard) and a navigable variation tree
 - Keeps the proven core: breadth-first tree generation, per-side centipawn-threshold
   move filtering, White-perspective evaluation, nested-variation PGN export, plus JSON export
+- In-app user guide (`web/src/components/HelpModal.jsx`, opened from the header "Help"
+  link) plus hover tooltips on every control
 - Started by the "Start application" workflow (`npm run dev --prefix web`, port 5000)
+
+> **Keep help in sync:** Whenever you change any control, setting, default value,
+> range, label, behavior, or output in the web app, also update the in-app user
+> guide (`web/src/components/HelpModal.jsx`) and the matching control tooltips so
+> the documentation never describes the app inaccurately.
 
 The two original desktop implementations are unchanged:
 

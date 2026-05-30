@@ -7,6 +7,7 @@ import Board from "./components/Board.jsx";
 import VariationTree from "./components/VariationTree.jsx";
 import SettingsPanel from "./components/SettingsPanel.jsx";
 import InputPanel from "./components/InputPanel.jsx";
+import HelpModal from "./components/HelpModal.jsx";
 
 const START_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
@@ -64,6 +65,7 @@ export default function App() {
   const [running, setRunning] = useState(false);
   const [progress, setProgress] = useState(null);
   const [error, setError] = useState("");
+  const [helpOpen, setHelpOpen] = useState(false);
 
   useEffect(() => {
     const engine = new StockfishEngine();
@@ -235,13 +237,33 @@ export default function App() {
             <p>Deep variation trees, powered by Stockfish in your browser</p>
           </div>
         </div>
-        <div className="engine-status">
-          <span className={"dot " + engineState} />
-          {engineState === "loading" && "Loading engine…"}
-          {engineState === "ready" && "Engine ready"}
-          {engineState === "error" && "Engine failed"}
+        <div className="topbar-right">
+          <button
+            className="help-link"
+            onClick={() => setHelpOpen(true)}
+            title="Open the user guide — how to use every part of this app"
+          >
+            <span aria-hidden="true">?</span> Help
+          </button>
+          <div
+            className="engine-status"
+            title={
+              engineState === "ready"
+                ? "The chess engine is loaded and ready to analyse"
+                : engineState === "loading"
+                ? "The chess engine is still loading in your browser"
+                : "The chess engine could not start"
+            }
+          >
+            <span className={"dot " + engineState} />
+            {engineState === "loading" && "Loading engine…"}
+            {engineState === "ready" && "Engine ready"}
+            {engineState === "error" && "Engine failed"}
+          </div>
         </div>
       </header>
+
+      <HelpModal open={helpOpen} onClose={() => setHelpOpen(false)} />
 
       <div className="layout">
         <div className="column left">
@@ -279,11 +301,16 @@ export default function App() {
                 className="btn btn-primary"
                 onClick={handleRun}
                 disabled={engineState !== "ready"}
+                title="Start analysing the chosen position and build the variation tree"
               >
                 ▶ Generate Tree
               </button>
             ) : (
-              <button className="btn btn-danger" onClick={handleStop}>
+              <button
+                className="btn btn-danger"
+                onClick={handleStop}
+                title="Stop the analysis now and keep whatever has been worked out so far"
+              >
                 ■ Stop Analysis
               </button>
             )}
@@ -316,6 +343,7 @@ export default function App() {
                       "application/x-chess-pgn"
                     )
                   }
+                  title="Download the whole tree as a PGN file (opens in ChessBase, Lichess, and most chess software)"
                 >
                   ↓ PGN
                 </button>
@@ -328,6 +356,7 @@ export default function App() {
                       "application/json"
                     )
                   }
+                  title="Download the tree as structured JSON data for use in your own scripts or tools"
                 >
                   ↓ JSON
                 </button>
@@ -355,6 +384,7 @@ export default function App() {
               className="btn btn-secondary"
               onClick={navParent}
               disabled={!selectedNode || !parentMap.get(selectedNode.id)}
+              title="Go to the previous move (the parent of the current move in the tree)"
             >
               ← Back
             </button>
@@ -362,6 +392,7 @@ export default function App() {
               className="btn btn-secondary"
               onClick={navChild}
               disabled={!selectedNode || !selectedNode.children.length}
+              title="Go forward into the first follow-up move of the current move"
             >
               Forward →
             </button>

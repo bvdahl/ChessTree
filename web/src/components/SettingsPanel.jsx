@@ -1,9 +1,9 @@
 import React from "react";
 
-function Slider({ label, value, min, max, step, onChange, suffix, disabled }) {
+function Slider({ label, value, min, max, step, onChange, suffix, disabled, tip }) {
   return (
     <div className="field">
-      <label>{label}</label>
+      <label title={tip}>{label}</label>
       <div className="num-input">
         <input
           type="range"
@@ -13,6 +13,7 @@ function Slider({ label, value, min, max, step, onChange, suffix, disabled }) {
           value={value}
           disabled={disabled}
           onChange={(e) => onChange(Number(e.target.value))}
+          title={tip}
         />
         <span className="val">
           {value}
@@ -46,6 +47,7 @@ export default function SettingsPanel({
         min={1}
         max={12}
         onChange={set("maxDepth")}
+        tip="How many moves deep the tree goes. One half-move is a single move by one player. Higher = deeper tree but slower."
       />
       <Slider
         label="Time per position"
@@ -55,6 +57,7 @@ export default function SettingsPanel({
         step={100}
         suffix=" ms"
         onChange={set("moveTimeMs")}
+        tip="How long the engine thinks about each position, in milliseconds (1000 ms = 1 second). More time = stronger moves but slower."
       />
 
       <div className="field-row">
@@ -64,6 +67,7 @@ export default function SettingsPanel({
           min={1}
           max={5}
           onChange={set("whiteMoves")}
+          tip="How many candidate moves to keep for White at each position (e.g. 3 = explore White's top 3 moves)."
         />
         <Slider
           label="Black moves"
@@ -71,6 +75,7 @@ export default function SettingsPanel({
           min={1}
           max={5}
           onChange={set("blackMoves")}
+          tip="How many candidate moves to keep for Black at each position (e.g. 3 = explore Black's top 3 moves)."
         />
       </div>
 
@@ -83,6 +88,7 @@ export default function SettingsPanel({
           step={10}
           suffix=" cp"
           onChange={set("whiteThreshold")}
+          tip="Quality filter for White's moves, in centipawns (100 cp = one pawn). Keep a move only if it's within this much of White's best move. Smaller = stricter."
         />
         <Slider
           label="Black threshold"
@@ -92,6 +98,7 @@ export default function SettingsPanel({
           step={10}
           suffix=" cp"
           onChange={set("blackThreshold")}
+          tip="Quality filter for Black's moves, in centipawns (100 cp = one pawn). Keep a move only if it's within this much of Black's best move. Smaller = stricter."
         />
       </div>
 
@@ -104,6 +111,7 @@ export default function SettingsPanel({
           step={16}
           suffix=" MB"
           onChange={set("hashMb")}
+          tip="How much memory (MB) the engine may use to remember positions it has already worked out. The default is fine for most uses."
         />
         <Slider
           label="Engine threads"
@@ -112,6 +120,7 @@ export default function SettingsPanel({
           max={Math.max(1, maxThreads)}
           onChange={set("threads")}
           disabled={threadsLocked}
+          tip="How many CPU cores the engine uses. This in-browser build runs single-threaded, so it is fixed at 1."
         />
       </div>
       {threadsLocked && (

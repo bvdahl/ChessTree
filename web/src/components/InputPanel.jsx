@@ -36,6 +36,7 @@ export default function InputPanel({
           className={"tab" + (mode === "pgn" ? " active" : "")}
           onClick={() => setMode("pgn")}
           disabled={disabled}
+          title="Analyse from a recorded game: paste or upload a PGN game"
         >
           PGN Game
         </button>
@@ -43,6 +44,7 @@ export default function InputPanel({
           className={"tab" + (mode === "fen" ? " active" : "")}
           onClick={() => setMode("fen")}
           disabled={disabled}
+          title="Analyse a single position from its FEN code"
         >
           FEN Position
         </button>
@@ -50,6 +52,7 @@ export default function InputPanel({
           className={"tab" + (mode === "board" ? " active" : "")}
           onClick={() => setMode("board")}
           disabled={disabled}
+          title="Set up a position by dragging the pieces on the board"
         >
           Play on Board
         </button>
@@ -63,6 +66,7 @@ export default function InputPanel({
             onChange={(e) => setPgnText(e.target.value)}
             placeholder="1. e4 e5 2. Nf3 ..."
             disabled={disabled}
+            title="Paste the moves of a game here. These moves become the main line the analysis starts from."
           />
           <input
             ref={fileRef}
@@ -76,6 +80,7 @@ export default function InputPanel({
               className="btn btn-secondary"
               onClick={() => fileRef.current && fileRef.current.click()}
               disabled={disabled}
+              title="Load a .pgn (or .txt) game file from your computer"
             >
               ↑ Upload PGN file
             </button>
@@ -83,6 +88,7 @@ export default function InputPanel({
               className="btn btn-secondary"
               onClick={() => setPgnText(SAMPLE_PGN)}
               disabled={disabled}
+              title="Fill the box with an example game so you can try the app right away"
             >
               Load sample game
             </button>
@@ -99,6 +105,7 @@ export default function InputPanel({
             onChange={(e) => setFenText(e.target.value)}
             placeholder="rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
             disabled={disabled}
+            title="Paste a FEN code describing the exact position you want to analyse"
           />
           <button
             className="btn btn-secondary"
@@ -109,6 +116,7 @@ export default function InputPanel({
               )
             }
             disabled={disabled}
+            title="Reset the FEN box to the normal chess starting position"
           >
             Use starting position
           </button>
@@ -131,6 +139,7 @@ export default function InputPanel({
               className="btn btn-secondary"
               onClick={onUndoBoardMove}
               disabled={disabled || !boardMoves || !boardMoves.length}
+              title="Take back the last move you played on the board"
             >
               ↶ Undo move
             </button>
@@ -138,6 +147,7 @@ export default function InputPanel({
               className="btn btn-secondary"
               onClick={onResetBoard}
               disabled={disabled || !boardMoves || !boardMoves.length}
+              title="Clear all your moves and start over from the initial position"
             >
               ⟲ Reset board
             </button>
