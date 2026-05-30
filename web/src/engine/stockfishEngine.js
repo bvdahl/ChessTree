@@ -48,10 +48,26 @@ export class StockfishEngine {
           this._listeners.add(handler);
         });
 
+      // Capture the engine's real option limits from the uci handshake so the
+      // UI can present honest Hash/Threads ranges (this build caps Threads = 1).
+      this.maxThreads = 1;
+      this.maxHash = 1024;
+      const optHandler = (line) => {
+        if (line.startsWith("option name Threads")) {
+          const m = line.match(/max (\d+)/);
+          if (m) this.maxThreads = parseInt(m[1], 10);
+        } else if (line.startsWith("option name Hash")) {
+          const m = line.match(/max (\d+)/);
+          if (m) this.maxHash = parseInt(m[1], 10);
+        }
+      };
+
       (async () => {
         try {
+          this._listeners.add(optHandler);
           this.send("uci");
           await waitFor("uciok");
+          this._listeners.delete(optHandler);
           this.send(`setoption name Hash value ${hashMb}`);
           this.send(`setoption name Threads value ${threads}`);
           this.send("isready");
@@ -59,6 +75,7 @@ export class StockfishEngine {
           this.ready = true;
           resolve();
         } catch (err) {
+          this._listeners.delete(optHandler);
           reject(err);
         }
       })();
@@ -74,6 +91,30 @@ export class StockfishEngine {
 
   async newGame() {
     this.send("ucinewgame");
+    this.send("isready");
+    await new Promise((resolve) => {
+      const handler = (line) => {
+        if (line.startsWith("readyok")) {
+          this._listeners.delete(handler);
+          resolve();
+        }
+      };
+      this._listeners.add(handler);
+    });
+  }
+
+  // Apply engine options (hash size in MB, thread count) at runtime, clamped to
+  // the limits this build reports. Resolves once the engine acknowledges.
+  async configure({ hashMb, threads } = {}) {
+    if (!this.worker) throw new Error("Engine not initialized");
+    if (hashMb != null) {
+      const h = Math.max(1, Math.min(hashMb, this.maxHash || hashMb));
+      this.send(`setoption name Hash value ${h}`);
+    }
+    if (threads != null) {
+      const t = Math.max(1, Math.min(threads, this.maxThreads || 1));
+      this.send(`setoption name Threads value ${t}`);
+    }
     this.send("isready");
     await new Promise((resolve) => {
       const handler = (line) => {

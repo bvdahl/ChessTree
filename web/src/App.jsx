@@ -17,6 +17,8 @@ const DEFAULT_SETTINGS = {
   blackMoves: 3,
   whiteThreshold: 100,
   blackThreshold: 100,
+  hashMb: 64,
+  threads: 1,
 };
 
 function buildParentMap(root) {
@@ -48,10 +50,12 @@ export default function App() {
 
   const [engineState, setEngineState] = useState("loading"); // loading|ready|error
   const [engineError, setEngineError] = useState("");
+  const [engineCaps, setEngineCaps] = useState({ maxThreads: 1, maxHash: 1024 });
 
   const [mode, setMode] = useState("pgn");
   const [pgnText, setPgnText] = useState("");
   const [fenText, setFenText] = useState(START_FEN);
+  const [boardMoves, setBoardMoves] = useState([]);
 
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
 
@@ -65,8 +69,14 @@ export default function App() {
     const engine = new StockfishEngine();
     engineRef.current = engine;
     engine
-      .init({ hashMb: 64, threads: 1 })
-      .then(() => setEngineState("ready"))
+      .init({ hashMb: DEFAULT_SETTINGS.hashMb, threads: DEFAULT_SETTINGS.threads })
+      .then(() => {
+        setEngineState("ready");
+        setEngineCaps({
+          maxThreads: engine.maxThreads || 1,
+          maxHash: engine.maxHash || 1024,
+        });
+      })
       .catch((err) => {
         setEngineState("error");
         setEngineError(err.message || String(err));
@@ -79,9 +89,54 @@ export default function App() {
     [tree]
   );
 
-  const boardFen = selectedNode ? selectedNode.fen : fenText || START_FEN;
+  // Position the user is building by dragging pieces (board input mode).
+  const boardSetupFen = useMemo(() => {
+    const c = new Chess();
+    for (const m of boardMoves) {
+      try {
+        c.move(m.san ?? { from: m.uci.slice(0, 2), to: m.uci.slice(2, 4) });
+      } catch (e) {
+        break;
+      }
+    }
+    return c.fen();
+  }, [boardMoves]);
+
+  const boardInteractive = mode === "board" && !running && !selectedNode;
+  const boardFen = selectedNode
+    ? selectedNode.fen
+    : mode === "board"
+    ? boardSetupFen
+    : fenText || START_FEN;
+
+  function handlePieceDrop(from, to) {
+    if (!boardInteractive) return false;
+    const c = new Chess(boardSetupFen);
+    let mv;
+    try {
+      mv = c.move({ from, to, promotion: "q" });
+    } catch (e) {
+      return false;
+    }
+    if (!mv) return false;
+    setBoardMoves((prev) => [...prev, { san: mv.san, uci: mv.lan }]);
+    return true;
+  }
+
+  function undoBoardMove() {
+    setBoardMoves((prev) => prev.slice(0, -1));
+  }
+
+  function resetBoard() {
+    setBoardMoves([]);
+    setTree(null);
+    setSelectedNode(null);
+  }
 
   function getInputParams() {
+    if (mode === "board") {
+      return { startFen: START_FEN, gameMoves: boardMoves };
+    }
     if (mode === "pgn") {
       if (!pgnText.trim()) throw new Error("Please paste a PGN game first.");
       const { startFen, gameMoves } = parsePgn(pgnText);
@@ -126,6 +181,10 @@ export default function App() {
 
     try {
       await engineRef.current.newGame();
+      await engineRef.current.configure({
+        hashMb: settings.hashMb,
+        threads: settings.threads,
+      });
       const root = await generateTree(
         engineRef.current,
         { ...params, settings },
@@ -200,6 +259,9 @@ export default function App() {
             setPgnText={setPgnText}
             fenText={fenText}
             setFenText={setFenText}
+            boardMoves={boardMoves}
+            onUndoBoardMove={undoBoardMove}
+            onResetBoard={resetBoard}
             disabled={running}
           />
 
@@ -207,6 +269,8 @@ export default function App() {
             settings={settings}
             onChange={setSettings}
             disabled={running}
+            maxThreads={engineCaps.maxThreads}
+            maxHash={engineCaps.maxHash}
           />
 
           <div className="card">
@@ -233,6 +297,11 @@ export default function App() {
                   <span>{progress.analyzed} analyzed</span>
                   <span>{progress.queued} queued</span>
                 </div>
+                {progress.line && (
+                  <div className="progress-line" title={progress.line}>
+                    Exploring: {progress.line}
+                  </div>
+                )}
               </div>
             )}
 
@@ -275,7 +344,11 @@ export default function App() {
 
         <div className="column center">
           <div className="board-wrap">
-            <Board fen={boardFen} />
+            <Board
+              fen={boardFen}
+              draggable={boardInteractive}
+              onPieceDrop={handlePieceDrop}
+            />
           </div>
           <div className="board-nav">
             <button

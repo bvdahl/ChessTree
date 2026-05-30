@@ -1,11 +1,14 @@
 import React from "react";
 import { Chessboard } from "react-chessboard";
 
-export default function Board({ fen }) {
+export default function Board({ fen, draggable = false, onPieceDrop }) {
   return (
     <Chessboard
       position={fen}
-      arePiecesDraggable={false}
+      arePiecesDraggable={draggable}
+      onPieceDrop={
+        onPieceDrop ? (from, to) => onPieceDrop(from, to) : undefined
+      }
       customBoardStyle={{
         borderRadius: "10px",
         boxShadow: "0 8px 24px rgba(0,0,0,0.45)",

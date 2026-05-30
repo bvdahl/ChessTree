@@ -1,6 +1,6 @@
 import React from "react";
 
-function Slider({ label, value, min, max, step, onChange, suffix }) {
+function Slider({ label, value, min, max, step, onChange, suffix, disabled }) {
   return (
     <div className="field">
       <label>{label}</label>
@@ -11,6 +11,7 @@ function Slider({ label, value, min, max, step, onChange, suffix }) {
           max={max}
           step={step || 1}
           value={value}
+          disabled={disabled}
           onChange={(e) => onChange(Number(e.target.value))}
         />
         <span className="val">
@@ -22,8 +23,18 @@ function Slider({ label, value, min, max, step, onChange, suffix }) {
   );
 }
 
-export default function SettingsPanel({ settings, onChange, disabled }) {
+export default function SettingsPanel({
+  settings,
+  onChange,
+  disabled,
+  maxThreads = 1,
+  maxHash = 1024,
+}) {
   const set = (key) => (val) => onChange({ ...settings, [key]: val });
+  const hashCap = Math.min(maxHash, 1024);
+  const threadsLocked = maxThreads <= 1;
+  const hashVal = Math.min(settings.hashMb ?? 64, hashCap);
+  const threadsVal = Math.min(settings.threads ?? 1, Math.max(1, maxThreads));
 
   return (
     <div className="card" style={{ opacity: disabled ? 0.6 : 1 }}>
@@ -83,6 +94,31 @@ export default function SettingsPanel({ settings, onChange, disabled }) {
           onChange={set("blackThreshold")}
         />
       </div>
+
+      <div className="field-row">
+        <Slider
+          label="Engine hash"
+          value={hashVal}
+          min={16}
+          max={hashCap}
+          step={16}
+          suffix=" MB"
+          onChange={set("hashMb")}
+        />
+        <Slider
+          label="Engine threads"
+          value={threadsVal}
+          min={1}
+          max={Math.max(1, maxThreads)}
+          onChange={set("threads")}
+          disabled={threadsLocked}
+        />
+      </div>
+      {threadsLocked && (
+        <p className="muted" style={{ marginTop: -4 }}>
+          This in-browser engine build runs single-threaded.
+        </p>
+      )}
     </div>
   );
 }

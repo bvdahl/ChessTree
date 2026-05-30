@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef } from "react";
 
 const SAMPLE_PGN = `[Event "Sample"]
 
@@ -11,8 +11,23 @@ export default function InputPanel({
   setPgnText,
   fenText,
   setFenText,
+  boardMoves,
+  onUndoBoardMove,
+  onResetBoard,
   disabled,
 }) {
+  const fileRef = useRef(null);
+
+  function handleFile(e) {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => setPgnText(String(reader.result || ""));
+    reader.readAsText(file);
+    // Allow re-selecting the same file later.
+    e.target.value = "";
+  }
+
   return (
     <div className="card" style={{ opacity: disabled ? 0.6 : 1 }}>
       <h2>Position Input</h2>
@@ -31,9 +46,16 @@ export default function InputPanel({
         >
           FEN Position
         </button>
+        <button
+          className={"tab" + (mode === "board" ? " active" : "")}
+          onClick={() => setMode("board")}
+          disabled={disabled}
+        >
+          Play on Board
+        </button>
       </div>
 
-      {mode === "pgn" ? (
+      {mode === "pgn" && (
         <div className="field">
           <label>Paste a PGN game (moves form the main line)</label>
           <textarea
@@ -42,16 +64,33 @@ export default function InputPanel({
             placeholder="1. e4 e5 2. Nf3 ..."
             disabled={disabled}
           />
-          <button
-            className="btn btn-secondary"
-            style={{ marginTop: 8 }}
-            onClick={() => setPgnText(SAMPLE_PGN)}
-            disabled={disabled}
-          >
-            Load sample game
-          </button>
+          <input
+            ref={fileRef}
+            type="file"
+            accept=".pgn,.txt"
+            style={{ display: "none" }}
+            onChange={handleFile}
+          />
+          <div className="btn-group" style={{ marginTop: 8 }}>
+            <button
+              className="btn btn-secondary"
+              onClick={() => fileRef.current && fileRef.current.click()}
+              disabled={disabled}
+            >
+              ↑ Upload PGN file
+            </button>
+            <button
+              className="btn btn-secondary"
+              onClick={() => setPgnText(SAMPLE_PGN)}
+              disabled={disabled}
+            >
+              Load sample game
+            </button>
+          </div>
         </div>
-      ) : (
+      )}
+
+      {mode === "fen" && (
         <div className="field">
           <label>Enter a FEN position</label>
           <input
@@ -73,6 +112,36 @@ export default function InputPanel({
           >
             Use starting position
           </button>
+        </div>
+      )}
+
+      {mode === "board" && (
+        <div className="field">
+          <label>
+            Drag pieces on the board to play into a position. Those moves become
+            the main line.
+          </label>
+          <div className="moves-preview">
+            {boardMoves && boardMoves.length
+              ? boardMoves.map((m) => m.san).join(" ")
+              : "No moves yet — the analysis will start from the position you set up."}
+          </div>
+          <div className="btn-group" style={{ marginTop: 8 }}>
+            <button
+              className="btn btn-secondary"
+              onClick={onUndoBoardMove}
+              disabled={disabled || !boardMoves || !boardMoves.length}
+            >
+              ↶ Undo move
+            </button>
+            <button
+              className="btn btn-secondary"
+              onClick={onResetBoard}
+              disabled={disabled || !boardMoves || !boardMoves.length}
+            >
+              ⟲ Reset board
+            </button>
+          </div>
         </div>
       )}
     </div>

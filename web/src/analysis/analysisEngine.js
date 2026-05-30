@@ -22,7 +22,24 @@ function whiteToMoveFromFen(fen) {
   return fen.split(" ")[1] === "w";
 }
 
-// Build the root + game-move chain. Returns { root, leaf }.
+// Turn a list of SAN moves into a readable, numbered line for progress display.
+function formatLine(startFen, sans) {
+  const parts = startFen.split(" ");
+  let moveNo = parseInt(parts[5], 10) || 1;
+  let whiteToMove = parts[1] === "w";
+  const out = [];
+  for (const san of sans) {
+    if (whiteToMove) out.push(`${moveNo}. ${san}`);
+    else {
+      out.push(out.length === 0 ? `${moveNo}... ${san}` : san);
+      moveNo += 1;
+    }
+    whiteToMove = !whiteToMove;
+  }
+  return out.join(" ");
+}
+
+// Build the root + game-move chain. Returns { root, leaf, leafLine }.
 function buildGameLine(startFen, gameMoves) {
   const root = {
     id: nextId(),
@@ -38,6 +55,7 @@ function buildGameLine(startFen, gameMoves) {
 
   let current = root;
   const chess = new Chess(startFen);
+  const leafLine = [];
 
   for (const gm of gameMoves) {
     let moveResult;
@@ -61,9 +79,10 @@ function buildGameLine(startFen, gameMoves) {
     };
     current.children.push(node);
     current = node;
+    leafLine.push(moveResult.san);
   }
 
-  return { root, leaf: current };
+  return { root, leaf: current, leafLine };
 }
 
 // Analyze a tree from a starting position.
@@ -75,16 +94,16 @@ function buildGameLine(startFen, gameMoves) {
 export async function generateTree(engine, params, onProgress, signal) {
   nodeCounter = 0;
   const { startFen, gameMoves, settings } = params;
-  const { root, leaf } = buildGameLine(startFen, gameMoves);
+  const { root, leaf, leafLine } = buildGameLine(startFen, gameMoves);
 
   // BFS queue of position nodes to expand. Start from the leaf.
-  const queue = [{ node: leaf, depth: 0 }];
+  const queue = [{ node: leaf, depth: 0, line: leafLine.slice() }];
   let analyzed = 0;
 
   while (queue.length) {
     if (signal && signal.aborted) break;
 
-    const { node, depth } = queue.shift();
+    const { node, depth, line } = queue.shift();
     if (depth >= settings.maxDepth) continue;
 
     const whiteToMove = whiteToMoveFromFen(node.fen);
@@ -143,7 +162,11 @@ export async function generateTree(engine, params, onProgress, signal) {
         children: [],
       };
       node.children.push(childNode);
-      queue.push({ node: childNode, depth: depth + 1 });
+      queue.push({
+        node: childNode,
+        depth: depth + 1,
+        line: [...line, mv.san],
+      });
     }
 
     if (onProgress) {
@@ -151,7 +174,7 @@ export async function generateTree(engine, params, onProgress, signal) {
         analyzed,
         queued: queue.length,
         depth,
-        line: node.move ? node.move.san : "start",
+        line: line.length ? formatLine(startFen, line) : "(start position)",
       });
     }
   }
