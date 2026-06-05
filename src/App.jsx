@@ -37,6 +37,18 @@ function buildParentMap(root) {
   return map;
 }
 
+// Turn a raw engine/handshake error into plain language for the user.
+function friendlyEngineError(err, source) {
+  const msg = (err && err.message) || String(err);
+  if (source === "local" && /uciok|readyok/i.test(msg)) {
+    return (
+      "That program started but didn't respond like a chess engine. Make sure " +
+      "the path points to a UCI engine (such as Stockfish)."
+    );
+  }
+  return msg;
+}
+
 function download(filename, content, type) {
   const blob = new Blob([content], { type });
   const url = URL.createObjectURL(blob);
@@ -102,7 +114,7 @@ export default function App() {
     engine.onFatal = (err) => {
       if (engineRef.current !== engine) return;
       setEngineState("error");
-      setEngineError(err.message || String(err));
+      setEngineError(friendlyEngineError(err, source));
     };
 
     try {
@@ -113,20 +125,30 @@ export default function App() {
       if (engineRef.current !== engine) return;
       setEngineState("ready");
       setEngineName(engine.name || "");
-      // A native engine may advertise hundreds of threads; cap the slider to the
-      // CPU cores actually available so the choice stays meaningful.
-      const cpuCap = navigator.hardwareConcurrency || 1;
-      setEngineCaps({
-        maxThreads:
-          source === "local"
-            ? Math.max(1, Math.min(engine.maxThreads || 1, cpuCap))
-            : engine.maxThreads || 1,
-        maxHash: engine.maxHash || 1024,
-      });
+      // A native engine may advertise absurd limits (hundreds of threads, terabytes
+      // of hash). Honour the engine's real reported max, but keep the sliders
+      // meaningful by clamping to what this machine can actually use.
+      const reportedThreads = engine.maxThreads || 1;
+      const reportedHash = engine.maxHash || 1024;
+      if (source === "local") {
+        const cpuCap = navigator.hardwareConcurrency || 1;
+        // navigator.deviceMemory is in GB (spec-capped at 8); fall back to 4 GB.
+        const memCapMb = (navigator.deviceMemory || 4) * 1024;
+        setEngineCaps({
+          maxThreads: Math.max(1, Math.min(reportedThreads, cpuCap)),
+          maxHash: Math.min(reportedHash, memCapMb),
+        });
+      } else {
+        // Built-in browser engine: keep the conservative defaults.
+        setEngineCaps({
+          maxThreads: reportedThreads,
+          maxHash: Math.min(reportedHash, 1024),
+        });
+      }
     } catch (err) {
       if (engineRef.current !== engine) return;
       setEngineState("error");
-      setEngineError(err.message || String(err));
+      setEngineError(friendlyEngineError(err, source));
     }
   }, []);
 

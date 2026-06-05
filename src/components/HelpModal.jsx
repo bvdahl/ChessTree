@@ -228,7 +228,10 @@ export default function HelpModal({ open, onClose }) {
               <li>
                 <strong>Engine hash:</strong> how much memory (in MB) the engine
                 may use to remember positions it has already worked out. More can
-                help on big analyses; the default is fine for most uses.
+                help on big analyses; the default is fine for most uses. The
+                built-in browser engine is limited to a modest amount; if you
+                connect your own engine, the slider opens up to what your computer
+                can spare.
               </li>
               <li>
                 <strong>Engine threads:</strong> how many CPU cores the engine

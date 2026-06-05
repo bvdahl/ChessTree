@@ -33,7 +33,7 @@ export default function SettingsPanel({
   localEngine = false,
 }) {
   const set = (key) => (val) => onChange({ ...settings, [key]: val });
-  const hashCap = Math.min(maxHash, 1024);
+  const hashCap = Math.max(16, maxHash);
   const threadsLocked = maxThreads <= 1;
   const hashVal = Math.min(settings.hashMb ?? 64, hashCap);
   const threadsVal = Math.min(settings.threads ?? 1, Math.max(1, maxThreads));
