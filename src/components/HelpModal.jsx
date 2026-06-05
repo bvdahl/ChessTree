@@ -54,6 +54,7 @@ export default function HelpModal({ open, onClose }) {
             <a href="#help-what">What this app does</a>
             <a href="#help-start">Your first analysis in 3 steps</a>
             <a href="#help-input">Choosing a position</a>
+            <a href="#help-engine">Choosing your engine</a>
             <a href="#help-settings">Analysis settings</a>
             <a href="#help-board">The board &amp; navigation</a>
             <a href="#help-tree">The variation tree</a>
@@ -141,6 +142,56 @@ export default function HelpModal({ open, onClose }) {
             </p>
           </section>
 
+          <section id="help-engine">
+            <h3>Choosing your engine</h3>
+            <p>
+              The <em>Engine</em> card at the top-left lets you pick which chess
+              engine does the thinking. Most people never need to change this.
+            </p>
+            <h4>Built-in (browser)</h4>
+            <p>
+              The default. A copy of Stockfish 16 is bundled with the app and
+              runs right inside your web browser — nothing to download or set up,
+              and it works everywhere, including the published online version.
+              The one trade-off is that this in-browser version runs on a single
+              CPU core.
+            </p>
+            <h4>My own engine (local)</h4>
+            <p>
+              If you have downloaded your own chess engine program to your
+              computer (for example a newer Stockfish, or a different engine
+              entirely), you can have the app use that instead. This only works
+              when you’re running the app on your own machine, and it can use{" "}
+              <strong>all your CPU cores</strong> for faster, stronger analysis.
+              To set it up:
+            </p>
+            <ol>
+              <li>
+                Open a terminal in the project folder and run{" "}
+                <code>npm run bridge</code>. This starts a small helper that lets
+                the app launch your engine. (Or run <code>npm run dev:full</code>{" "}
+                to start the app and the helper together.) Leave that window
+                open.
+              </li>
+              <li>
+                In the <em>Engine</em> card, click{" "}
+                <em>My own engine (local)</em>, paste the full path to your
+                engine program (on Windows it usually ends in{" "}
+                <code>.exe</code>), and click <em>Connect</em>.
+              </li>
+              <li>
+                When the status in the top-right shows your engine’s name, you’re
+                connected. The app remembers your choice for next time.
+              </li>
+            </ol>
+            <p className="help-tip">
+              Everything still stays on your computer — the helper only runs on
+              your machine and is not reachable from the internet. If you publish
+              the app online, visitors automatically use the built-in browser
+              engine.
+            </p>
+          </section>
+
           <section id="help-settings">
             <h3>Analysis settings</h3>
             <p>
@@ -181,8 +232,10 @@ export default function HelpModal({ open, onClose }) {
               </li>
               <li>
                 <strong>Engine threads:</strong> how many CPU cores the engine
-                uses. This in-browser build runs single-threaded, so this is
-                fixed at 1 and shown for transparency.
+                uses. The built-in browser engine runs single-threaded, so this
+                is fixed at 1. If you connect your own engine (see{" "}
+                <em>Choosing your engine</em>), you can raise this to use more
+                cores for faster analysis.
               </li>
             </ul>
           </section>

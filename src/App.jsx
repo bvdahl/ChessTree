@@ -1,12 +1,14 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Chess } from "chess.js";
 import { StockfishEngine } from "./engine/stockfishEngine.js";
+import { BridgeEngine } from "./engine/bridgeEngine.js";
 import { generateTree, parsePgn } from "./analysis/analysisEngine.js";
 import { treeToPgn, treeToJson, countAnalyzedNodes } from "./analysis/output.js";
 import Board from "./components/Board.jsx";
 import VariationTree from "./components/VariationTree.jsx";
 import SettingsPanel from "./components/SettingsPanel.jsx";
 import InputPanel from "./components/InputPanel.jsx";
+import EnginePanel from "./components/EnginePanel.jsx";
 import HelpModal from "./components/HelpModal.jsx";
 
 const START_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
@@ -52,6 +54,13 @@ export default function App() {
   const [engineState, setEngineState] = useState("loading"); // loading|ready|error
   const [engineError, setEngineError] = useState("");
   const [engineCaps, setEngineCaps] = useState({ maxThreads: 1, maxHash: 1024 });
+  const [engineSource, setEngineSource] = useState(
+    () => localStorage.getItem("engineSource") || "builtin"
+  );
+  const [enginePath, setEnginePath] = useState(
+    () => localStorage.getItem("enginePath") || ""
+  );
+  const [engineName, setEngineName] = useState("");
 
   const [mode, setMode] = useState("pgn");
   const [pgnText, setPgnText] = useState("");
@@ -67,24 +76,89 @@ export default function App() {
   const [error, setError] = useState("");
   const [helpOpen, setHelpOpen] = useState(false);
 
-  useEffect(() => {
-    const engine = new StockfishEngine();
+  // Build (or rebuild) the engine for the chosen source and connect to it.
+  const startEngine = useCallback(async (source, path = "") => {
+    if (engineRef.current) {
+      try {
+        engineRef.current.dispose();
+      } catch (e) {
+        /* ignore */
+      }
+      engineRef.current = null;
+    }
+
+    setEngineState("loading");
+    setEngineError("");
+    setEngineName("");
+
+    const engine =
+      source === "local"
+        ? new BridgeEngine({ enginePath: path })
+        : new StockfishEngine();
     engineRef.current = engine;
-    engine
-      .init({ hashMb: DEFAULT_SETTINGS.hashMb, threads: DEFAULT_SETTINGS.threads })
-      .then(() => {
-        setEngineState("ready");
-        setEngineCaps({
-          maxThreads: engine.maxThreads || 1,
-          maxHash: engine.maxHash || 1024,
-        });
-      })
-      .catch((err) => {
-        setEngineState("error");
-        setEngineError(err.message || String(err));
+
+    // Surface failures that happen AFTER a successful connect (engine crash,
+    // bridge closed, etc.) instead of leaving a stale "ready" state.
+    engine.onFatal = (err) => {
+      if (engineRef.current !== engine) return;
+      setEngineState("error");
+      setEngineError(err.message || String(err));
+    };
+
+    try {
+      await engine.init({
+        hashMb: DEFAULT_SETTINGS.hashMb,
+        threads: DEFAULT_SETTINGS.threads,
       });
-    return () => engine.dispose();
+      if (engineRef.current !== engine) return;
+      setEngineState("ready");
+      setEngineName(engine.name || "");
+      // A native engine may advertise hundreds of threads; cap the slider to the
+      // CPU cores actually available so the choice stays meaningful.
+      const cpuCap = navigator.hardwareConcurrency || 1;
+      setEngineCaps({
+        maxThreads:
+          source === "local"
+            ? Math.max(1, Math.min(engine.maxThreads || 1, cpuCap))
+            : engine.maxThreads || 1,
+        maxHash: engine.maxHash || 1024,
+      });
+    } catch (err) {
+      if (engineRef.current !== engine) return;
+      setEngineState("error");
+      setEngineError(err.message || String(err));
+    }
   }, []);
+
+  // Start the saved engine once on load, and dispose on unmount.
+  useEffect(() => {
+    startEngine(engineSource, enginePath);
+    return () => {
+      if (engineRef.current) {
+        try {
+          engineRef.current.dispose();
+        } catch (e) {
+          /* ignore */
+        }
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function handleChooseBuiltin() {
+    setEngineSource("builtin");
+    localStorage.setItem("engineSource", "builtin");
+    startEngine("builtin");
+  }
+
+  function handleConnectLocal(path) {
+    const trimmed = (path || "").trim();
+    setEngineSource("local");
+    setEnginePath(trimmed);
+    localStorage.setItem("engineSource", "local");
+    localStorage.setItem("enginePath", trimmed);
+    startEngine("local", trimmed);
+  }
 
   const parentMap = useMemo(
     () => (tree ? buildParentMap(tree) : new Map()),
@@ -249,16 +323,26 @@ export default function App() {
             className="engine-status"
             title={
               engineState === "ready"
-                ? "The chess engine is loaded and ready to analyse"
+                ? engineSource === "local"
+                  ? "Connected to your own engine through the local bridge"
+                  : "The built-in chess engine is loaded and ready to analyse"
                 : engineState === "loading"
-                ? "The chess engine is still loading in your browser"
-                : "The chess engine could not start"
+                ? engineSource === "local"
+                  ? "Connecting to your own engine…"
+                  : "The chess engine is still loading in your browser"
+                : "The chess engine is not connected"
             }
           >
             <span className={"dot " + engineState} />
-            {engineState === "loading" && "Loading engine…"}
-            {engineState === "ready" && "Engine ready"}
-            {engineState === "error" && "Engine failed"}
+            {engineState === "loading" &&
+              (engineSource === "local" ? "Connecting…" : "Loading engine…")}
+            {engineState === "ready" &&
+              (engineName
+                ? engineName
+                : engineSource === "local"
+                ? "Engine connected"
+                : "Engine ready")}
+            {engineState === "error" && "Engine not connected"}
           </div>
         </div>
       </header>
@@ -267,12 +351,23 @@ export default function App() {
 
       <div className="layout">
         <div className="column left">
-          {engineState === "error" && (
+          {engineState === "error" && engineSource !== "local" && (
             <div className="error-box">
               Could not start the engine: {engineError}
             </div>
           )}
           {error && <div className="error-box">{error}</div>}
+
+          <EnginePanel
+            source={engineSource}
+            path={enginePath}
+            status={engineState}
+            error={engineError}
+            name={engineName}
+            onChooseBuiltin={handleChooseBuiltin}
+            onConnectLocal={handleConnectLocal}
+            disabled={running}
+          />
 
           <InputPanel
             mode={mode}
@@ -293,6 +388,7 @@ export default function App() {
             disabled={running}
             maxThreads={engineCaps.maxThreads}
             maxHash={engineCaps.maxHash}
+            localEngine={engineSource === "local"}
           />
 
           <div className="card">

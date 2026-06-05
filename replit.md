@@ -9,7 +9,10 @@ with ChessBase and other chess software) or JSON. The tool is designed for chess
 players and analysts who need to explore positions in depth.
 
 The app runs entirely client-side in the browser — there is no backend and
-nothing to install.
+nothing to install. The built-in browser Stockfish is the default and works
+everywhere, including the published online version. Optionally, when running
+locally, users can point the app at their own downloaded UCI engine (e.g. a
+native Stockfish) via a small localhost "engine bridge" helper.
 
 # User Preferences
 
@@ -29,6 +32,10 @@ project root.
 - Core engine: breadth-first tree generation, per-side centipawn-threshold move
   filtering, White-perspective evaluation, nested-variation PGN export, plus JSON
   export
+- Pluggable engine: a shared UCI client base (`src/engine/uciEngine.js`) with two
+  transports — the bundled WASM Worker (default) and a local WebSocket bridge to a
+  native engine. Selected in the in-app Engine panel; choice persists in
+  localStorage
 - In-app user guide (`src/components/HelpModal.jsx`, opened from the header "Help"
   link) plus hover tooltips on every control
 - Started by the "Start application" workflow (`npm run dev`, port 5000)
@@ -43,17 +50,23 @@ project root.
 ```
 index.html             App entry HTML
 vite.config.js         Vite config (port 5000, COOP/COEP headers for WASM threads)
-package.json           Dependencies and scripts (dev/build/preview)
+package.json           Dependencies and scripts (dev/build/preview/bridge/dev:full)
 src/
-  App.jsx              App shell and state
+  App.jsx              App shell, engine lifecycle and switching
   main.jsx             Entry point
   index.css            Styles
-  components/          Board, InputPanel, SettingsPanel, VariationTree, HelpModal
+  components/          Board, EnginePanel, InputPanel, SettingsPanel, VariationTree, HelpModal
   analysis/            Tree generation, evaluation, PGN/JSON output
-  engine/              Stockfish Web Worker interface
+  engine/              UCI clients: uciEngine (shared base), stockfishEngine (Worker), bridgeEngine (WebSocket)
+server/
+  engine-bridge.js     Local, localhost-only WebSocket helper that spawns a native UCI engine
 public/
   stockfish/           Stockfish WASM engine files
 ```
+
+Scripts: `dev` (Vite, used by the Replit workflow), `build`, `preview`,
+`bridge` (run the local engine helper), `dev:full` (Vite + bridge together via
+`concurrently`). The published/online build never uses the bridge.
 
 ## Core Components
 
@@ -62,13 +75,16 @@ Stockfish. Uses a tree-based data structure to represent chess variations
 hierarchically, with each node containing a chess position, the move that led to
 it, and an engine evaluation.
 
-**Stockfish Integration** (`src/engine/`): Manages UCI protocol communication with
-the Stockfish WebAssembly engine running in a Web Worker, including multi-PV
-analysis for generating multiple candidate moves per position.
+**Engine Integration** (`src/engine/`): A shared UCI client base (`uciEngine.js`)
+handles the protocol — handshake, option limits, multi-PV analysis, and lifecycle —
+independent of transport. Two transports extend it: `stockfishEngine.js` (the
+bundled WASM build in a Web Worker, the default) and `bridgeEngine.js` (a localhost
+WebSocket to `server/engine-bridge.js`, which spawns a user-supplied native UCI
+engine). Both expose the same interface, so the analysis layer is unchanged.
 
-**User Interface** (`src/components/`): Interactive chess board, input panel
-(PGN / FEN / play-on-board), settings panel, navigable variation tree, and the
-in-app Help guide.
+**User Interface** (`src/components/`): Interactive chess board, engine panel
+(built-in vs. own engine), input panel (PGN / FEN / play-on-board), settings
+panel, navigable variation tree, and the in-app Help guide.
 
 ## Data Processing Pipeline
 
@@ -91,12 +107,18 @@ with chess databases such as ChessBase) or **JSON** for programmatic processing.
 
 # External Dependencies
 
-- **Stockfish 16 (WebAssembly)**: The chess engine, bundled in
+- **Stockfish 16 (WebAssembly)**: The default chess engine, bundled in
   `public/stockfish/` and run in a Web Worker. Communicates via the UCI protocol.
 - **chess.js**: Chess rules, move validation, and PGN/FEN parsing and notation
   conversion.
 - **react-chessboard**: Interactive chess board UI component.
 - **React + Vite**: Application framework and build tooling.
+- **ws** (Node): WebSocket server used only by the optional local engine bridge
+  (`server/engine-bridge.js`); not part of the browser bundle.
+- **concurrently** (dev): runs Vite and the bridge together via `npm run dev:full`.
+- **A native UCI engine (optional, user-supplied)**: any Stockfish/UCI executable
+  the user has on their own machine, launched by the bridge when they pick "My own
+  engine".
 
 # Version Control / GitHub
 
@@ -104,4 +126,4 @@ The web app lives at the project root so it can be synced to GitHub directly. A
 `.gitignore` keeps Replit/workspace-only files (`.replit`, `replit.md`, `.local`,
 `.agents`, caches, etc.) out of the published repository, leaving a clean
 web-only project (`index.html`, `package.json`, `package-lock.json`,
-`vite.config.js`, `README.md`, `.gitignore`, `src/`, `public/`).
+`vite.config.js`, `README.md`, `.gitignore`, `src/`, `public/`, `server/`).

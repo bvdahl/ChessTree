@@ -1,0 +1,178 @@
+// Local engine bridge.
+//
+// This is a tiny helper that runs ONLY on your own computer. The Chess Tree
+// Analyzer runs in your browser, and browsers cannot launch a native program
+// such as a downloaded Stockfish .exe. This bridge does that for you: it opens
+// a localhost WebSocket, the app connects to it, tells it which engine file to
+// run, and the bridge relays UCI messages back and forth.
+//
+// Run it with:   npm run bridge
+// or run it together with the web app:   npm run dev:full
+//
+// It listens on 127.0.0.1 only, so nothing on your network or the internet can
+// reach it. Stop it with Ctrl+C.
+
+import { WebSocketServer } from "ws";
+import { spawn } from "node:child_process";
+
+const PORT = Number(process.env.ENGINE_BRIDGE_PORT) || 4090;
+const HOST = "127.0.0.1";
+
+// Security: a browser lets ANY website open a WebSocket to localhost (there is no
+// CORS preflight for WebSockets). Since this bridge can launch programs, we must
+// not accept connections from arbitrary web pages — otherwise a malicious site
+// you happen to have open could drive it. We therefore only accept handshakes
+// whose Origin is this app running on localhost. Browsers always send a truthful
+// Origin header that web pages cannot forge. Non-browser clients (e.g. a test
+// script or CLI) send no Origin and are allowed, because a web page cannot reach
+// this case.
+function isAllowedOrigin(origin) {
+  if (!origin) return true; // not a browser page
+  try {
+    const host = new URL(origin).hostname;
+    return host === "localhost" || host === "127.0.0.1" || host === "::1";
+  } catch (e) {
+    return false;
+  }
+}
+
+const wss = new WebSocketServer({
+  host: HOST,
+  port: PORT,
+  verifyClient: ({ origin }) => {
+    const ok = isAllowedOrigin(origin);
+    if (!ok) {
+      console.warn(
+        `[engine-bridge] rejected a connection from origin "${origin}". ` +
+          "Only the app running on localhost may use the bridge."
+      );
+    }
+    return ok;
+  },
+});
+
+console.log(`[engine-bridge] listening on ws://${HOST}:${PORT}`);
+console.log(
+  "[engine-bridge] Leave this window open. In the app, choose “My own engine”, " +
+    "paste the full path to your engine, and click Connect."
+);
+
+wss.on("connection", (ws) => {
+  let engine = null;
+  let stdoutBuffer = "";
+
+  const sendJson = (obj) => {
+    if (ws.readyState === ws.OPEN) ws.send(JSON.stringify(obj));
+  };
+
+  const killEngine = () => {
+    if (!engine) return;
+    const proc = engine;
+    engine = null;
+    try {
+      proc.stdin.write("quit\n");
+    } catch (e) {
+      /* ignore */
+    }
+    try {
+      proc.kill();
+    } catch (e) {
+      /* ignore */
+    }
+  };
+
+  ws.on("message", (raw) => {
+    let msg;
+    try {
+      msg = JSON.parse(raw.toString());
+    } catch (e) {
+      return;
+    }
+    if (!msg || typeof msg !== "object") return;
+
+    if (msg.type === "start") {
+      killEngine();
+      const enginePath = String(msg.path || "").trim();
+      if (!enginePath) {
+        sendJson({ type: "error", message: "No engine path was provided." });
+        return;
+      }
+
+      let proc;
+      try {
+        proc = spawn(enginePath, [], { stdio: ["pipe", "pipe", "pipe"] });
+      } catch (err) {
+        sendJson({
+          type: "error",
+          message: "Could not start that engine: " + err.message,
+        });
+        return;
+      }
+      engine = proc;
+
+      // A bad path surfaces here (ENOENT), asynchronously, not as a throw.
+      proc.on("error", (err) => {
+        engine = null;
+        sendJson({
+          type: "error",
+          message:
+            "Could not start that engine: " +
+            err.message +
+            ". Check that the path points to a real engine program.",
+        });
+      });
+
+      proc.on("exit", (code, signal) => {
+        if (engine === proc) engine = null;
+        sendJson({ type: "exit", code, signal });
+      });
+
+      proc.stdout.on("data", (chunk) => {
+        stdoutBuffer += chunk.toString();
+        let idx;
+        while ((idx = stdoutBuffer.indexOf("\n")) >= 0) {
+          const line = stdoutBuffer.slice(0, idx).replace(/\r$/, "");
+          stdoutBuffer = stdoutBuffer.slice(idx + 1);
+          sendJson({ type: "line", data: line });
+        }
+      });
+
+      // Native engines sometimes print banners to stderr; ignore it.
+      proc.stderr.on("data", () => {});
+
+      sendJson({ type: "started" });
+      return;
+    }
+
+    if (msg.type === "cmd") {
+      if (engine && engine.stdin.writable) {
+        try {
+          engine.stdin.write(String(msg.data) + "\n");
+        } catch (e) {
+          /* ignore */
+        }
+      }
+      return;
+    }
+
+    if (msg.type === "stop-engine") {
+      killEngine();
+      return;
+    }
+  });
+
+  ws.on("close", killEngine);
+  ws.on("error", killEngine);
+});
+
+wss.on("error", (err) => {
+  if (err && err.code === "EADDRINUSE") {
+    console.error(
+      `[engine-bridge] Port ${PORT} is already in use. Is the bridge already ` +
+        "running? You can pick another port with ENGINE_BRIDGE_PORT."
+    );
+  } else {
+    console.error("[engine-bridge] server error:", err.message);
+  }
+  process.exit(1);
+});

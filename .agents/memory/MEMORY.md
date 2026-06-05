@@ -1,1 +1,1 @@
-- [Stockfish WASM in browser](stockfish-wasm-browser.md) — web/ runs single-threaded SF16 worker; no 40MB net; Node raw-module postMessage must NOT pass `true`.
+- [Local engine bridge security](engine-bridge-security.md) — localhost WS that spawns native engines MUST verify Origin; localhost binding alone doesn't stop cross-site WS hijacking.

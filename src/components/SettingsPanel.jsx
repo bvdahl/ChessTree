@@ -30,6 +30,7 @@ export default function SettingsPanel({
   disabled,
   maxThreads = 1,
   maxHash = 1024,
+  localEngine = false,
 }) {
   const set = (key) => (val) => onChange({ ...settings, [key]: val });
   const hashCap = Math.min(maxHash, 1024);
@@ -120,12 +121,18 @@ export default function SettingsPanel({
           max={Math.max(1, maxThreads)}
           onChange={set("threads")}
           disabled={threadsLocked}
-          tip="How many CPU cores the engine uses. This in-browser build runs single-threaded, so it is fixed at 1."
+          tip={
+            threadsLocked
+              ? "How many CPU cores the engine uses. The built-in browser build runs single-threaded, so it is fixed at 1."
+              : "How many CPU cores the engine uses. More cores = faster, stronger analysis."
+          }
         />
       </div>
       {threadsLocked && (
         <p className="muted" style={{ marginTop: -4 }}>
-          This in-browser engine build runs single-threaded.
+          {localEngine
+            ? "This engine reports a single usable core."
+            : "The built-in browser engine runs single-threaded. To use more cores, connect your own engine in the Engine panel above."}
         </p>
       )}
     </div>
