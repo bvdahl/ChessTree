@@ -13,7 +13,9 @@
 // reach it. Stop it with Ctrl+C.
 
 import { WebSocketServer } from "ws";
-import { spawn } from "node:child_process";
+import uciProcessModule from "./uciProcess.cjs";
+
+const { UciProcess } = uciProcessModule;
 
 const PORT = Number(process.env.ENGINE_BRIDGE_PORT) || 4090;
 const HOST = "127.0.0.1";
@@ -59,7 +61,6 @@ console.log(
 
 wss.on("connection", (ws) => {
   let engine = null;
-  let stdoutBuffer = "";
 
   const sendJson = (obj) => {
     if (ws.readyState === ws.OPEN) ws.send(JSON.stringify(obj));
@@ -69,16 +70,7 @@ wss.on("connection", (ws) => {
     if (!engine) return;
     const proc = engine;
     engine = null;
-    try {
-      proc.stdin.write("quit\n");
-    } catch (e) {
-      /* ignore */
-    }
-    try {
-      proc.kill();
-    } catch (e) {
-      /* ignore */
-    }
+    proc.kill();
   };
 
   ws.on("message", (raw) => {
@@ -98,60 +90,30 @@ wss.on("connection", (ws) => {
         return;
       }
 
-      let proc;
-      try {
-        proc = spawn(enginePath, [], { stdio: ["pipe", "pipe", "pipe"] });
-      } catch (err) {
-        sendJson({
-          type: "error",
-          message: "Could not start that engine: " + err.message,
-        });
-        return;
-      }
-      engine = proc;
-
-      // A bad path surfaces here (ENOENT), asynchronously, not as a throw.
-      proc.on("error", (err) => {
-        engine = null;
-        sendJson({
-          type: "error",
-          message:
-            "Could not start that engine: " +
-            err.message +
-            ". Check that the path points to a real engine program.",
-        });
+      engine = new UciProcess(enginePath, {
+        onLine: (line) => sendJson({ type: "line", data: line }),
+        onError: (err) => {
+          engine = null;
+          sendJson({
+            type: "error",
+            message:
+              "Could not start that engine: " +
+              err.message +
+              ". Check that the path points to a real engine program.",
+          });
+        },
+        onExit: (code, signal) => {
+          engine = null;
+          sendJson({ type: "exit", code, signal });
+        },
       });
-
-      proc.on("exit", (code, signal) => {
-        if (engine === proc) engine = null;
-        sendJson({ type: "exit", code, signal });
-      });
-
-      proc.stdout.on("data", (chunk) => {
-        stdoutBuffer += chunk.toString();
-        let idx;
-        while ((idx = stdoutBuffer.indexOf("\n")) >= 0) {
-          const line = stdoutBuffer.slice(0, idx).replace(/\r$/, "");
-          stdoutBuffer = stdoutBuffer.slice(idx + 1);
-          sendJson({ type: "line", data: line });
-        }
-      });
-
-      // Native engines sometimes print banners to stderr; ignore it.
-      proc.stderr.on("data", () => {});
 
       sendJson({ type: "started" });
       return;
     }
 
     if (msg.type === "cmd") {
-      if (engine && engine.stdin.writable) {
-        try {
-          engine.stdin.write(String(msg.data) + "\n");
-        } catch (e) {
-          /* ignore */
-        }
-      }
+      if (engine) engine.write(msg.data);
       return;
     }
 

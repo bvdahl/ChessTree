@@ -35,9 +35,23 @@ works everywhere (including the published online version), but limited to a sing
 CPU core.
 
 If you'd rather use a chess engine program you downloaded to your own computer (a
-newer Stockfish, or a different UCI engine), the app can drive it through a small
-local helper called the **engine bridge**. The bridge runs only on your machine,
-binds to `localhost`, and is not reachable from the internet.
+newer Stockfish, or a different UCI engine), you have two ways to do it. Either
+way the engine runs only on your machine and can use all your CPU cores via the
+*Engine threads* slider.
+
+### Easiest: the desktop app
+
+Build the installable Windows desktop app (see *Desktop app* below). In it, open
+the **Engine** panel, choose **My own engine (local)**, click **Browse…**, and
+pick your engine program (on Windows it ends in `.exe`). It connects
+automatically — no terminal, no typing file paths.
+
+### Browser version: the engine bridge
+
+In the browser the app drives your engine through a small local helper called the
+**engine bridge**, because a web page cannot launch a program on its own. The
+bridge runs only on your machine, binds to `localhost`, and is not reachable from
+the internet.
 
 ```bash
 npm run bridge      # starts the bridge helper (leave it running)
@@ -46,12 +60,30 @@ npm run dev:full
 ```
 
 Then in the app's **Engine** panel choose **My own engine (local)**, paste the full
-path to your engine program (on Windows it usually ends in `.exe`), and click
-**Connect**. A local engine can use all your CPU cores via the *Engine threads*
-slider. Your choice is remembered for next time.
+path to your engine program, and click **Connect**. Your choice is remembered for
+next time.
 
 > The bridge is for local use only. The published/online build always uses the
 > built-in browser engine.
+
+## Desktop app (Windows installer)
+
+The same app can be packaged as an installable Windows program so it can be
+double-clicked like any other app — and so you can pick your own engine with a
+native **Browse…** dialog instead of the bridge helper. The desktop shell loads
+the exact same web app; the built-in browser Stockfish is still the default.
+
+```bash
+npm run electron:dev   # run the desktop app in development (with live reload)
+npm run dist           # build the Windows installer into release/
+```
+
+`npm run dist` produces a standard NSIS installer (`.exe`) in the `release/`
+folder. Hand that file to users — they run it once, then launch **Chess Tree
+Analyzer** from the Start menu or desktop shortcut. Nothing else to install.
+
+> Build the Windows installer on a Windows machine. The desktop app needs the
+> `electron` and `electron-builder` dev dependencies (`npm install`).
 
 ## Building for production
 
@@ -79,9 +111,13 @@ src/
   index.css            Styles
   components/          Board, EnginePanel, InputPanel, SettingsPanel, VariationTree, HelpModal
   analysis/            Tree generation, evaluation, PGN/JSON output
-  engine/              UCI engine clients (shared base, browser Worker, local bridge)
+  engine/              UCI engine clients (shared base, browser Worker, local bridge, desktop IPC)
 server/
   engine-bridge.js     Local WebSocket helper that runs a native UCI engine
+  uciProcess.cjs       Shared helper that spawns a native engine (used by the bridge and desktop app)
+electron/
+  main.cjs             Desktop app main process (window, file dialog, engine IPC)
+  preload.cjs          Safe window.desktop bridge exposed to the page
 public/
   stockfish/           Stockfish WASM engine files
 ```

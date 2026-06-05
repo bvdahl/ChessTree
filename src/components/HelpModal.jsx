@@ -163,7 +163,18 @@ export default function HelpModal({ open, onClose }) {
               entirely), you can have the app use that instead. This only works
               when you’re running the app on your own machine, and it can use{" "}
               <strong>all your CPU cores</strong> for faster, stronger analysis.
-              To set it up:
+            </p>
+            <p>
+              <strong>Easiest way — the desktop app.</strong> If you installed
+              the Chess Tree Analyzer desktop app (the double-click installer),
+              just click <em>My own engine (local)</em>, then{" "}
+              <em>Browse…</em>, and pick your engine program from the file window
+              (on Windows it ends in <code>.exe</code>). It connects
+              automatically — no terminal, no typing file paths.
+            </p>
+            <p>
+              <strong>In the browser version</strong> you start a small helper
+              first, because a web page cannot launch a program on its own:
             </p>
             <ol>
               <li>
@@ -185,7 +196,7 @@ export default function HelpModal({ open, onClose }) {
               </li>
             </ol>
             <p className="help-tip">
-              Everything still stays on your computer — the helper only runs on
+              Everything still stays on your computer — your engine runs only on
               your machine and is not reachable from the internet. If you publish
               the app online, visitors automatically use the built-in browser
               engine.

@@ -14,6 +14,12 @@ everywhere, including the published online version. Optionally, when running
 locally, users can point the app at their own downloaded UCI engine (e.g. a
 native Stockfish) via a small localhost "engine bridge" helper.
 
+The same web app can also be packaged as an installable **Windows desktop app**
+(Electron). The desktop shell loads the identical web build and adds a native
+"Browse…" file dialog so non-technical users can pick their own UCI engine
+without a terminal or the bridge. The built-in browser Stockfish stays the
+default, and the web/published build is unchanged.
+
 # User Preferences
 
 Preferred communication style: Simple, everyday language.
@@ -50,23 +56,30 @@ project root.
 ```
 index.html             App entry HTML
 vite.config.js         Vite config (port 5000, COOP/COEP headers for WASM threads)
-package.json           Dependencies and scripts (dev/build/preview/bridge/dev:full)
+package.json           Dependencies, scripts, and electron-builder "build" config
 src/
   App.jsx              App shell, engine lifecycle and switching
   main.jsx             Entry point
   index.css            Styles
   components/          Board, EnginePanel, InputPanel, SettingsPanel, VariationTree, HelpModal
   analysis/            Tree generation, evaluation, PGN/JSON output
-  engine/              UCI clients: uciEngine (shared base), stockfishEngine (Worker), bridgeEngine (WebSocket)
+  engine/              UCI clients: uciEngine (shared base), stockfishEngine (Worker), bridgeEngine (WebSocket), desktopEngine (Electron IPC)
 server/
   engine-bridge.js     Local, localhost-only WebSocket helper that spawns a native UCI engine
+  uciProcess.cjs       Shared CommonJS helper that spawns a native UCI engine + relays lines (used by the bridge AND the desktop app)
+electron/
+  main.cjs             Desktop app main process: serves dist/ over a localhost http server (COOP/COEP), native file dialog, engine IPC
+  preload.cjs          Exposes a safe window.desktop bridge (isDesktop, pickEngine, start/stop/send, onMessage) to the page
 public/
   stockfish/           Stockfish WASM engine files
 ```
 
 Scripts: `dev` (Vite, used by the Replit workflow), `build`, `preview`,
 `bridge` (run the local engine helper), `dev:full` (Vite + bridge together via
-`concurrently`). The published/online build never uses the bridge.
+`concurrently`), `electron` (run the desktop shell against the built dist/),
+`electron:dev` (Vite + Electron together, live reload), `dist` (build the web app
+then package a Windows installer into `release/` via electron-builder). The
+published/online build never uses the bridge or Electron.
 
 ## Core Components
 
@@ -77,10 +90,23 @@ it, and an engine evaluation.
 
 **Engine Integration** (`src/engine/`): A shared UCI client base (`uciEngine.js`)
 handles the protocol — handshake, option limits, multi-PV analysis, and lifecycle —
-independent of transport. Two transports extend it: `stockfishEngine.js` (the
-bundled WASM build in a Web Worker, the default) and `bridgeEngine.js` (a localhost
-WebSocket to `server/engine-bridge.js`, which spawns a user-supplied native UCI
-engine). Both expose the same interface, so the analysis layer is unchanged.
+independent of transport. Three transports extend it: `stockfishEngine.js` (the
+bundled WASM build in a Web Worker, the default), `bridgeEngine.js` (a localhost
+WebSocket to `server/engine-bridge.js`), and `desktopEngine.js` (Electron IPC over
+the `window.desktop` bridge). The last two both spawn a user-supplied native UCI
+engine via the shared `server/uciProcess.cjs` helper. App.jsx picks the local
+transport at runtime: `DesktopEngine` when `isDesktop()` (running in the Electron
+shell), otherwise `BridgeEngine`. All expose the same interface, so the analysis
+layer is unchanged.
+
+**Desktop shell** (`electron/`): `main.cjs` is the Electron main process. It
+serves the Vite build (`dist/`) over a localhost HTTP server with the same
+COOP/COEP headers Vite uses (so absolute asset paths and the WASM engine work
+exactly as on the web — not `file://`), opens a native "Browse…" file dialog, and
+spawns/relays the native engine over IPC using `server/uciProcess.cjs`.
+`preload.cjs` exposes only a small, safe `window.desktop` API (context-isolated,
+no Node access in the page). The web build is untouched; `isDesktop()` is false in
+a normal browser, so nothing changes there.
 
 **User Interface** (`src/components/`): Interactive chess board, engine panel
 (built-in vs. own engine), input panel (PGN / FEN / play-on-board), settings
@@ -115,10 +141,14 @@ with chess databases such as ChessBase) or **JSON** for programmatic processing.
 - **React + Vite**: Application framework and build tooling.
 - **ws** (Node): WebSocket server used only by the optional local engine bridge
   (`server/engine-bridge.js`); not part of the browser bundle.
-- **concurrently** (dev): runs Vite and the bridge together via `npm run dev:full`.
+- **concurrently** (dev): runs Vite and the bridge/Electron together via
+  `npm run dev:full` / `npm run electron:dev`.
+- **electron** (dev): the desktop shell runtime. Not part of the browser bundle.
+- **electron-builder** (dev): packages the Windows installer via `npm run dist`.
+- **cross-env** (dev): sets env vars cross-platform for `npm run electron:dev`.
 - **A native UCI engine (optional, user-supplied)**: any Stockfish/UCI executable
-  the user has on their own machine, launched by the bridge when they pick "My own
-  engine".
+  the user has on their own machine, launched by the bridge (browser) or the
+  desktop app (Electron) when they pick "My own engine".
 
 # Version Control / GitHub
 

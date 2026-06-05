@@ -9,8 +9,10 @@ export default function EnginePanel({
   status, // "loading" | "ready" | "error"
   error,
   name,
+  desktop, // true when running inside the installed desktop app
   onChooseBuiltin,
   onConnectLocal,
+  onBrowse, // returns a Promise resolving to a chosen file path, or null
   disabled,
 }) {
   const [pathInput, setPathInput] = useState(path || "");
@@ -22,6 +24,16 @@ export default function EnginePanel({
 
   const local = source === "local";
   const connecting = local && status === "loading";
+
+  // Desktop app: open the native file picker, then connect to the chosen engine.
+  async function handleBrowse() {
+    if (!onBrowse) return;
+    const chosen = await onBrowse();
+    if (chosen) {
+      setPathInput(chosen);
+      onConnectLocal(chosen);
+    }
+  }
 
   return (
     <div className="card" style={{ opacity: disabled ? 0.6 : 1 }}>
@@ -39,7 +51,11 @@ export default function EnginePanel({
           className={"tab" + (local ? " active" : "")}
           onClick={() => onConnectLocal(pathInput)}
           disabled={disabled}
-          title="Use a chess engine program you downloaded to your own computer (needs the bridge helper running)."
+          title={
+            desktop
+              ? "Use a chess engine program you downloaded to your own computer. Click Browse to pick it."
+              : "Use a chess engine program you downloaded to your own computer (needs the bridge helper running)."
+          }
         >
           My own engine (local)
         </button>
@@ -67,23 +83,46 @@ export default function EnginePanel({
             }}
           />
           <div className="btn-group" style={{ marginTop: 8 }}>
+            {desktop && (
+              <button
+                className="btn btn-secondary"
+                onClick={handleBrowse}
+                disabled={disabled}
+                title="Open a file window to find your engine program on this computer"
+              >
+                Browse…
+              </button>
+            )}
             <button
               className="btn btn-secondary"
               onClick={() => onConnectLocal(pathInput)}
               disabled={disabled || !pathInput.trim()}
-              title="Launch your engine through the local bridge and connect to it"
+              title={
+                desktop
+                  ? "Start the selected engine and connect to it"
+                  : "Launch your engine through the local bridge and connect to it"
+              }
             >
               {connecting ? "Connecting…" : "Connect"}
             </button>
           </div>
 
-          <p className="muted" style={{ marginTop: 8 }}>
-            First, start the bridge helper: open a terminal in this project and
-            run <code>npm run bridge</code> (or run{" "}
-            <code>npm run dev:full</code> to start the app and the bridge
-            together). Then paste the full path to your engine above and click
-            Connect. Everything stays on your computer.
-          </p>
+          {desktop ? (
+            <p className="muted" style={{ marginTop: 8 }}>
+              Click <em>Browse…</em> to find your engine program on this computer
+              (on Windows it ends in <code>.exe</code>), then it connects
+              automatically. No terminal needed. Everything stays on your
+              computer.
+            </p>
+          ) : (
+            <p className="muted" style={{ marginTop: 8 }}>
+              First, start the bridge helper: open a terminal in this project and
+              run <code>npm run bridge</code> (or run{" "}
+              <code>npm run dev:full</code> to start the app and the bridge
+              together). Then paste the full path to your engine above and click
+              Connect. Everything stays on your computer.
+            </p>
+          )}
 
           {status === "ready" && (
             <p className="muted" style={{ marginTop: 4, color: "#2e7d32" }}>

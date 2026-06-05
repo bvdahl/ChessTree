@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Chess } from "chess.js";
 import { StockfishEngine } from "./engine/stockfishEngine.js";
 import { BridgeEngine } from "./engine/bridgeEngine.js";
+import { DesktopEngine, isDesktop } from "./engine/desktopEngine.js";
 import { generateTree, parsePgn } from "./analysis/analysisEngine.js";
 import { treeToPgn, treeToJson, countAnalyzedNodes } from "./analysis/output.js";
 import Board from "./components/Board.jsx";
@@ -105,7 +106,9 @@ export default function App() {
 
     const engine =
       source === "local"
-        ? new BridgeEngine({ enginePath: path })
+        ? isDesktop()
+          ? new DesktopEngine({ enginePath: path })
+          : new BridgeEngine({ enginePath: path })
         : new StockfishEngine();
     engineRef.current = engine;
 
@@ -386,8 +389,12 @@ export default function App() {
             status={engineState}
             error={engineError}
             name={engineName}
+            desktop={isDesktop()}
             onChooseBuiltin={handleChooseBuiltin}
             onConnectLocal={handleConnectLocal}
+            onBrowse={() =>
+              isDesktop() ? window.desktop.pickEngine() : Promise.resolve(null)
+            }
             disabled={running}
           />
 
