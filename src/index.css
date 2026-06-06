@@ -574,31 +574,6 @@ textarea {
   flex: 1;
 }
 
-.eval-chip {
-  display: inline-block;
-  font-family: var(--mono);
-  font-size: 12px;
-  padding: 1px 7px;
-  border-radius: 5px;
-  font-weight: 600;
-}
-.eval-white {
-  background: rgba(230, 237, 243, 0.12);
-  color: var(--text);
-}
-.eval-pos {
-  background: rgba(63, 185, 80, 0.16);
-  color: var(--accent);
-}
-.eval-neg {
-  background: rgba(248, 81, 73, 0.16);
-  color: var(--red);
-}
-.eval-mate {
-  background: rgba(227, 179, 65, 0.18);
-  color: var(--amber);
-}
-
 .tree-header {
   padding: 16px 18px 10px;
   border-bottom: 1px solid var(--border);
@@ -613,7 +588,7 @@ textarea {
 .tree-body {
   flex: 1;
   overflow-y: auto;
-  padding: 12px 8px 24px;
+  padding: 14px 16px 28px;
   font-family: var(--mono);
   font-size: 13px;
 }
@@ -626,36 +601,107 @@ textarea {
   font-size: 13px;
 }
 
-.node-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 3px 8px;
-  border-radius: 6px;
-  cursor: pointer;
-  white-space: nowrap;
-}
-.node-row:hover {
-  background: var(--bg-elevated);
-}
-.node-row.selected {
-  background: rgba(63, 185, 80, 0.14);
-  outline: 1px solid rgba(63, 185, 80, 0.3);
-}
-.node-move {
-  font-weight: 600;
-}
-.node-move.game {
-  color: var(--blue);
-}
-.node-num {
-  color: var(--text-faint);
+/* Flowing, ChessBase-style move notation. */
+.vt-flow {
+  line-height: 1.95;
+  word-break: break-word;
 }
 
-.tree-children {
-  border-left: 1px solid var(--border);
-  margin-left: 10px;
-  padding-left: 4px;
+.vt-move {
+  cursor: pointer;
+  border-radius: 5px;
+  padding: 1px 3px;
+  white-space: nowrap;
+  color: var(--text-dim);
+}
+.vt-move:hover {
+  background: var(--bg-elevated);
+}
+.vt-move.selected {
+  background: rgba(63, 185, 80, 0.16);
+  outline: 1px solid rgba(63, 185, 80, 0.35);
+  color: var(--text);
+}
+/* Main line: emphasised and brighter. */
+.vt-move.main {
+  color: var(--text);
+  font-weight: 700;
+}
+/* Game moves (from the input game / starting line). */
+.vt-move.game {
+  color: var(--blue);
+}
+.vt-move.main.game {
+  color: var(--blue);
+  font-weight: 700;
+}
+.vt-start {
+  color: var(--text-faint);
+  font-weight: 600;
+}
+
+.vt-num {
+  color: var(--text-faint);
+  font-weight: 400;
+}
+.vt-san {
+  margin-left: 1px;
+}
+
+.vt-eval {
+  margin-left: 4px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.vt-eval-neutral {
+  color: var(--text-dim);
+}
+.vt-eval-pos {
+  color: var(--accent);
+}
+.vt-eval-neg {
+  color: var(--red);
+}
+.vt-eval-mate {
+  color: var(--amber);
+}
+
+/* A nested side-variation. Colour shifts slightly by nesting depth. */
+.vt-var {
+  color: var(--text-dim);
+}
+.vt-var[data-depth="1"] {
+  color: var(--text-faint);
+}
+.vt-bracket {
+  color: var(--text-faint);
+}
+.vt-ellipsis {
+  color: var(--text-faint);
+  padding: 0 2px;
+}
+
+.vt-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  margin-right: 1px;
+  padding: 0;
+  font-family: var(--mono);
+  font-size: 11px;
+  line-height: 1;
+  color: var(--text-dim);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  cursor: pointer;
+  vertical-align: middle;
+}
+.vt-toggle:hover {
+  color: var(--text);
+  border-color: var(--border-strong);
 }
 
 .footer-note {

@@ -280,24 +280,45 @@ export default function HelpModal({ open, onClose }) {
           <section id="help-tree">
             <h3>The variation tree</h3>
             <p>
-              The panel on the right lists every line the analysis found,
-              indented to show how the branches relate. <strong>Click any move
-              to jump straight to that position on the board.</strong> The move
-              you’re currently viewing is highlighted.
+              The panel on the right shows every line the analysis found as
+              flowing chess notation, just like ChessBase and other chess
+              software. <strong>Click any move to jump straight to that position
+              on the board.</strong> The move you’re currently viewing is
+              highlighted.
             </p>
+            <ul className="help-defs">
+              <li>
+                <strong>Bold moves</strong> are the main line — the engine’s top
+                continuation running straight through.
+              </li>
+              <li>
+                Moves in <span className="help-blue">blue</span> are the moves
+                from your original game or starting line.
+              </li>
+              <li>
+                <strong>Side-variations</strong> are alternative moves the engine
+                suggested. They appear in brackets right after the move they’re an
+                alternative to — <code>( )</code> for the first level,{" "}
+                <code>[ ]</code> and <code>{"{ }"}</code> for deeper nesting.
+              </li>
+              <li>
+                The small <strong>+ / −</strong> button before a variation folds
+                it away or opens it back up, so you can hide branches you’re not
+                looking at.
+              </li>
+            </ul>
             <p>
-              Moves shown in <span className="help-blue">blue</span> are the
-              moves from your original game or starting line (the “main line”).
-              Other moves are alternatives the engine suggested. Each move also
-              shows a small evaluation tag — see below.
+              Each analysed move also shows a small evaluation next to it — see
+              below.
             </p>
           </section>
 
           <section id="help-evals">
             <h3>How evaluations are shown</h3>
             <p>
-              Every analysed move has a coloured evaluation tag. Evaluations are
-              always given from <strong>White’s point of view</strong>:
+              Every analysed move shows a small coloured evaluation next to it.
+              Evaluations are always given from{" "}
+              <strong>White’s point of view</strong>:
             </p>
             <ul className="help-defs">
               <li>
