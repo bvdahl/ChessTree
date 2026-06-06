@@ -16,6 +16,7 @@ const path = require("node:path");
 const http = require("node:http");
 const fs = require("node:fs");
 const { UciProcess } = require("../server/uciProcess.cjs");
+const { autoUpdater } = require("electron-updater");
 
 let currentEngine = null;
 let server = null;
@@ -224,9 +225,56 @@ ipcMain.handle("engine:stop", async () => {
   return { ok: true };
 });
 
+// --- Auto-update --------------------------------------------------------------
+
+// In the installed app, quietly check GitHub Releases for a newer published
+// version, download it in the background, and offer to restart now (it also
+// installs on its own the next time the app is closed). Does nothing while
+// developing (an unpacked dev run has no update feed).
+function setupAutoUpdates() {
+  if (!app.isPackaged) return;
+
+  autoUpdater.autoDownload = true;
+  autoUpdater.autoInstallOnAppQuit = true;
+
+  autoUpdater.on("update-downloaded", async (info) => {
+    const wins = BrowserWindow.getAllWindows();
+    const parent = wins.length ? wins[0] : undefined;
+    const version = info && info.version ? info.version : "the latest version";
+    const { response } = await dialog.showMessageBox(parent, {
+      type: "info",
+      buttons: ["Restart now", "Later"],
+      defaultId: 0,
+      cancelId: 1,
+      title: "Update ready",
+      message: "A new version of Chess Tree Analyzer was downloaded.",
+      detail:
+        "Restart now to switch to " +
+        version +
+        ", or keep working — it will update automatically the next time you close the app.",
+    });
+    if (response === 0) setImmediate(() => autoUpdater.quitAndInstall());
+  });
+
+  // Never interrupt the user if an update check fails; it retries next launch.
+  autoUpdater.on("error", (err) => {
+    console.error(
+      "Auto-update error:",
+      err ? (err.stack || err).toString() : "unknown",
+    );
+  });
+
+  autoUpdater.checkForUpdatesAndNotify().catch((err) => {
+    console.error("Auto-update check failed:", err);
+  });
+}
+
 // --- App lifecycle ------------------------------------------------------------
 
-app.whenReady().then(createWindow);
+app.whenReady().then(() => {
+  createWindow();
+  setupAutoUpdates();
+});
 
 app.on("activate", () => {
   if (BrowserWindow.getAllWindows().length === 0) createWindow();

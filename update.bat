@@ -2,14 +2,15 @@
 setlocal enabledelayedexpansion
 
 REM ============================================================
-REM  Chess Tree Analyzer - one-click update & build
+REM  Chess Tree Analyzer - one-click update, build & publish
 REM ------------------------------------------------------------
 REM  Double-click this file (from ANY folder - even from inside
 REM  C:\Apps\ChessTree). It will:
 REM    1) ask for administrator access (click "Yes" once),
 REM    2) download or update the project in C:\Apps\ChessTree,
 REM    3) install everything it needs,
-REM    4) build the Windows installer.
+REM    4) build the Windows installer AND publish it to GitHub,
+REM       so every installed copy of the app updates itself.
 REM
 REM  The work runs in a window launched with "cmd /k", so the
 REM  window STAYS OPEN no matter what happens. You will always be
@@ -85,6 +86,15 @@ if exist "%APPDIR%\.git" (
   cd /d "%APPDIR%"
 )
 
+REM --- Give this build an ever-increasing version number ---
+REM Auto-update only notices a NEW version number, so we base it on the number
+REM of commits, which always goes up each time you push a change.
+for /f "delims=" %%i in ('git rev-list --count HEAD') do set "BUILDNO=%%i"
+if "%BUILDNO%"=="" set "BUILDNO=0"
+echo.
+echo This build will be version 1.0.%BUILDNO%
+call npm version 1.0.%BUILDNO% --no-git-tag-version --allow-same-version >nul 2>&1
+
 REM --- Install dependencies ---
 REM The shared lock file points at Replit's private servers, so remove it and
 REM let npm rebuild it from the public registry.
@@ -94,20 +104,40 @@ echo Installing dependencies (a few minutes the first time) ...
 call npm install
 if errorlevel 1 ( echo. & echo ERROR: npm install failed. & goto :end )
 
-REM --- Build the installer ---
+REM --- Make sure we have a GitHub token so the new version can be published ---
+REM (Published versions are what let every installed app update itself.)
+if "%GH_TOKEN%"=="" (
+  echo.
+  echo ------------------------------------------------------------
+  echo  One-time setup: a GitHub token is needed to publish updates.
+  echo  Create one at  https://github.com/settings/tokens
+  echo  ^(use a "classic" token with the "repo" checkbox ticked^).
+  echo ------------------------------------------------------------
+  set /p "GH_TOKEN=Paste the token here and press Enter: "
+  if not "!GH_TOKEN!"=="" (
+    setx GH_TOKEN "!GH_TOKEN!" >nul
+    echo Saved - you will not be asked for it again on this computer.
+  )
+)
+if "%GH_TOKEN%"=="" ( echo. & echo ERROR: no GitHub token given, so the update cannot be published. & goto :end )
+
+REM --- Build the installer AND publish it for auto-update ---
 echo.
 echo Cleaning previous build ...
 if exist release rmdir /s /q release
 echo.
-echo Building the Windows installer (this can take several minutes) ...
-call npm run dist
-if errorlevel 1 ( echo. & echo ERROR: build failed. & goto :end )
+echo Building and publishing version 1.0.%BUILDNO% (this can take several minutes) ...
+call npm run release
+if errorlevel 1 ( echo. & echo ERROR: build or publish failed. & goto :end )
 
 echo.
 echo ============================================
 echo   DONE!
 echo ============================================
-echo Your installer is in: %APPDIR%\release
+echo Version 1.0.%BUILDNO% was published to GitHub.
+echo Installed copies of the app will now update themselves automatically.
+echo.
+echo The installer is also here if you need it: %APPDIR%\release
 echo Look for: "Chess Tree Analyzer Setup ....exe"
 start "" "%APPDIR%\release"
 

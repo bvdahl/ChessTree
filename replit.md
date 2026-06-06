@@ -20,6 +20,13 @@ The same web app can also be packaged as an installable **Windows desktop app**
 without a terminal or the bridge. The built-in browser Stockfish stays the
 default, and the web/published build is unchanged.
 
+The installed desktop app **updates itself automatically** (via
+electron-updater). Each `update.bat` run builds the app, stamps it with an
+ever-increasing version, and publishes it to GitHub Releases; running copies
+quietly download the new version and apply it (offering "Restart now", or
+installing on the next app close). So after a one-time manual install of the
+first auto-update-enabled build, future changes reach users with no reinstall.
+
 # User Preferences
 
 Preferred communication style: Simple, everyday language.
@@ -78,7 +85,9 @@ Scripts: `dev` (Vite, used by the Replit workflow), `build`, `preview`,
 `bridge` (run the local engine helper), `dev:full` (Vite + bridge together via
 `concurrently`), `electron` (run the desktop shell against the built dist/),
 `electron:dev` (Vite + Electron together, live reload), `dist` (build the web app
-then package a Windows installer into `release/` via electron-builder). The
+then package a Windows installer into `release/` via electron-builder), `release`
+(same as `dist` but also publishes the installer to GitHub Releases so installed
+desktop apps can auto-update — this is what `update.bat` runs). The
 published/online build never uses the bridge or Electron.
 
 ## Core Components
@@ -144,7 +153,13 @@ with chess databases such as ChessBase) or **JSON** for programmatic processing.
 - **concurrently** (dev): runs Vite and the bridge/Electron together via
   `npm run dev:full` / `npm run electron:dev`.
 - **electron** (dev): the desktop shell runtime. Not part of the browser bundle.
-- **electron-builder** (dev): packages the Windows installer via `npm run dist`.
+- **electron-builder** (dev): packages the Windows installer via `npm run dist`,
+  and publishes it to GitHub Releases via `npm run release`.
+- **electron-updater**: runtime auto-update for the desktop app. On launch the
+  installed app checks the project's public GitHub Releases for a newer published
+  version and updates itself. Publishing a build needs a GitHub token (classic,
+  `repo` scope) in the `GH_TOKEN` environment variable; `update.bat` prompts for
+  it once and remembers it.
 - **cross-env** (dev): sets env vars cross-platform for `npm run electron:dev`.
 - **A native UCI engine (optional, user-supplied)**: any Stockfish/UCI executable
   the user has on their own machine, launched by the bridge (browser) or the

@@ -12,11 +12,13 @@
     "dev:full": "concurrently -n app,bridge -c green,cyan \"vite\" \"node server/engine-bridge.js\"",
     "electron": "electron .",
     "electron:dev": "concurrently -k -n app,electron -c green,magenta \"vite\" \"cross-env ELECTRON_DEV_URL=http://localhost:5000 electron .\"",
-    "dist": "vite build && electron-builder --win"
+    "dist": "vite build && electron-builder --win",
+    "release": "vite build && electron-builder --win --publish always"
   },
   "dependencies": {
     "chess.js": "^1.0.0-beta.8",
     "concurrently": "^9.2.1",
+    "electron-updater": "^6.8.9",
     "react": "^18.3.1",
     "react-chessboard": "^4.7.2",
     "react-dom": "^18.3.1",
@@ -33,6 +35,14 @@
   "build": {
     "appId": "com.chesstree.analyzer",
     "productName": "Chess Tree Analyzer",
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "bvdahl",
+        "repo": "ChessTree",
+        "releaseType": "release"
+      }
+    ],
     "files": [
       "dist/**/*",
       "electron/**/*",
