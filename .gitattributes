@@ -1,0 +1,3 @@
+# Windows batch files must keep CRLF line endings or cmd.exe mis-parses them
+# (goto/labels fail). Treat as binary so no tool ever converts the EOLs.
+*.bat -text
