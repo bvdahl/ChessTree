@@ -4,30 +4,29 @@ setlocal enabledelayedexpansion
 REM ============================================================
 REM  Chess Tree Analyzer - one-click update & build
 REM ------------------------------------------------------------
-REM  This file is self-contained. You can drop just this .bat
-REM  into an empty folder, double-click it, and it will:
-REM    1) download (clone) the whole project the first time,
-REM       or update it (git pull) on later runs,
-REM    2) install everything it needs,
-REM    3) build the Windows installer.
-REM  It always works in C:\Apps\ChessTree, no matter where this
-REM  .bat file itself is sitting.
+REM  Double-click this file. It will:
+REM    1) ask for administrator access (click "Yes" once),
+REM    2) download or update the project in C:\Apps\ChessTree,
+REM    3) install everything it needs,
+REM    4) build the Windows installer.
+REM
+REM  The work runs in a window launched with "cmd /k", so the
+REM  window STAYS OPEN no matter what happens. You will always be
+REM  able to read any error message instead of it flashing closed.
 REM ============================================================
 
-REM If this is the elevated relaunch, go straight to work (prevents any loop)
+REM If this is our elevated, stay-open window, go straight to work.
 if "%~1"=="elevated" goto :run
 
-REM --- Make sure we're running as Administrator (needed so the build can ---
-REM --- create symlinks). 'net session' alone is unreliable because it    ---
-REM --- needs the Server service, so we fall back to a second check.       ---
-net session >nul 2>&1
-if not errorlevel 1 goto :run
-fsutil dirty query %systemdrive% >nul 2>&1
-if not errorlevel 1 goto :run
-
-REM Not admin yet - relaunch elevated, passing a marker so this can never loop
-echo Requesting administrator access...
-powershell -NoProfile -Command "Start-Process -FilePath '%~f0' -ArgumentList 'elevated' -Verb RunAs"
+REM First launch: relaunch as Administrator in a window that stays open.
+REM A tiny VBScript is used so the file path and the "/k" flag are passed
+REM through reliably (this is the part that kept failing before).
+echo Requesting administrator access (please click "Yes") ...
+set "VBS=%temp%\chesstree_elevate.vbs"
+echo Set UAC = CreateObject^("Shell.Application"^) > "%VBS%"
+echo UAC.ShellExecute "cmd.exe", "/k ""%~f0"" elevated", "", "runas", 1 >> "%VBS%"
+cscript //nologo "%VBS%"
+del "%VBS%" >nul 2>&1
 exit /b
 
 :run
@@ -42,13 +41,13 @@ echo.
 
 REM --- Make sure the tools we need are installed ---
 where git >nul 2>&1
-if %errorlevel% neq 0 (
+if errorlevel 1 (
   echo ERROR: Git is not installed or not on your PATH.
   echo Install it from https://git-scm.com/download/win then run this again.
   goto :end
 )
 where npm >nul 2>&1
-if %errorlevel% neq 0 (
+if errorlevel 1 (
   echo ERROR: Node.js / npm is not installed or not on your PATH.
   echo Install the LTS version from https://nodejs.org then run this again.
   goto :end
@@ -64,10 +63,10 @@ if exist "%APPDIR%\.git" (
 ) else (
   echo Downloading a fresh copy to %APPDIR% ...
   git clone "%REPO%" "%APPDIR%"
-  if %errorlevel% neq 0 ( echo. & echo ERROR: download (git clone) failed. & goto :end )
+  if errorlevel 1 ( echo. & echo ERROR: download ^(git clone^) failed. & goto :end )
   cd /d "%APPDIR%"
 )
-if %errorlevel% neq 0 ( echo. & echo ERROR: getting the code failed. & goto :end )
+if errorlevel 1 ( echo. & echo ERROR: getting the code failed. & goto :end )
 
 REM --- Install dependencies ---
 REM The shared lock file points at Replit's private servers, so remove it and
@@ -76,7 +75,7 @@ if exist package-lock.json del /f /q package-lock.json
 echo.
 echo Installing dependencies (a few minutes the first time) ...
 call npm install
-if %errorlevel% neq 0 ( echo. & echo ERROR: npm install failed. & goto :end )
+if errorlevel 1 ( echo. & echo ERROR: npm install failed. & goto :end )
 
 REM --- Build the installer ---
 echo.
@@ -85,7 +84,7 @@ if exist release rmdir /s /q release
 echo.
 echo Building the Windows installer (this can take several minutes) ...
 call npm run dist
-if %errorlevel% neq 0 ( echo. & echo ERROR: build failed. & goto :end )
+if errorlevel 1 ( echo. & echo ERROR: build failed. & goto :end )
 
 echo.
 echo ============================================
@@ -97,4 +96,10 @@ start "" "%APPDIR%\release"
 
 :end
 echo.
+echo ------------------------------------------------------------
+echo This window will stay open so you can read the messages above.
+echo When you are finished, just close it.
+echo ------------------------------------------------------------
+echo.
 pause
+exit /b
