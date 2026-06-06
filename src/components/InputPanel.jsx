@@ -131,7 +131,11 @@ export default function InputPanel({
           </label>
           <div className="moves-preview">
             {boardMoves && boardMoves.length
-              ? boardMoves.map((m) => m.san).join(" ")
+              ? boardMoves
+                  .map((m, i) =>
+                    i % 2 === 0 ? `${i / 2 + 1}. ${m.san}` : m.san
+                  )
+                  .join(" ")
               : "No moves yet — the analysis will start from the position you set up."}
           </div>
           <div className="btn-group" style={{ marginTop: 8 }}>

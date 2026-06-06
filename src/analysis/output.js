@@ -1,4 +1,4 @@
-// PGN and JSON output generation from a variation tree.
+// PGN output generation from a variation tree.
 // Produces ChessBase-compatible nested variations with eval comments.
 
 import { formatEvalComment } from "./evaluation.js";
@@ -74,28 +74,6 @@ export function treeToPgn(root, meta = {}) {
   const body = moves ? `${moves} *` : "*";
 
   return `${headers.join("\n")}\n\n${body}\n`;
-}
-
-export function treeToJson(root) {
-  function serialize(node) {
-    const out = {
-      move: node.move ? node.move.san : null,
-      uci: node.move ? node.move.uci : null,
-      fen: node.fen,
-      depth: node.depth,
-      isGameMove: node.isGameMove,
-    };
-    if (node.eval) {
-      out.eval = node.eval.isMate
-        ? { mate: node.eval.whiteMate }
-        : { cp: node.eval.whiteCp };
-    }
-    if (node.children.length) {
-      out.children = node.children.map(serialize);
-    }
-    return out;
-  }
-  return JSON.stringify(serialize(root), null, 2);
 }
 
 // Count total analyzed nodes (excludes game moves and root).

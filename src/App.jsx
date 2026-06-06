@@ -4,7 +4,7 @@ import { StockfishEngine } from "./engine/stockfishEngine.js";
 import { BridgeEngine } from "./engine/bridgeEngine.js";
 import { DesktopEngine, isDesktop } from "./engine/desktopEngine.js";
 import { generateTree, parsePgn } from "./analysis/analysisEngine.js";
-import { treeToPgn, treeToJson, countAnalyzedNodes } from "./analysis/output.js";
+import { treeToPgn, countAnalyzedNodes } from "./analysis/output.js";
 import Board from "./components/Board.jsx";
 import VariationTree from "./components/VariationTree.jsx";
 import SettingsPanel from "./components/SettingsPanel.jsx";
@@ -446,14 +446,9 @@ export default function App() {
                   <span style={{ width: `${progressPct}%` }} />
                 </div>
                 <div className="progress-text">
-                  <span>{progress.analyzed} analyzed</span>
-                  <span>{progress.queued} queued</span>
+                  <span>{progress.analyzed} positions analyzed</span>
+                  <span>{progress.queued} still to go</span>
                 </div>
-                {progress.line && (
-                  <div className="progress-line" title={progress.line}>
-                    Exploring: {progress.line}
-                  </div>
-                )}
               </div>
             )}
 
@@ -471,19 +466,6 @@ export default function App() {
                   title="Download the whole tree as a PGN file (opens in ChessBase, Lichess, and most chess software)"
                 >
                   ↓ PGN
-                </button>
-                <button
-                  className="btn btn-secondary"
-                  onClick={() =>
-                    download(
-                      "chess-tree.json",
-                      treeToJson(tree),
-                      "application/json"
-                    )
-                  }
-                  title="Download the tree as structured JSON data for use in your own scripts or tools"
-                >
-                  ↓ JSON
                 </button>
               </div>
             )}

@@ -17,7 +17,7 @@ export function bridgeUrl(port = DEFAULT_BRIDGE_PORT) {
 
 const BRIDGE_DOWN_MSG =
   "Could not reach the local engine helper. Start it first by running " +
-  "“npm run bridge” in a terminal, then try Connect again.";
+  "“npm run bridge” in a terminal, then try connecting again.";
 
 export class BridgeEngine extends UciEngine {
   constructor({ enginePath, port = DEFAULT_BRIDGE_PORT } = {}) {
@@ -82,7 +82,7 @@ export class BridgeEngine extends UciEngine {
           }
         } else if (msg.type === "exit") {
           const err = new Error(
-            "The engine stopped unexpectedly. Check the engine file and try Connect again."
+            "The engine stopped unexpectedly. Check the engine file and try connecting again."
           );
           if (!started) {
             clearTimeout(connectTimer);

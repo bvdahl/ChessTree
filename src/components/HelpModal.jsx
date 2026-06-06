@@ -188,7 +188,8 @@ export default function HelpModal({ open, onClose }) {
                 In the <em>Engine</em> card, click{" "}
                 <em>My own engine (local)</em>, paste the full path to your
                 engine program (on Windows it usually ends in{" "}
-                <code>.exe</code>), and click <em>Connect</em>.
+                <code>.exe</code>), and press <em>Enter</em> — it connects
+                automatically.
               </li>
               <li>
                 When the status in the top-right shows your engine’s name, you’re
@@ -343,18 +344,13 @@ export default function HelpModal({ open, onClose }) {
           <section id="help-export">
             <h3>Saving your results</h3>
             <p>
-              After an analysis finishes, two download buttons appear on the
-              left:
+              After an analysis finishes, a download button appears on the left:
             </p>
             <ul className="help-defs">
               <li>
                 <strong>PGN:</strong> saves the whole tree as a standard PGN
                 file with all variations and evaluation comments. You can open
                 this in ChessBase, Lichess, SCID, and most other chess programs.
-              </li>
-              <li>
-                <strong>JSON:</strong> saves the tree as structured data, handy
-                if you want to process it with your own scripts or tools.
               </li>
             </ul>
             <p>

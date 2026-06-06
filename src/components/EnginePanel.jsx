@@ -82,8 +82,8 @@ export default function EnginePanel({
               if (e.key === "Enter" && !disabled) onConnectLocal(pathInput);
             }}
           />
-          <div className="btn-group" style={{ marginTop: 8 }}>
-            {desktop && (
+          {desktop && (
+            <div className="btn-group" style={{ marginTop: 8 }}>
               <button
                 className="btn btn-secondary"
                 onClick={handleBrowse}
@@ -92,20 +92,8 @@ export default function EnginePanel({
               >
                 Browse…
               </button>
-            )}
-            <button
-              className="btn btn-secondary"
-              onClick={() => onConnectLocal(pathInput)}
-              disabled={disabled || !pathInput.trim()}
-              title={
-                desktop
-                  ? "Start the selected engine and connect to it"
-                  : "Launch your engine through the local bridge and connect to it"
-              }
-            >
-              {connecting ? "Connecting…" : "Connect"}
-            </button>
-          </div>
+            </div>
+          )}
 
           {desktop ? (
             <p className="muted" style={{ marginTop: 8 }}>
@@ -119,11 +107,17 @@ export default function EnginePanel({
               First, start the bridge helper: open a terminal in this project and
               run <code>npm run bridge</code> (or run{" "}
               <code>npm run dev:full</code> to start the app and the bridge
-              together). Then paste the full path to your engine above and click
-              Connect. Everything stays on your computer.
+              together). Then paste the full path to your engine above and press{" "}
+              <em>Enter</em> — it connects automatically. Everything stays on
+              your computer.
             </p>
           )}
 
+          {connecting && (
+            <p className="muted" style={{ marginTop: 4 }}>
+              Connecting…
+            </p>
+          )}
           {status === "ready" && (
             <p className="muted" style={{ marginTop: 4, color: "#2e7d32" }}>
               Connected{name ? ` to ${name}` : ""}.
