@@ -159,7 +159,10 @@ with chess databases such as ChessBase) or **JSON** for programmatic processing.
   installed app checks the project's public GitHub Releases for a newer published
   version and updates itself. Publishing a build needs a GitHub token (classic,
   `repo` scope) in the `GH_TOKEN` environment variable; `update.bat` prompts for
-  it once and remembers it.
+  it, remembers it (`setx`), and before each build verifies the token can
+  actually publish — if it lacks the `repo` permission the script stops with a
+  plain-language message and offers to replace the saved token. Every run is also
+  saved to `C:\Apps\chesstree-update-log.txt`.
 - **cross-env** (dev): sets env vars cross-platform for `npm run electron:dev`.
 - **A native UCI engine (optional, user-supplied)**: any Stockfish/UCI executable
   the user has on their own machine, launched by the bridge (browser) or the
