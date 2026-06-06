@@ -14,16 +14,25 @@ REM  It always works in C:\Apps\ChessTree, no matter where this
 REM  .bat file itself is sitting.
 REM ============================================================
 
+REM If this is the elevated relaunch, go straight to work (prevents any loop)
+if "%~1"=="elevated" goto :run
+
+REM --- Make sure we're running as Administrator (needed so the build can ---
+REM --- create symlinks). 'net session' alone is unreliable because it    ---
+REM --- needs the Server service, so we fall back to a second check.       ---
+net session >nul 2>&1
+if not errorlevel 1 goto :run
+fsutil dirty query %systemdrive% >nul 2>&1
+if not errorlevel 1 goto :run
+
+REM Not admin yet - relaunch elevated, passing a marker so this can never loop
+echo Requesting administrator access...
+powershell -NoProfile -Command "Start-Process -FilePath '%~f0' -ArgumentList 'elevated' -Verb RunAs"
+exit /b
+
+:run
 set "REPO=https://github.com/bvdahl/ChessTree"
 set "APPDIR=C:\Apps\ChessTree"
-
-REM --- Re-launch as Administrator (needed so the build can create symlinks) ---
-net session >nul 2>&1
-if %errorlevel% neq 0 (
-  echo Requesting administrator access...
-  powershell -Command "Start-Process -FilePath '%~f0' -Verb RunAs"
-  exit /b
-)
 
 echo.
 echo ============================================
