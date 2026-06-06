@@ -158,7 +158,7 @@ export class UciEngine {
   // Analyze a FEN. Returns up to multiPv entries:
   //   { multipv, scoreType: 'cp'|'mate', scoreValue, uci, pv: string[], depth }
   // scoreValue is RELATIVE to the side to move (raw engine value).
-  analyze(fen, { multiPv = 3, moveTimeMs = 2000 } = {}, signal) {
+  analyze(fen, { multiPv = 3, moveTimeMs = 2000, onInfo = null } = {}, signal) {
     return new Promise((resolve, reject) => {
       if (!this.ready) {
         reject(new Error("Engine not ready"));
@@ -200,6 +200,16 @@ export class UciEngine {
           const parsed = parseInfoLine(line);
           if (parsed && parsed.uci) {
             results.set(parsed.multipv, parsed);
+            if (onInfo) {
+              const snapshot = [...results.values()].sort(
+                (a, b) => a.multipv - b.multipv
+              );
+              try {
+                onInfo(snapshot);
+              } catch (e) {
+                /* never let a UI callback break analysis */
+              }
+            }
           }
         } else if (line.startsWith("bestmove")) {
           finish();

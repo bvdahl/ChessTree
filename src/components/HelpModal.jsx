@@ -57,6 +57,7 @@ export default function HelpModal({ open, onClose }) {
             <a href="#help-engine">Choosing your engine</a>
             <a href="#help-settings">Analysis settings</a>
             <a href="#help-board">The board &amp; navigation</a>
+            <a href="#help-live">Watching the engine think</a>
             <a href="#help-tree">The variation tree</a>
             <a href="#help-evals">How evaluations are shown</a>
             <a href="#help-export">Saving your results</a>
@@ -258,8 +259,10 @@ export default function HelpModal({ open, onClose }) {
           <section id="help-board">
             <h3>The board &amp; navigation</h3>
             <p>
-              The board in the middle always shows the position for whatever move
-              you’ve selected. Below it:
+              When you’re not running an analysis, the board in the middle shows
+              the position for whatever move you’ve selected (and, while an
+              analysis is running, it follows the engine live — see{" "}
+              <em>Watching the engine think</em> below). Below it:
             </p>
             <ul className="help-defs">
               <li>
@@ -275,6 +278,44 @@ export default function HelpModal({ open, onClose }) {
               Under the buttons you’ll see the selected move’s name and the FEN
               code for that exact position, which you can copy if you need it
               elsewhere.
+            </p>
+          </section>
+
+          <section id="help-live">
+            <h3>Watching the engine think</h3>
+            <p>
+              While an analysis is running you don’t have to wait in the dark. The
+              board <strong>follows along live</strong>, jumping to whichever
+              position the engine is working on right now, with the moves that
+              led there shown just beneath it.
+            </p>
+            <p>
+              A <strong>live feedback panel</strong> appears under the board and
+              updates many times a second as the engine thinks. It shows:
+            </p>
+            <ul className="help-defs">
+              <li>
+                <strong>Evaluation:</strong> the current score for the position
+                being searched, from White’s point of view (see{" "}
+                <em>How evaluations are shown</em>).
+              </li>
+              <li>
+                <strong>Best line:</strong> the sequence of moves the engine
+                currently thinks is best from this position.
+              </li>
+              <li>
+                <strong>Depth:</strong> how many moves ahead the engine has looked
+                so far — it climbs higher the longer it searches.
+              </li>
+              <li>
+                <strong>Candidate moves:</strong> the top moves the engine is
+                comparing for this position, each with its own evaluation.
+              </li>
+            </ul>
+            <p>
+              When the analysis finishes — or you press <em>Stop Analysis</em> —
+              this panel goes away and the board returns to normal: the move
+              you’ve selected, or your input position.
             </p>
           </section>
 

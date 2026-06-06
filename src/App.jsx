@@ -204,11 +204,17 @@ export default function App() {
   }, [boardMoves]);
 
   const boardInteractive = mode === "board" && !running && !selectedNode;
-  const boardFen = selectedNode
-    ? selectedNode.fen
-    : mode === "board"
-    ? boardSetupFen
-    : fenText || START_FEN;
+  // While analysing, the board follows the position the engine is working on.
+  const liveFen = running && progress && progress.currentFen
+    ? progress.currentFen
+    : null;
+  const boardFen =
+    liveFen ||
+    (selectedNode
+      ? selectedNode.fen
+      : mode === "board"
+      ? boardSetupFen
+      : fenText || START_FEN);
 
   function handlePieceDrop(from, to) {
     if (!boardInteractive) return false;
@@ -506,12 +512,57 @@ export default function App() {
           </div>
           <div className="board-meta">
             <strong style={{ fontSize: 13 }}>
-              {selectedNode && selectedNode.move
+              {liveFen
+                ? "Analyzing this position"
+                : selectedNode && selectedNode.move
                 ? `Move: ${selectedNode.move.san}`
                 : "Starting position"}
             </strong>
+            {liveFen && progress && progress.line && (
+              <div className="board-line">{progress.line}</div>
+            )}
             <div className="fen">{boardFen}</div>
           </div>
+
+          {running && progress && progress.live && (
+            <div
+              className="live-panel"
+              title="Live feedback from the engine while it searches this position"
+            >
+              <div className="live-head">
+                <span className="live-title">Engine thinking…</span>
+                <span className="live-depth">
+                  depth {progress.live.depth}
+                </span>
+              </div>
+              <div className="live-row">
+                <span className="live-label">Evaluation</span>
+                <span className="live-eval">{progress.live.eval}</span>
+              </div>
+              {progress.live.bestLine && (
+                <div className="live-row live-row-col">
+                  <span className="live-label">Best line</span>
+                  <span className="live-bestline">
+                    {progress.live.bestLine}
+                  </span>
+                </div>
+              )}
+              {progress.live.candidates &&
+                progress.live.candidates.length > 0 && (
+                  <div className="live-row live-row-col">
+                    <span className="live-label">Candidate moves</span>
+                    <ul className="live-cands">
+                      {progress.live.candidates.map((c, i) => (
+                        <li key={i}>
+                          <span className="live-cand-move">{c.san}</span>
+                          <span className="live-cand-eval">{c.eval}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+            </div>
+          )}
         </div>
 
         <VariationTree

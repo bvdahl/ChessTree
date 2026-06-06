@@ -3,7 +3,7 @@
 // game position (the leaf) and expands outward depth by depth.
 
 import { Chess } from "chess.js";
-import { normalizeEval, filterMoves } from "./evaluation.js";
+import { normalizeEval, filterMoves, formatEvalDisplay } from "./evaluation.js";
 
 let nodeCounter = 0;
 function nextId() {
@@ -37,6 +37,44 @@ function formatLine(startFen, sans) {
     whiteToMove = !whiteToMove;
   }
   return out.join(" ");
+}
+
+// Convert the first few plies of a UCI principal variation into readable SAN.
+function uciLineToSan(fen, pvUci, maxPlies = 12) {
+  const chess = new Chess(fen);
+  const sans = [];
+  for (let i = 0; i < pvUci.length && i < maxPlies; i++) {
+    let mv;
+    try {
+      mv = chess.move(uciToMoveObj(pvUci[i]));
+    } catch (e) {
+      break;
+    }
+    if (!mv) break;
+    sans.push(mv.san);
+  }
+  return sans;
+}
+
+// Turn a snapshot of raw engine info lines into the live feedback the board
+// panel shows while a position is being searched: current eval, the best line,
+// the search depth, and the competing candidate moves (all White's-perspective).
+function buildLiveInfo(fen, parsedList, whiteToMove) {
+  if (!parsedList || !parsedList.length) return null;
+  const normalized = parsedList.map((p) => normalizeEval(p, whiteToMove));
+  const best = normalized[0];
+  const bestPv = parsedList[0].pv || [];
+  const bestSans = uciLineToSan(fen, bestPv);
+  const candidates = normalized.map((n) => {
+    const sans = uciLineToSan(fen, n.pv || [], 1);
+    return { san: sans[0] || n.uci || "", eval: formatEvalDisplay(n) };
+  });
+  return {
+    depth: parsedList[0].depth || 0,
+    eval: formatEvalDisplay(best),
+    bestLine: bestSans.length ? formatLine(fen, bestSans) : "",
+    candidates,
+  };
 }
 
 // Build the root + game-move chain. Returns { root, leaf, leafLine }.
@@ -99,6 +137,9 @@ export async function generateTree(engine, params, onProgress, signal) {
   // BFS queue of position nodes to expand. Start from the leaf.
   const queue = [{ node: leaf, depth: 0, line: leafLine.slice() }];
   let analyzed = 0;
+  // Last live snapshot from the engine; kept so the board panel persists its
+  // feedback while one position finishes and the next one starts.
+  let lastLive = null;
 
   while (queue.length) {
     if (signal && signal.aborted) break;
@@ -123,11 +164,43 @@ export async function generateTree(engine, params, onProgress, signal) {
     }
     if (chess.isGameOver() || chess.moves().length === 0) continue;
 
+    const currentLine = line.length
+      ? formatLine(startFen, line)
+      : "(start position)";
+
+    // Announce the position we're about to work on so the board can follow along.
+    if (onProgress) {
+      onProgress({
+        analyzed,
+        queued: queue.length,
+        depth,
+        line: currentLine,
+        currentFen: node.fen,
+        live: lastLive,
+      });
+    }
+
     let parsedMoves;
     try {
       parsedMoves = await engine.analyze(
         node.fen,
-        { multiPv: movesToAnalyze, moveTimeMs: settings.moveTimeMs },
+        {
+          multiPv: movesToAnalyze,
+          moveTimeMs: settings.moveTimeMs,
+          onInfo: onProgress
+            ? (snapshot) => {
+                lastLive = buildLiveInfo(node.fen, snapshot, whiteToMove);
+                onProgress({
+                  analyzed,
+                  queued: queue.length,
+                  depth,
+                  line: currentLine,
+                  currentFen: node.fen,
+                  live: lastLive,
+                });
+              }
+            : null,
+        },
         signal
       );
     } catch (e) {
@@ -174,7 +247,9 @@ export async function generateTree(engine, params, onProgress, signal) {
         analyzed,
         queued: queue.length,
         depth,
-        line: line.length ? formatLine(startFen, line) : "(start position)",
+        line: currentLine,
+        currentFen: node.fen,
+        live: lastLive,
       });
     }
   }
