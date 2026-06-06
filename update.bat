@@ -4,7 +4,8 @@ setlocal enabledelayedexpansion
 REM ============================================================
 REM  Chess Tree Analyzer - one-click update & build
 REM ------------------------------------------------------------
-REM  Double-click this file. It will:
+REM  Double-click this file (from ANY folder - even from inside
+REM  C:\Apps\ChessTree). It will:
 REM    1) ask for administrator access (click "Yes" once),
 REM    2) download or update the project in C:\Apps\ChessTree,
 REM    3) install everything it needs,
@@ -15,16 +16,16 @@ REM  window STAYS OPEN no matter what happens. You will always be
 REM  able to read any error message instead of it flashing closed.
 REM ============================================================
 
-REM If this is our elevated, stay-open window, go straight to work.
-if "%~1"=="elevated" goto :run
+REM "go" means: we are already in the elevated, stay-open window.
+if "%~1"=="go" goto :run
 
 REM First launch: relaunch as Administrator in a window that stays open.
 REM A tiny VBScript is used so the file path and the "/k" flag are passed
-REM through reliably (this is the part that kept failing before).
+REM through reliably.
 echo Requesting administrator access (please click "Yes") ...
 set "VBS=%temp%\chesstree_elevate.vbs"
 echo Set UAC = CreateObject^("Shell.Application"^) > "%VBS%"
-echo UAC.ShellExecute "cmd.exe", "/k ""%~f0"" elevated", "", "runas", 1 >> "%VBS%"
+echo UAC.ShellExecute "cmd.exe", "/k ""%~f0"" go", "", "runas", 1 >> "%VBS%"
 cscript //nologo "%VBS%"
 del "%VBS%" >nul 2>&1
 exit /b
@@ -32,6 +33,16 @@ exit /b
 :run
 set "REPO=https://github.com/bvdahl/ChessTree"
 set "APPDIR=C:\Apps\ChessTree"
+
+REM If we are running from INSIDE the folder we manage, continue from a temp
+REM copy of ourselves. That way we can freely clear/re-create the folder
+REM (and overwrite this very script) without breaking the running batch.
+if /i "%~dp0"=="%APPDIR%\" (
+  echo Preparing ...
+  copy /y "%~f0" "%temp%\chesstree_update.bat" >nul
+  "%temp%\chesstree_update.bat" go
+  exit /b
+)
 
 echo.
 echo ============================================
@@ -59,14 +70,20 @@ if not exist "C:\Apps" mkdir "C:\Apps"
 if exist "%APPDIR%\.git" (
   echo Updating existing copy in %APPDIR% ...
   cd /d "%APPDIR%"
-  git pull
+  git fetch origin
+  if errorlevel 1 ( echo. & echo ERROR: could not download the latest code. & goto :end )
+  git reset --hard origin/main
+  if errorlevel 1 ( echo. & echo ERROR: could not update the files. & goto :end )
 ) else (
+  if exist "%APPDIR%" (
+    echo Folder %APPDIR% already exists but is not a project copy - clearing it ...
+    rmdir /s /q "%APPDIR%"
+  )
   echo Downloading a fresh copy to %APPDIR% ...
   git clone "%REPO%" "%APPDIR%"
   if errorlevel 1 ( echo. & echo ERROR: download ^(git clone^) failed. & goto :end )
   cd /d "%APPDIR%"
 )
-if errorlevel 1 ( echo. & echo ERROR: getting the code failed. & goto :end )
 
 REM --- Install dependencies ---
 REM The shared lock file points at Replit's private servers, so remove it and
