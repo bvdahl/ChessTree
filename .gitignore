@@ -8,6 +8,7 @@ release
 # Replit / workspace-only files (kept out of the published repo)
 .replit
 replit.md
+scripts/post-merge.sh
 .config
 .upm
 .cache
