@@ -419,13 +419,13 @@ textarea {
   margin: 0;
 }
 
-/* Label + editable value on top, slider full-width below. Keeps the controls
-   from overflowing the narrow settings column. */
+/* Label on the left, editable value box on the right. A single text box per
+   setting — no slider — so values are unlimited and nothing overflows the
+   narrow settings column. */
 .field-top {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 6px;
   min-width: 0;
 }
 
@@ -442,7 +442,7 @@ textarea {
 }
 
 .num-edit {
-  width: 56px;
+  width: 68px;
   background: var(--bg-input);
   border: 1px solid var(--border);
   border-radius: 6px;
@@ -464,17 +464,7 @@ textarea {
 .num-suffix {
   font-size: 11px;
   color: var(--text-dim);
-  min-width: 18px;
-}
-
-.num-slider {
-  width: 100%;
-  min-width: 0;
-  accent-color: var(--accent);
-}
-.num-slider:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
+  min-width: 16px;
 }
 
 .btn {
@@ -858,6 +848,19 @@ textarea {
   background: rgba(63, 185, 80, 0.16);
   outline: 1px solid rgba(63, 185, 80, 0.35);
   color: var(--text);
+}
+/* The move whose position is being analysed right now: a gently pulsing amber
+   highlight so you can see where the engine is working in the live tree. */
+.vt-move.analyzing {
+  background: rgba(227, 179, 65, 0.22);
+  outline: 1px solid rgba(227, 179, 65, 0.55);
+  color: var(--text);
+  animation: vt-analyzing 1.1s ease-in-out infinite;
+}
+@keyframes vt-analyzing {
+  50% {
+    background: rgba(227, 179, 65, 0.42);
+  }
 }
 /* Main line: emphasised and brighter. */
 .vt-move.main {

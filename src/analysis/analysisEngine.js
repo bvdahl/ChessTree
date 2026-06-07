@@ -176,6 +176,9 @@ export async function generateTree(engine, params, onProgress, signal) {
         depth,
         line: currentLine,
         currentFen: node.fen,
+        currentId: node.id,
+        currentMoveUci: node.move ? node.move.uci : null,
+        root,
         live: lastLive,
       });
     }
@@ -196,6 +199,9 @@ export async function generateTree(engine, params, onProgress, signal) {
                   depth,
                   line: currentLine,
                   currentFen: node.fen,
+                  currentId: node.id,
+                  currentMoveUci: node.move ? node.move.uci : null,
+                  root,
                   live: lastLive,
                 });
               }
@@ -255,6 +261,9 @@ export async function generateTree(engine, params, onProgress, signal) {
         depth,
         line: currentLine,
         currentFen: node.fen,
+        currentId: node.id,
+        currentMoveUci: node.move ? node.move.uci : null,
+        root,
         live: lastLive,
       });
     }
@@ -271,6 +280,9 @@ export async function generateTree(engine, params, onProgress, signal) {
       depth: 0,
       line: "",
       currentFen: null,
+      currentId: null,
+      currentMoveUci: null,
+      root,
       live: lastLive,
       done: true,
     });

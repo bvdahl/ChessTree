@@ -21,7 +21,7 @@ function numberPrefix(node, forceNumber) {
   return forceNumber ? `${num}...` : "";
 }
 
-export default function VariationTree({ root, selectedId, onSelect }) {
+export default function VariationTree({ root, selectedId, analyzingId, onSelect }) {
   // Ids of variations the user has folded away.
   const [collapsed, setCollapsed] = useState(() => new Set());
   const hasContent = root && root.children.length > 0;
@@ -49,7 +49,8 @@ export default function VariationTree({ root, selectedId, onSelect }) {
       "vt-move" +
       (isMain ? " main" : "") +
       (node.isGameMove ? " game" : "") +
-      (node.id === selectedId ? " selected" : "");
+      (node.id === selectedId ? " selected" : "") +
+      (node.id === analyzingId ? " analyzing" : "");
     return (
       <span
         key={node.id}
@@ -164,7 +165,9 @@ export default function VariationTree({ root, selectedId, onSelect }) {
         <div className="vt-line vt-mainline">
           <span
             className={
-              "vt-move vt-start" + (root.id === selectedId ? " selected" : "")
+              "vt-move vt-start" +
+              (root.id === selectedId ? " selected" : "") +
+              (root.id === analyzingId ? " analyzing" : "")
             }
             onClick={() => onSelect(root)}
             title="The starting position — click to view it on the board"

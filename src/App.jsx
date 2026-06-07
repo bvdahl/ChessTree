@@ -39,6 +39,25 @@ function buildParentMap(root) {
   return map;
 }
 
+// Where tree generation began: walk the game-move chain to the final game move
+// (or the root itself when there were no game moves).
+function findAnalysisStart(root) {
+  if (!root) return null;
+  let n = root;
+  while (true) {
+    const gm = n.children.find((c) => c.isGameMove);
+    if (!gm) break;
+    n = gm;
+  }
+  return n;
+}
+
+// The two squares of a move (from its UCI string) so the board can highlight it.
+function uciSquares(uci) {
+  if (!uci || uci.length < 4) return null;
+  return { from: uci.slice(0, 2), to: uci.slice(2, 4) };
+}
+
 // Turn a raw engine/handshake error into plain language for the user.
 function friendlyEngineError(err, source) {
   const msg = (err && err.message) || String(err);
@@ -296,6 +315,10 @@ export default function App() {
     const controller = new AbortController();
     abortRef.current = controller;
 
+    // Track the most recent tree built so far, so that however the run ends
+    // (finished, stopped, or errored mid-way) we can land on its Tree-start.
+    let latestRoot = null;
+
     try {
       await engineRef.current.newGame();
       await engineRef.current.configure({
@@ -305,16 +328,28 @@ export default function App() {
       const root = await generateTree(
         engineRef.current,
         { ...params, settings },
-        (p) => setProgress({ ...p }),
+        (p) => {
+          setProgress({ ...p });
+          // Show the tree growing live as nodes are discovered. The root object
+          // is mutated in place during the run, so re-renders are driven by the
+          // progress updates above; setting it here just wires up the prop.
+          if (p.root) {
+            latestRoot = p.root;
+            setTree(p.root);
+          }
+        },
         controller.signal
       );
+      latestRoot = root;
       setTree(root);
-      selectNode(root, false);
     } catch (e) {
       setError("Analysis failed: " + (e.message || String(e)));
     } finally {
       setRunning(false);
       abortRef.current = null;
+      // However the run ended, land on the Tree-start position (the end of the
+      // loaded game, where generation began) rather than the opening position.
+      if (latestRoot) selectNode(findAnalysisStart(latestRoot), false);
     }
   }
 
@@ -325,16 +360,7 @@ export default function App() {
 
   // Where tree generation began: the end of the loaded game line (the last
   // game move), or the root itself when there were no game moves.
-  const analysisStartNode = useMemo(() => {
-    if (!tree) return null;
-    let n = tree;
-    while (true) {
-      const gm = n.children.find((c) => c.isGameMove);
-      if (!gm) break;
-      n = gm;
-    }
-    return n;
-  }, [tree]);
+  const analysisStartNode = useMemo(() => findAnalysisStart(tree), [tree]);
 
   // Single place to change the viewed position, recording whether the board
   // should animate the transition.
@@ -376,6 +402,15 @@ export default function App() {
     : boardAnim
     ? 300
     : 0;
+
+  // Highlight the two squares of the last move played into the shown position:
+  // while analysing, the move leading into the position under analysis; when
+  // viewing a move in the tree, that move.
+  const boardHighlight = liveFen
+    ? uciSquares(progress && progress.currentMoveUci)
+    : selectedNode && selectedNode.move
+    ? uciSquares(selectedNode.move.uci)
+    : null;
 
   const analyzedCount = tree ? countAnalyzedNodes(tree) : 0;
   const maxProgress = progress
@@ -551,6 +586,7 @@ export default function App() {
               draggable={boardInteractive}
               onPieceDrop={handlePieceDrop}
               animationMs={boardAnimMs}
+              highlight={boardHighlight}
             />
           </div>
           <div className="board-nav-wrap">
@@ -652,6 +688,7 @@ export default function App() {
         <VariationTree
           root={tree}
           selectedId={selectedNode ? selectedNode.id : null}
+          analyzingId={running && progress ? progress.currentId : null}
           onSelect={(n) => selectNode(n, false)}
         />
       </div>

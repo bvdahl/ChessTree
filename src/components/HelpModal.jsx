@@ -210,10 +210,11 @@ export default function HelpModal({ open, onClose }) {
             <p>
               These controls set how wide and how deep the tree gets, and how
               hard the engine works. Bigger numbers usually mean a more thorough
-              analysis but a longer wait. Each setting has a slider for quick
-              changes and a box where you can <strong>type an exact value</strong>
-              {" "}— including a number larger than the slider’s range, up to a
-              safe limit — when you need to go further.
+              analysis but a longer wait. Each setting is a{" "}
+              <strong>box you type a value into</strong> — there’s no upper limit,
+              so you can go as high as you like (just remember that bigger numbers
+              take longer). Engine hash and threads are the exception: those are
+              capped at what your engine and computer can actually use.
             </p>
             <ul className="help-defs">
               <li>
@@ -225,9 +226,8 @@ export default function HelpModal({ open, onClose }) {
               <li>
                 <strong>Time per position:</strong> how long the engine thinks
                 about each position, in <strong>seconds</strong>. More time =
-                stronger, more reliable moves, but slower overall. Type a larger
-                value in the box if you want the engine to think longer than the
-                slider allows.
+                stronger, more reliable moves, but slower overall. Type any value
+                (at least a tenth of a second).
               </li>
               <li>
                 <strong>White moves / Black moves:</strong> how many candidate
@@ -248,7 +248,7 @@ export default function HelpModal({ open, onClose }) {
                 may use to remember positions it has already worked out. More can
                 help on big analyses; the default is fine for most uses. The
                 built-in browser engine is limited to a modest amount; if you
-                connect your own engine, the slider opens up to what your computer
+                connect your own engine, you can raise it to what your computer
                 can spare.
               </li>
               <li>
@@ -297,6 +297,13 @@ export default function HelpModal({ open, onClose }) {
               changes don’t feel disorienting.
             </p>
             <p>
+              The two squares of the move that led to the position you’re looking
+              at are gently <strong>tinted</strong>, so you can always see what
+              just moved. When an analysis finishes, the board lands on the{" "}
+              <strong>Tree start</strong> position automatically, ready for you to
+              explore.
+            </p>
+            <p>
               Under the buttons you’ll see the selected move’s name and the FEN
               code for that exact position, which you can copy if you need it
               elsewhere.
@@ -308,8 +315,11 @@ export default function HelpModal({ open, onClose }) {
             <p>
               While an analysis is running you don’t have to wait in the dark. The
               board <strong>follows along live</strong>, jumping to whichever
-              position the engine is working on right now, with the moves that
-              led there shown just beneath it.
+              position the engine is working on right now (with the last move’s
+              squares tinted), and the moves that led there shown just beneath it.
+              At the same time the <strong>variation tree on the right fills in
+              live</strong> as new moves are found, and the move whose position is
+              being worked on is highlighted in amber.
             </p>
             <p>
               A <strong>live feedback panel</strong> appears under the board and
@@ -336,8 +346,9 @@ export default function HelpModal({ open, onClose }) {
             </ul>
             <p>
               When the analysis finishes — or you press <em>Stop Analysis</em> —
-              this panel goes away and the board returns to normal: the move
-              you’ve selected, or your input position.
+              this panel goes away and the board jumps to the{" "}
+              <strong>Tree start</strong> position (where generation began),
+              ready for you to explore the lines that were found.
             </p>
           </section>
 
@@ -350,7 +361,9 @@ export default function HelpModal({ open, onClose }) {
               <strong>indented line</strong> below, so branches are easy to read
               and follow. <strong>Click any move to jump straight to that
               position on the board.</strong> The move you’re currently viewing
-              is highlighted.
+              is highlighted. While an analysis is running, the tree fills in live
+              and the move whose position is being worked on is highlighted in
+              amber.
             </p>
             <ul className="help-defs">
               <li>
