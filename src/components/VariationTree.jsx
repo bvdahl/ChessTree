@@ -1,14 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { formatEvalDisplay } from "../analysis/evaluation.js";
 
-// Bracket pairs cycle by nesting depth, the way ChessBase shows nested
-// variations: ( ) for the first level, [ ] for the next, { } deeper still.
-const BRACKETS = [
-  ["(", ")"],
-  ["[", "]"],
-  ["{", "}"],
-];
-
 function evalClass(ev) {
   if (!ev) return "vt-eval-neutral";
   if (ev.isMate) return "vt-eval-mate";
@@ -81,73 +73,109 @@ export default function VariationTree({ root, selectedId, onSelect }) {
     );
   }
 
-  // A side-variation: an alternative move `v` plus everything that follows it,
-  // wrapped in brackets and foldable with a small +/- toggle.
-  function renderVariation(v, depthLevel) {
-    const [open, close] = BRACKETS[depthLevel % BRACKETS.length];
-    const isCollapsed = collapsed.has(v.id);
-
-    const inner = [moveToken(v, true, false)];
-    if (!isCollapsed) {
-      // Mirror output.js buildLine(v): the continuation starts with the number
-      // forced, so the on-screen notation matches the exported PGN exactly.
-      const cont = renderContinuation(v, depthLevel + 1, true, false);
-      if (cont.length) {
-        inner.push(" ");
-        inner.push(...cont);
-      }
-    }
-
-    return (
-      <span
-        key={"var-" + v.id}
-        className="vt-var"
-        data-depth={depthLevel % BRACKETS.length}
-      >
-        <button
-          className="vt-toggle"
-          onClick={(e) => {
-            e.stopPropagation();
-            toggle(v.id);
-          }}
-          title={isCollapsed ? "Show this variation" : "Hide this variation"}
-          aria-label={isCollapsed ? "Show this variation" : "Hide this variation"}
-        >
-          {isCollapsed ? "+" : "\u2212"}
-        </button>
-        <span className="vt-bracket">{open}</span>
-        {isCollapsed ? <span className="vt-ellipsis">…</span> : inner}
-        <span className="vt-bracket">{close}</span>
-      </span>
-    );
-  }
-
-  // Walk a position's line: its main continuation (first child chain) plus the
-  // alternative moves at each step, rendered as nested variations.
-  function renderContinuation(node, depthLevel, forceNumberFirst, isMain) {
-    const out = [];
-    let cur = node;
+  // Walk a chain from `start`, collecting the main line as inline tokens and the
+  // alternatives at each step as nested, indented variation blocks. `includeSelf`
+  // is true for a side-variation (we render its own first move) and false for the
+  // root spine (which has no move of its own).
+  function buildChain(start, includeSelf, forceNumberFirst, isMain) {
+    const inline = [];
+    const subBlocks = [];
+    let cur = start;
     let forceNumber = forceNumberFirst;
+
+    if (includeSelf) {
+      inline.push(moveToken(start, true, isMain));
+      forceNumber = false;
+    }
 
     while (cur.children.length) {
       const main = cur.children[0];
-      const variations = cur.children.slice(1);
+      const alts = cur.children.slice(1);
 
-      if (out.length) out.push(" ");
-      out.push(moveToken(main, forceNumber, isMain));
+      if (inline.length) inline.push(" ");
+      inline.push(moveToken(main, forceNumber, isMain));
 
-      for (const v of variations) {
-        out.push(" ");
-        out.push(renderVariation(v, depthLevel));
+      for (const alt of alts) {
+        subBlocks.push(renderVariationBlock(alt));
       }
 
       // After a branch interrupts the flow, the next black move needs its
       // number repeated.
-      forceNumber = variations.length > 0;
+      forceNumber = alts.length > 0;
       cur = main;
     }
 
-    return out;
+    return { inline, subBlocks };
+  }
+
+  // An alternative move plus everything that follows it, rendered on its own
+  // indented line. Deeper alternatives nest further via the DOM, foldable with a
+  // small +/- toggle.
+  function renderVariationBlock(v) {
+    const isCollapsed = collapsed.has(v.id);
+    const hasMore = v.children.length > 0;
+
+    let inline;
+    let subBlocks = [];
+    if (isCollapsed) {
+      inline = [moveToken(v, true, false)];
+    } else {
+      const built = buildChain(v, true, false, false);
+      inline = built.inline;
+      subBlocks = built.subBlocks;
+    }
+
+    return (
+      <div className="vt-block" key={"var-" + v.id}>
+        <div className="vt-line vt-varline">
+          {hasMore ? (
+            <button
+              className="vt-toggle"
+              onClick={(e) => {
+                e.stopPropagation();
+                toggle(v.id);
+              }}
+              title={isCollapsed ? "Show this line" : "Hide this line"}
+              aria-label={isCollapsed ? "Show this line" : "Hide this line"}
+            >
+              {isCollapsed ? "+" : "\u2212"}
+            </button>
+          ) : (
+            <span className="vt-toggle-spacer" />
+          )}
+          <span className="vt-branch" aria-hidden="true">
+            ↳
+          </span>
+          {inline}
+          {isCollapsed && hasMore ? (
+            <span className="vt-ellipsis">…</span>
+          ) : null}
+        </div>
+        {subBlocks.length ? <div className="vt-subs">{subBlocks}</div> : null}
+      </div>
+    );
+  }
+
+  let mainLine = null;
+  if (hasContent) {
+    const { inline, subBlocks } = buildChain(root, false, true, true);
+    mainLine = (
+      <div className="vt-tree">
+        <div className="vt-line vt-mainline">
+          <span
+            className={
+              "vt-move vt-start" + (root.id === selectedId ? " selected" : "")
+            }
+            onClick={() => onSelect(root)}
+            title="The starting position — click to view it on the board"
+          >
+            Start
+          </span>{" "}
+          {inline}
+        </div>
+        {subBlocks.length ? <div className="vt-subs">{subBlocks}</div> : null}
+      </div>
+    );
   }
 
   return (
@@ -162,23 +190,12 @@ export default function VariationTree({ root, selectedId, onSelect }) {
             variation tree.
           </div>
         ) : (
-          <div className="vt-flow">
-            <span
-              className={
-                "vt-move vt-start" + (root.id === selectedId ? " selected" : "")
-              }
-              onClick={() => onSelect(root)}
-              title="The starting position — click to view it on the board"
-            >
-              Start
-            </span>{" "}
-            {renderContinuation(root, 0, true, true)}
-          </div>
+          mainLine
         )}
       </div>
       <div className="footer-note">
-        Bold = main line · Blue = game moves · ( ) variations · +/− folds a
-        branch · Click a move to view it
+        Bold = main line · Blue = game moves · Indented ↳ lines = variations ·
+        +/− folds a branch · Click a move to view it
       </div>
     </div>
   );

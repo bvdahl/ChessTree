@@ -235,11 +235,17 @@ export async function generateTree(engine, params, onProgress, signal) {
         children: [],
       };
       node.children.push(childNode);
-      queue.push({
-        node: childNode,
-        depth: depth + 1,
-        line: [...line, mv.san],
-      });
+      // Only queue a child if it could still be expanded. Children that land at
+      // (or past) the depth limit are kept in the tree as leaves but never
+      // analysed, so queuing them would inflate the "still to go" count and
+      // leave a phantom remainder when the analysis is actually finished.
+      if (depth + 1 < settings.maxDepth) {
+        queue.push({
+          node: childNode,
+          depth: depth + 1,
+          line: [...line, mv.san],
+        });
+      }
     }
 
     if (onProgress) {
@@ -252,6 +258,22 @@ export async function generateTree(engine, params, onProgress, signal) {
         live: lastLive,
       });
     }
+  }
+
+  // Final progress beat. When we finish normally (not aborted) report zero
+  // remaining and mark the run done so the UI never shows a leftover
+  // "still to go" count. Skipped/terminal nodes are dequeued without their own
+  // progress beat, so without this flush the last reported count could linger.
+  if (onProgress && !(signal && signal.aborted)) {
+    onProgress({
+      analyzed,
+      queued: 0,
+      depth: 0,
+      line: "",
+      currentFen: null,
+      live: lastLive,
+      done: true,
+    });
   }
 
   return root;

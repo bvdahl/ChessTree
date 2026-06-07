@@ -208,9 +208,12 @@ export default function HelpModal({ open, onClose }) {
           <section id="help-settings">
             <h3>Analysis settings</h3>
             <p>
-              These sliders control how wide and how deep the tree gets, and how
+              These controls set how wide and how deep the tree gets, and how
               hard the engine works. Bigger numbers usually mean a more thorough
-              analysis but a longer wait.
+              analysis but a longer wait. Each setting has a slider for quick
+              changes and a box where you can <strong>type an exact value</strong>
+              {" "}— including a number larger than the slider’s range, up to a
+              safe limit — when you need to go further.
             </p>
             <ul className="help-defs">
               <li>
@@ -221,8 +224,10 @@ export default function HelpModal({ open, onClose }) {
               </li>
               <li>
                 <strong>Time per position:</strong> how long the engine thinks
-                about each position, in milliseconds (1000 ms = 1 second). More
-                time = stronger, more reliable moves, but slower overall.
+                about each position, in <strong>seconds</strong>. More time =
+                stronger, more reliable moves, but slower overall. Type a larger
+                value in the box if you want the engine to think longer than the
+                slider allows.
               </li>
               <li>
                 <strong>White moves / Black moves:</strong> how many candidate
@@ -267,13 +272,30 @@ export default function HelpModal({ open, onClose }) {
             <ul className="help-defs">
               <li>
                 <strong>Back:</strong> step to the move before the current one
-                (its “parent” in the tree).
+                (its “parent” in the tree). Stepping keeps the gentle piece
+                animation, so you can watch a line play out move by move.
               </li>
               <li>
-                <strong>Forward:</strong> step into the first follow-up move of
-                the current one.
+                <strong>Forward:</strong> step to the next move. If the current
+                position branches into more than one move, a small{" "}
+                <strong>chooser</strong> pops up listing each move with its
+                evaluation — pick the one you want to follow.
+              </li>
+              <li>
+                <strong>⏮ Start:</strong> jump straight to the starting position
+                (the very beginning of the line).
+              </li>
+              <li>
+                <strong>Tree start ⏭:</strong> jump to where the tree began
+                being generated — the end of the game you loaded (or the start
+                position if you didn’t load any game moves).
               </li>
             </ul>
+            <p>
+              Jumps (clicking a move in the tree, <em>Start</em>, or{" "}
+              <em>Tree start</em>) switch instantly with no animation, so big
+              changes don’t feel disorienting.
+            </p>
             <p>
               Under the buttons you’ll see the selected move’s name and the FEN
               code for that exact position, which you can copy if you need it
@@ -322,11 +344,13 @@ export default function HelpModal({ open, onClose }) {
           <section id="help-tree">
             <h3>The variation tree</h3>
             <p>
-              The panel on the right shows every line the analysis found as
-              flowing chess notation, just like ChessBase and other chess
-              software. <strong>Click any move to jump straight to that position
-              on the board.</strong> The move you’re currently viewing is
-              highlighted.
+              The panel on the right shows every line the analysis found as a
+              structured, indented tree. The <strong>main line</strong> runs
+              across the top, and each alternative is pulled out onto its own{" "}
+              <strong>indented line</strong> below, so branches are easy to read
+              and follow. <strong>Click any move to jump straight to that
+              position on the board.</strong> The move you’re currently viewing
+              is highlighted.
             </p>
             <ul className="help-defs">
               <li>
@@ -339,14 +363,14 @@ export default function HelpModal({ open, onClose }) {
               </li>
               <li>
                 <strong>Side-variations</strong> are alternative moves the engine
-                suggested. They appear in brackets right after the move they’re an
-                alternative to — <code>( )</code> for the first level,{" "}
-                <code>[ ]</code> and <code>{"{ }"}</code> for deeper nesting.
+                suggested. Each one sits on its own indented line, marked with a{" "}
+                <code>↳</code> and tucked under the move it’s an alternative to.
+                Deeper alternatives are indented further still.
               </li>
               <li>
-                The small <strong>+ / −</strong> button before a variation folds
-                it away or opens it back up, so you can hide branches you’re not
-                looking at.
+                The small <strong>+ / −</strong> button at the start of a
+                variation folds it away or opens it back up, so you can hide
+                branches you’re not looking at.
               </li>
             </ul>
             <p>

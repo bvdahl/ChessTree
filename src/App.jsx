@@ -11,6 +11,7 @@ import SettingsPanel from "./components/SettingsPanel.jsx";
 import InputPanel from "./components/InputPanel.jsx";
 import EnginePanel from "./components/EnginePanel.jsx";
 import HelpModal from "./components/HelpModal.jsx";
+import ForkDialog from "./components/ForkDialog.jsx";
 
 const START_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
@@ -88,6 +89,13 @@ export default function App() {
   const [progress, setProgress] = useState(null);
   const [error, setError] = useState("");
   const [helpOpen, setHelpOpen] = useState(false);
+  // Board animation: on for stepping through a line (Back/Forward/fork pick),
+  // off for live analysis follow and for direct jumps (tree clicks, Start, Tree
+  // start) where an animated slide would just be confusing.
+  const [boardAnim, setBoardAnim] = useState(false);
+  // Fork chooser: shown when stepping forward from a position that branches.
+  const [forkOpen, setForkOpen] = useState(false);
+  const [forkMoves, setForkMoves] = useState([]);
 
   // Build (or rebuild) the engine for the chosen source and connect to it.
   const startEngine = useCallback(async (source, path = "") => {
@@ -282,6 +290,8 @@ export default function App() {
     setProgress({ analyzed: 0, queued: 0, depth: 0, line: "" });
     setTree(null);
     setSelectedNode(null);
+    setBoardAnim(false);
+    setForkOpen(false);
 
     const controller = new AbortController();
     abortRef.current = controller;
@@ -299,7 +309,7 @@ export default function App() {
         controller.signal
       );
       setTree(root);
-      setSelectedNode(root);
+      selectNode(root, false);
     } catch (e) {
       setError("Analysis failed: " + (e.message || String(e)));
     } finally {
@@ -313,15 +323,59 @@ export default function App() {
     if (engineRef.current) engineRef.current.stop();
   }
 
+  // Where tree generation began: the end of the loaded game line (the last
+  // game move), or the root itself when there were no game moves.
+  const analysisStartNode = useMemo(() => {
+    if (!tree) return null;
+    let n = tree;
+    while (true) {
+      const gm = n.children.find((c) => c.isGameMove);
+      if (!gm) break;
+      n = gm;
+    }
+    return n;
+  }, [tree]);
+
+  // Single place to change the viewed position, recording whether the board
+  // should animate the transition.
+  function selectNode(node, animate = false) {
+    setBoardAnim(animate);
+    setSelectedNode(node);
+  }
+
   function navParent() {
     if (!selectedNode) return;
     const p = parentMap.get(selectedNode.id);
-    if (p) setSelectedNode(p);
+    if (p) selectNode(p, true);
   }
-  function navChild() {
+  function navForward() {
     if (!selectedNode || !selectedNode.children.length) return;
-    setSelectedNode(selectedNode.children[0]);
+    if (selectedNode.children.length === 1) {
+      selectNode(selectedNode.children[0], true);
+    } else {
+      // The position branches — let the user choose which move to follow.
+      setForkMoves(selectedNode.children);
+      setForkOpen(true);
+    }
   }
+  function pickFork(node) {
+    setForkOpen(false);
+    selectNode(node, true);
+  }
+  function goStart() {
+    if (tree) selectNode(tree, false);
+  }
+  function goAnalysisStart() {
+    if (analysisStartNode) selectNode(analysisStartNode, false);
+  }
+
+  const boardAnimMs = liveFen
+    ? 0
+    : boardInteractive
+    ? 300
+    : boardAnim
+    ? 300
+    : 0;
 
   const analyzedCount = tree ? countAnalyzedNodes(tree) : 0;
   const maxProgress = progress
@@ -453,7 +507,13 @@ export default function App() {
                 </div>
                 <div className="progress-text">
                   <span>{progress.analyzed} positions analyzed</span>
-                  <span>{progress.queued} still to go</span>
+                  <span>
+                    {running
+                      ? `${progress.queued} still to go`
+                      : progress.done
+                      ? "Complete"
+                      : "Stopped"}
+                  </span>
                 </div>
               </div>
             )}
@@ -490,25 +550,49 @@ export default function App() {
               fen={boardFen}
               draggable={boardInteractive}
               onPieceDrop={handlePieceDrop}
+              animationMs={boardAnimMs}
             />
           </div>
-          <div className="board-nav">
-            <button
-              className="btn btn-secondary"
-              onClick={navParent}
-              disabled={!selectedNode || !parentMap.get(selectedNode.id)}
-              title="Go to the previous move (the parent of the current move in the tree)"
-            >
-              ← Back
-            </button>
-            <button
-              className="btn btn-secondary"
-              onClick={navChild}
-              disabled={!selectedNode || !selectedNode.children.length}
-              title="Go forward into the first follow-up move of the current move"
-            >
-              Forward →
-            </button>
+          <div className="board-nav-wrap">
+            <div className="board-nav">
+              <button
+                className="btn btn-secondary"
+                onClick={navParent}
+                disabled={!selectedNode || !parentMap.get(selectedNode.id)}
+                title="Go to the previous move (the parent of the current move in the tree)"
+              >
+                ← Back
+              </button>
+              <button
+                className="btn btn-secondary"
+                onClick={navForward}
+                disabled={!selectedNode || !selectedNode.children.length}
+                title="Go forward to the next move. If the position branches, you'll choose which move to follow."
+              >
+                Forward →
+              </button>
+            </div>
+            <div className="board-nav">
+              <button
+                className="btn btn-secondary"
+                onClick={goStart}
+                disabled={!tree || (selectedNode && selectedNode.id === tree.id)}
+                title="Jump to the starting position (the very beginning)"
+              >
+                ⏮ Start
+              </button>
+              <button
+                className="btn btn-secondary"
+                onClick={goAnalysisStart}
+                disabled={
+                  !analysisStartNode ||
+                  (selectedNode && selectedNode.id === analysisStartNode.id)
+                }
+                title="Jump to where the tree started being generated (the end of the game you loaded)"
+              >
+                Tree start ⏭
+              </button>
+            </div>
           </div>
           <div className="board-meta">
             <strong style={{ fontSize: 13 }}>
@@ -568,9 +652,16 @@ export default function App() {
         <VariationTree
           root={tree}
           selectedId={selectedNode ? selectedNode.id : null}
-          onSelect={setSelectedNode}
+          onSelect={(n) => selectNode(n, false)}
         />
       </div>
+
+      <ForkDialog
+        open={forkOpen}
+        moves={forkMoves}
+        onPick={pickFork}
+        onClose={() => setForkOpen(false)}
+      />
     </div>
   );
 }
