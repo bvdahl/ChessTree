@@ -117,7 +117,11 @@ REM let npm rebuild it from the public registry.
 if exist package-lock.json del /f /q package-lock.json
 call :say ""
 call :say "Installing dependencies (a few minutes the first time) ..."
-call :runtee npm install
+REM --no-audit / --no-fund keep routine noise (the "N vulnerabilities" report
+REM and the funding notice) off the screen. They are not actionable here, and
+REM "npm audit fix --force" can break the Electron build, so we never run it.
+REM A real install failure still sets a non-zero exit code and stops below.
+call :runtee npm install --no-audit --no-fund
 if errorlevel 1 ( call :say "ERROR: npm install failed." & goto :end )
 
 REM --- Build the installer AND publish it for auto-update ---
@@ -182,8 +186,18 @@ exit /b
 
 REM ---- :runtee <command...> : run a command, showing its output on screen
 REM      AND appending it to the log, while preserving the real exit code ----
+REM
+REM      The "2>&1" is placed INSIDE the inner "cmd /c '...'" on purpose. Tools
+REM      like git and npm write their normal status lines and warnings to the
+REM      error stream (stderr). If we merged that stream at the PowerShell layer
+REM      instead, PowerShell would paint every such line red and wrap it in a
+REM      scary "NativeCommandError", making a perfectly successful run look like
+REM      it is full of errors. Merging inside cmd turns those lines into plain
+REM      text BEFORE PowerShell sees them, so PowerShell just relays ordinary
+REM      output. The real exit code is still cmd's (git/npm) exit code, so
+REM      genuine failures are still detected via $LASTEXITCODE below.
 :runtee
-powershell -NoProfile -ExecutionPolicy Bypass -Command "& cmd /c '%*' 2>&1 | Tee-Object -FilePath '%LOG%' -Append; exit $LASTEXITCODE"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "& cmd /c '%* 2>&1' | Tee-Object -FilePath '%LOG%' -Append; exit $LASTEXITCODE"
 exit /b
 
 REM ---- :ensure_token : make sure we have a token that can publish.
