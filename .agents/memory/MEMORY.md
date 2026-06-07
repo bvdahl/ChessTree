@@ -1,2 +1,0 @@
-- [Local engine bridge security](engine-bridge-security.md) — localhost WS that spawns native engines MUST verify Origin; localhost binding alone doesn't stop cross-site WS hijacking.
-- [Desktop auto-update](desktop-auto-update.md) — Electron app self-updates via public GitHub Releases; version=commit count (don't force-push main); release must be non-draft.
