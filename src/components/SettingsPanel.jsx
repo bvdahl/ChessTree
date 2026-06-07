@@ -79,6 +79,7 @@ function Field({
 export default function SettingsPanel({
   settings,
   onChange,
+  onReset,
   disabled,
   maxThreads = 1,
   maxHash = 1024,
@@ -94,7 +95,20 @@ export default function SettingsPanel({
 
   return (
     <div className="card" style={{ opacity: disabled ? 0.6 : 1 }}>
-      <h2>Analysis Settings</h2>
+      <div className="settings-head">
+        <h2>Analysis Settings</h2>
+        {onReset && (
+          <button
+            type="button"
+            className="link-btn"
+            onClick={onReset}
+            disabled={disabled}
+            title="Reset all analysis settings back to their original default values"
+          >
+            Reset to defaults
+          </button>
+        )}
+      </div>
 
       <Field
         label="Max depth (half-moves)"

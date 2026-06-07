@@ -216,6 +216,16 @@ export default function HelpModal({ open, onClose }) {
               take longer). Engine hash and threads are the exception: those are
               capped at what your engine and computer can actually use.
             </p>
+            <p>
+              The app <strong>remembers your settings</strong> between visits, so
+              whatever you set here is still there next time you open or refresh
+              the app — no need to re-enter your favourite values. Want to start
+              over? Click <em>Reset to defaults</em> at the top of this card to
+              put every setting back to its original value. (Engine hash and
+              threads are re-checked against your current engine and computer when
+              they’re restored, so a value saved with a more powerful engine is
+              automatically trimmed to what the current one can handle.)
+            </p>
             <ul className="help-defs">
               <li>
                 <strong>Max depth (half-moves):</strong> how many moves deep the

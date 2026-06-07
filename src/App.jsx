@@ -26,6 +26,45 @@ const DEFAULT_SETTINGS = {
   threads: 1,
 };
 
+const SETTINGS_KEY = "analysisSettings";
+
+// Genuine lower bounds for each setting (mirrors the SettingsPanel `min`s). Used
+// when restoring so a corrupt or hand-edited localStorage entry can never leave
+// an invalid value (e.g. threads=0, hashMb=-1) in play.
+const SETTING_MINS = {
+  maxDepth: 1,
+  moveTimeMs: 100,
+  whiteMoves: 1,
+  blackMoves: 1,
+  whiteThreshold: 1,
+  blackThreshold: 1,
+  hashMb: 16,
+  threads: 1,
+};
+
+// Restore the user's saved analysis settings, falling back to the defaults for
+// anything missing or unreadable. Only finite numbers are accepted and each is
+// floored at its real lower bound, so a corrupt or hand-edited entry can never
+// poison the controls. Engine hash/threads are clamped to the engine's real
+// upper caps later, once those caps are actually known.
+function loadSettings() {
+  try {
+    const raw = localStorage.getItem(SETTINGS_KEY);
+    if (!raw) return DEFAULT_SETTINGS;
+    const parsed = JSON.parse(raw);
+    const merged = { ...DEFAULT_SETTINGS };
+    for (const key of Object.keys(DEFAULT_SETTINGS)) {
+      const v = parsed[key];
+      if (typeof v === "number" && Number.isFinite(v)) {
+        merged[key] = Math.max(SETTING_MINS[key] ?? 0, v);
+      }
+    }
+    return merged;
+  } catch (e) {
+    return DEFAULT_SETTINGS;
+  }
+}
+
 function buildParentMap(root) {
   const map = new Map();
   const stack = [root];
@@ -87,6 +126,10 @@ export default function App() {
   const [engineState, setEngineState] = useState("loading"); // loading|ready|error
   const [engineError, setEngineError] = useState("");
   const [engineCaps, setEngineCaps] = useState({ maxThreads: 1, maxHash: 1024 });
+  // True once a connected engine has reported its real hash/thread caps. Until
+  // then engineCaps holds bootstrap placeholders, so we must not clamp restored
+  // settings against them (that would permanently discard valid saved values).
+  const [capsResolved, setCapsResolved] = useState(false);
   const [engineSource, setEngineSource] = useState(
     () => localStorage.getItem("engineSource") || "builtin"
   );
@@ -100,7 +143,7 @@ export default function App() {
   const [fenText, setFenText] = useState(START_FEN);
   const [boardMoves, setBoardMoves] = useState([]);
 
-  const [settings, setSettings] = useState(DEFAULT_SETTINGS);
+  const [settings, setSettings] = useState(loadSettings);
 
   const [tree, setTree] = useState(null);
   const [selectedNode, setSelectedNode] = useState(null);
@@ -175,6 +218,8 @@ export default function App() {
           maxHash: Math.min(reportedHash, 1024),
         });
       }
+      // Real caps are now known — restored hash/threads may be clamped to them.
+      setCapsResolved(true);
     } catch (err) {
       if (engineRef.current !== engine) return;
       setEngineState("error");
@@ -196,6 +241,36 @@ export default function App() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Remember the analysis settings between visits (same as the chosen engine).
+  useEffect(() => {
+    try {
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+    } catch (e) {
+      /* ignore (e.g. storage disabled/full) */
+    }
+  }, [settings]);
+
+  // Once the engine reports its REAL caps, clamp restored hash/threads down to
+  // what this engine/computer can actually use, so a value saved with a beefier
+  // engine never exceeds the current one's limits. Gated on capsResolved so we
+  // never clamp against the bootstrap placeholder caps (which would wrongly and
+  // permanently shrink valid saved values before the engine has connected).
+  useEffect(() => {
+    if (!capsResolved) return;
+    setSettings((prev) => {
+      const hashCap = Math.max(16, engineCaps.maxHash);
+      const threadsCap = Math.max(1, engineCaps.maxThreads);
+      const hashMb = Math.min(prev.hashMb, hashCap);
+      const threads = Math.min(prev.threads, threadsCap);
+      if (hashMb === prev.hashMb && threads === prev.threads) return prev;
+      return { ...prev, hashMb, threads };
+    });
+  }, [engineCaps, capsResolved]);
+
+  function handleResetSettings() {
+    setSettings(DEFAULT_SETTINGS);
+  }
 
   function handleChooseBuiltin() {
     setEngineSource("builtin");
@@ -509,6 +584,7 @@ export default function App() {
           <SettingsPanel
             settings={settings}
             onChange={setSettings}
+            onReset={handleResetSettings}
             disabled={running}
             maxThreads={engineCaps.maxThreads}
             maxHash={engineCaps.maxHash}
